@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Piton"
+  given-names: "Guillaume"
+  orcid: "https://orcid.org/0000-0002-0124-0909"
+- family-names: "Goodwin"
+  given-names: "George R."
+  orcid: "https://orcid.org/0000-0002-2935-0122"
+title: "CheekyeDebrisFlowBarrier"
+version: 2.0.3
+doi: XXX
+date-released: 2021-09-24
+url: "https://github.com/GuillaumePitonInrae/CheekyeDebrisFlowBarrier"
