@@ -111,7 +111,7 @@ Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
     theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm"),plot.margin = unit(c(0.1,0.1,0.1,0.3), "cm"))
   
   #Plot name definition with date and hour
-  Plot.Name<-paste0("2Outputs/Buffering/EvtClass",Magnitude.class
+  Plot.Name<-paste0("2Outputs/Buffering/",Event.name
                     ,"_ComputedOn",lubridate::today()
                     ,"/HydrographBuffering",lubridate::now(),".png")
   Plot.Name<-str_replace_all(Plot.Name,":","-")

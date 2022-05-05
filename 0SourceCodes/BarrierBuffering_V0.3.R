@@ -14,6 +14,13 @@
 #Version -1 : based on code HydrographBufferingV0c # G. PITON, Aug. 2019
 #
 
+
+#Whole code and framework of analysis described in : # Piton G, Goodwin SR, Mark E, Strouth A. 2022. 
+# Debris flows, boulders and constrictions: a simple framework for modeling jamming, and its consequences on outflow. 
+# Journal of Geophysical Research: Earth Surface DOI: 10.1029/2021JF006447 
+# [online] Available from: https://onlinelibrary.wiley.com/doi/10.1029/2021JF006447 (Accessed 24 April 2022)
+
+
 #Flow discharge through opening defined according to Piton G, Recking A. 2016. 
 # Design of sediment traps with open check dams. I: hydraulic and deposition processes. 
 # Journal of Hydraulic Engineering 142 : 1–23. DOI: 10.1061/(ASCE)HY.1943-7900.0001048
@@ -24,35 +31,12 @@
 # Putting a Grill (or Not) in Slit Dams Aiming at Trapping Debris Flows? Lessons Learnt From France. 
 # AGHP Technical Notes : 1–5. [online] Available from: https://hal.archives-ouvertes.fr/hal-02701076
 
-
-#Clean working directory
-# rm(list=ls())
-#Working repository
-# setwd("C:/INRAE/Private/05_PROJETS/2018_CheekyeDam/5Analysis/05BufferingModel_V2")
-
-# Load package
-# library(lubridate) #To set date in names
-# library(ggplot2) #Plots
-# library(gridExtra) #For multi ggplots
-# library(grid) #For multi ggplots
-# library(stringr) #To replace string
-#start the clock for computation time recording
-# ptm <- proc.time()
-# source("0SourceCodes/DischargeCapacityFunctions_V0.R")#Load slit capacity function
-# source("0SourceCodes/BoulderPassing_V0.R")#Compute the number of boulders passing through an orifice
-# # #Want to print the plots?
-# Print.Data.Plot<-FALSE#TRUE
-# Print.Final.Plot<-FALSE#TRUE#FALSE
-# Keep.track.of.clogging.state<-FALSE
-
-
 ##### 
 BarrierBufferingUncertainSlope_V0.3<-function(input,Boulder.Generation.Mode)
 {
-  
 # Time step
-TimeStep<-1 #(s) Should be an integer in seconds, no less than 1 second
-# small enough to capture the peak, the code get stuck in infinite loops if set at 5 s with low slopes
+TimeStep<-1 #(s) Should be an integer in seconds, so no less than 1 second
+# small enough to capture the peak, the code seems to get stuck in infinite loops if set at 5 s with low slopes
 
 
 ################################
@@ -82,7 +66,7 @@ TimeStep<-1 #(s) Should be an integer in seconds, no less than 1 second
     ################################
     
     #Interpolation of storage - elevation curve
-    StorageElevation<-read.csv("./1Data/ElevationStorageCurves.txt",sep="\t")
+    # StorageElevation<-read.csv("./1Data/ElevationStorageCurves.txt",sep="\t")
     storageElevationCurve<-data.frame(s=0,h=StorageElevation$Z)
     #Interpolation for the slope of deposition selected
     for (i in (1:length(StorageElevation[,1])))
@@ -94,8 +78,7 @@ TimeStep<-1 #(s) Should be an integer in seconds, no less than 1 second
     
     
     #Count number of boulders 
-    # Boulders<-read.csv("./1Data/Boulders.txt",sep="\t")
-    Boulders<-read.csv("./1Data/RangeOfBoulders.txt",sep="\t")
+    # Boulders<-read.csv("./1Data/RangeOfBoulders.txt",sep="\t")
     
     for(i in (1:length(Boulders[,1])))
     {
@@ -116,7 +99,7 @@ TimeStep<-1 #(s) Should be an integer in seconds, no less than 1 second
     
     
     #Definition of openings
-    Opening<-read.csv("./1Data/Opening.txt",header = T)
+    # Opening<-read.csv("./1Data/Opening.txt",header = T)
     #reorder Opening by increasing base level to have the spillway as last opening
     Opening<-Opening[rank(Opening$Base.Level),]
     
@@ -299,7 +282,7 @@ TimeStep<-1 #(s) Should be an integer in seconds, no less than 1 second
           { 
             Volume.Surge.inst<-Volume.Surge[Opening.Ind]
             Boulder.list<-BoulderPassing(Volume.Surge.inst,Boulders)
-            if(!is.na(Boulder.list)){
+            if(!is.na(Boulder.list)[1]){
               Boulder.list<-data.frame(T=rep(i*TimeStep,length(Boulder.list))
                                        ,D=sort(Boulder.list,na.last=TRUE,decreasing =TRUE)
                                        ,Opening=rep(Opening.Ind,length(Boulder.list))
@@ -419,8 +402,8 @@ TimeStep<-1 #(s) Should be an integer in seconds, no less than 1 second
     
     #Save boulder sizes
     if(Save.boulder.size){
-      dir.create(paste0("2Outputs/Boulders/EvtClass",Magnitude.class,"_ComputedOn",lubridate::today()))
-      File.Name<-paste0("2Outputs/Boulders/EvtClass",Magnitude.class
+      dir.create(paste0("2Outputs/Boulders/",Event.name,"_ComputedOn",lubridate::today()))
+      File.Name<-paste0("2Outputs/Boulders/",Event.name
                         ,"_ComputedOn",lubridate::today(),"/Boulders",lubridate::now(),".Rdata")
       File.Name<-str_replace_all(File.Name,":","-")
       File.Name<-str_replace_all(File.Name," ","At")
@@ -429,8 +412,8 @@ TimeStep<-1 #(s) Should be an integer in seconds, no less than 1 second
     
     #Save hydrograph
     if(Save.hydrographs){
-      dir.create(paste0("2Outputs/Hydrographs/EvtClass",Magnitude.class,"_ComputedOn",lubridate::today()))
-      File.Name<-paste0("2Outputs/Hydrographs/EvtClass",Magnitude.class
+      dir.create(paste0("2Outputs/Hydrographs/",Event.name,"_ComputedOn",lubridate::today()))
+      File.Name<-paste0("2Outputs/Hydrographs/",Event.name
                         ,"_ComputedOn",lubridate::today(),"/Hydrographs",lubridate::now(),".Rdata")
       File.Name<-str_replace_all(File.Name,":","-")
       File.Name<-str_replace_all(File.Name," ","At")
@@ -482,7 +465,7 @@ TimeStep<-1 #(s) Should be an integer in seconds, no less than 1 second
 
     if(Print.Final.Plot){
         # Create directory to save recorded buffering results
-        dir.create(paste0("2Outputs/Buffering/EvtClass",Magnitude.class,"_ComputedOn",lubridate::today())
+        dir.create(paste0("2Outputs/Buffering/",Event.name,"_ComputedOn",lubridate::today())
                    ,showWarnings = FALSE,recursive = TRUE)
       
       Plot_BufferingModel(Reservoir,WidthClogging,VerticalClogging
@@ -510,8 +493,8 @@ TimeStep<-1 #(s) Should be an integer in seconds, no less than 1 second
       
       if(Save.Rslt.Single.Run)
       {
-        dir.create(paste0("2Outputs/Rdata/EvtClass",Magnitude.class,"_ComputedOn",lubridate::today()))
-        File.Name<-paste0("2Outputs/Rdata/EvtClass",Magnitude.class
+        dir.create(paste0("2Outputs/Rdata/",Event.name,"_ComputedOn",lubridate::today()))
+        File.Name<-paste0("2Outputs/Rdata/",Event.name
                           ,"_ComputedOn",lubridate::today(),"/RunResults",lubridate::now(),".Rdata")
         File.Name<-str_replace_all(File.Name,":","-")
         File.Name<-str_replace_all(File.Name," ","At")
@@ -522,7 +505,29 @@ TimeStep<-1 #(s) Should be an integer in seconds, no less than 1 second
     }
   }#end of function
 
-# BarrierBufferingUncertainSlope_V0.3(input,Boulder.Generation.Mode)
 
-# Stop the clock
-# proc.time() - ptm
+
+
+#######General function that can be called in the possibilistic analysis
+CheekyeBufferingModel_UncertainBoulderNumber<-function(input)
+{
+  #Transform volume in *1000 m3
+  input[1]<-input[1]*10^3
+  # Duration = V/Q*2
+  Duration<-round(input[1]*10^3/(input[2]/2),0)
+  #Pass duration in second rather than dimensionless
+  input[3]<-input[3]*Duration
+  
+  Boulder.Generation.Mode<-"Uncertain numbers"
+  #V0.3 uses the uncertain data of boulder numbers
+  Result<-BarrierBufferingUncertainSlope_V0.3(input,Boulder.Generation.Mode)
+  
+  return(Result)
+}
+
+# #Function exporting the volume flowing though and atop the barrier 
+CheekyeBufferingModel_UncertainBoulderNumber_Vtot<-function(input)
+{Rslt<-as.numeric(CheekyeBufferingModel_UncertainBoulderNumber(input))
+return(Rslt[5])
+}
+

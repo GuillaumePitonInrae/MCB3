@@ -1,0 +1,2 @@
+InitialDepositHeight_min	InitialDepositHeight_BestEstimate	InitialDepositHeight_max	InitialJammingHeight_min	InitialJammingHeight_BestEstimate	InitialJammingHeight_max
+0	0.01	0.02	0	0.01	0.02
