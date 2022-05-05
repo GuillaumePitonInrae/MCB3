@@ -193,7 +193,7 @@ while(Perform.Another.Simulation=="yes")
                                               ,Boulders$Boulder_size_category_.m.
                                               ," m in a volume of "
                                               ,Boulders$Reference_Volume," m3 of deposit"))
-    #Pop up windows to define the vales
+    #Pop up windows to define the values
     if(Adjust.event.manually){
       for(j in c(1:length(input)))
       {
