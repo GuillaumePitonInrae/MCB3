@@ -182,6 +182,7 @@ while(Perform.Another.Simulation=="yes")
     }
     
     #Adjust values manually
+    #Define the names for the pop-up windows
     input.data.name<-c("Volume (*1000 m3)"
                        ,"Qpeak (m3/s)"
                        ,"Peak lag (-)"
@@ -192,7 +193,7 @@ while(Perform.Another.Simulation=="yes")
                                               ,Boulders$Boulder_size_category_.m.
                                               ," m in a volume of "
                                               ,Boulders$Reference_Volume," m3 of deposit"))
-    
+    #Pop up windows to define the vales
     if(Adjust.event.manually){
       for(j in c(1:length(input)))
       {
