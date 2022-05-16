@@ -10,15 +10,17 @@ library(stringr) #To replace string
 library(HYRISK)#Package uncertainty propagation
 library(svDialogs) #Package for popup dialog windows
 library(ggplot2) #Plots
-library(gridExtra) #For multi ggplots
-library(grid) #For multi ggplots
 #start the clock for computation time recording
 # ptm <- proc.time()
 
+#Model version
+Model <- "CheekyeDebrisFlowBarrier V2.0"
+
+
 #Selecting the repository where the source codes are stored----
-  dlg_message(message="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
-              , type = c("ok"));SourceCodeRepository<-dlg_dir(title="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
-                                                              ,default = getwd())$res
+dlg_message(message="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
+            , type = c("ok"));SourceCodeRepository<-dlg_dir(title="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
+                                                            ,default = getwd())$res
 
 #Set this repository as working repository
 setwd(SourceCodeRepository)
@@ -35,7 +37,7 @@ source("BarrierBuffering_V0.3.R")#Actual buffering model and general functions c
 #Selecting the repository where the source codes are stored
 dlg_message(message="Show me where are stored the input data (Repository \"/1Data\")"
             , type = c("ok"));InputDataRepository<-dlg_dir(title="Show me where are stored the input data (Repository \"/1Data\")"
-                              ,default = getwd())$res
+                                                           ,default = getwd())$res
 #Load boulder list
 Boulders<-read.csv(paste0(InputDataRepository,"/RangeOfBoulders.txt"),sep="\t")
 #Load event features
@@ -81,6 +83,7 @@ while(Perform.Another.Simulation=="yes")
   }
   
   #Selecting the repository where one want to record the results
+  setwd(InputDataRepository)
   dlg_message(message="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
               , type = c("ok"));MainRepository<-dlg_dir(title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
                                                         ,default = getwd())$res
@@ -136,12 +139,19 @@ while(Perform.Another.Simulation=="yes")
   Event.undefined<-TRUE
   while(Event.undefined)
   {
-    Event.name<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
-                                      ,Events$Name
-                                      ,"If you want to define the event manually, write \"0\" ")
-                          ,default = Events$Name[1])$res
+    if(OnlyNormalRun=="yes"){ # Possible to reuse predefined values or to define the event manually
+      Event.name<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
+                                        ,Events$Name
+                                        ,"If you want to define the event manually, write \"0\" ")
+                            ,default = Events$Name[1])$res
+      
+    }else{#Only possible to reuse predefined values 
+      Event.name<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
+                                        ,Events$Name)
+                            ,default = Events$Name[1])$res
+    } 
     
-    if(Event.name == "0"){
+    if(Event.name == "0"){#Define values manually
       Adjust.event.manually <- TRUE
       Event.name<-dlg_input(message = c("OK we will adjust an event, which one do you want to take as base?, the available names are :"
                                         ,Events$Name)
@@ -157,7 +167,7 @@ while(Perform.Another.Simulation=="yes")
     }
   }
   
-# Launch runs----
+  # Launch runs----
   if(OnlyNormalRun=="yes")
   {
     #If only normal runs, we only use the best estimates
@@ -198,7 +208,7 @@ while(Perform.Another.Simulation=="yes")
       for(j in c(1:length(input)))
       {
         input[j]<-as.numeric(dlg_input(message = paste("Please provide the value of parameter \n",input.data.name[j])
-                             , default = input[j])$res)
+                                       , default = input[j])$res)
       }
     }
     
@@ -228,11 +238,12 @@ while(Perform.Another.Simulation=="yes")
       annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Magnitude.class]/10^3
                ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
       coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Magnitude.class]/10^3))+
-      labs(x="Released volume [*1000 m3]"
-           ,caption=paste("Buffering model V2.0 used on", lubridate::today(),"| Number of runs N =",N.Runs)
-           ,title = paste("Distribution of released volume for event:",Event.name))+
-      ggsave(paste0("2Outputs/Buffering/ReleasedVolume_Evt-",Event.name,"_Nrun_",N.Runs,"_ParametersAsBestEstimates.png")
-             , width = 16.5, height = 7,units="cm")
+      labs(x="Released volume [*1000 m3]",y="count"
+           ,caption=paste("Code of",Model," used on", lubridate::today(),"| Number of runs N =",N.Runs)
+           ,title = paste("Distribution of released volume for event:",Event.name))
+    #Save figure
+    ggsave(paste0("2Outputs/Buffering/ReleasedVolume_Evt-",Event.name,"_Nrun_",N.Runs,"_ParametersAsBestEstimates.png")
+           , width = 16.5, height = 7,units="cm")
     
     # Plot a synthesis figure on Qpeak out
     ggplot(Result.all)+
@@ -243,11 +254,12 @@ while(Perform.Another.Simulation=="yes")
       annotate(geom = "text", y = 0, adj=c(0,0), x = Events$PeakDischarge_BestEstimate[Magnitude.class]
                ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
       coord_cartesian(xlim=c(0,Events$PeakDischarge_BestEstimate[Magnitude.class]))+
-      labs(x="Peak discharge [m3/s]"
-           ,caption=paste("Buffering model V2.0 used on", lubridate::today(),"| Number of runs N =",N.Runs)
-           ,title = paste("Distribution of released peak dischage for event:",Event.name))+
-      ggsave(paste0("2Outputs/Buffering/ReleasedQpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_ParametersAsBestEstimates.png")
-             , width = 16.5, height = 7,units="cm")
+      labs(x="Peak discharge [m3/s]",y="count"
+           ,caption=paste("Code of",Model," used on", lubridate::today(),"| Number of runs N =",N.Runs)
+           ,title = paste("Distribution of released peak dischage for event:",Event.name))
+    #Save figure
+    ggsave(paste0("2Outputs/Buffering/ReleasedQpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_ParametersAsBestEstimates.png")
+           , width = 16.5, height = 7,units="cm")
     
     # Plot a synthesis figure of Qpeak out VS Vout
     ggplot(Result.all)+
@@ -263,16 +275,17 @@ while(Perform.Another.Simulation=="yes")
       coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Magnitude.class])
                       ,xlim=c(0,Events$Volume_BestEstimate[Magnitude.class]/10^3))+
       labs(x="Released volume [*1000 m3]",y="Peak discharge [m3/s]"
-           ,caption=paste("Buffering model V2.0 used on", lubridate::today(),"| Number of runs N =",N.Runs)
-           ,title = paste("Released volume and released peak dischage for event:",Event.name))+
-      ggsave(paste0("2Outputs/Buffering/ReleasedVolume-VS-Qpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_ParametersAsBestEstimates.png")
-             , width = 16.5, height = 7,units="cm")
+           ,caption=paste("Code of",Model," used on", lubridate::today(),"| Number of runs N =",N.Runs)
+           ,title = paste("Released volume and released peak dischage for event:",Event.name))
+    #Save figure
+    ggsave(paste0("2Outputs/Buffering/ReleasedVolume-VS-Qpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_ParametersAsBestEstimates.png")
+           , width = 16.5, height = 7,units="cm")
     
   }else{
     
-
-# IMPERFECT DATA TO PROVIDE----
-
+    
+    # IMPERFECT DATA TO PROVIDE----
+    
     ninput<-6+length(Boulders[,1]) #Number of input parameters
     input<-vector(mode="list", length=ninput) # Initialisation#
     
@@ -462,9 +475,9 @@ while(Perform.Another.Simulation=="yes")
       }
     }
     
-
-#     COMPUTATION----
-
+    
+    #     COMPUTATION----
+    
     ####CREATION OF THE DISTRIBUTIONS ASSOCIATED TO THE PARAMETERS
     input=CREATE_DISTR(input)
     
@@ -489,44 +502,35 @@ while(Perform.Another.Simulation=="yes")
     #       
     ###################Plot Pbox----
     #       
-    PboxPlot<-ggplot()+theme_bw(base_size = 9)+
+    ggplot()+theme_bw(base_size = 9)+
       geom_vline(aes(xintercept = 1))+
-      geom_vline(aes(xintercept = 0))
-    
-    if(OnlyNormalRun=="yes")
-    {
-      PboxPlot<-PboxPlot+
-        geom_hline(aes(yintercept=Events$Volume_BestEstimate[Magnitude.class]/10^3))+
-        annotate(geom = "text", x = 0.5, y = Events$Volume_BestEstimate[Magnitude.class]/10^3,vjust=(-0.5), label = "Supply",srt=90)
-    }else{
-      PboxPlot<-PboxPlot+
-        geom_hline(aes(yintercept=Events$Volume_min[Magnitude.class]/10^3),lty=2)+
-        geom_hline(aes(yintercept=Events$Volume_BestEstimate[Magnitude.class]/10^3))+
-        geom_hline(aes(yintercept=Events$Volume_max[Magnitude.class]/10^3),lty=2)+
-        annotate(geom = "text", x = 0.5, y = Events$Volume_BestEstimate[Magnitude.class]/10^3
-                 ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)
-    }
-    PboxPlot<-PboxPlot+
+      geom_vline(aes(xintercept = 0))+
+      geom_hline(aes(yintercept=Events$Volume_min[Magnitude.class]/10^3),lty=2)+
+      geom_hline(aes(yintercept=Events$Volume_BestEstimate[Magnitude.class]/10^3))+
+      geom_hline(aes(yintercept=Events$Volume_max[Magnitude.class]/10^3),lty=2)+
+      annotate(geom = "text", x = 0.5, y = Events$Volume_BestEstimate[Magnitude.class]/10^3
+               ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
       geom_ribbon(data=Rslt_Uncertain.Boulder.Number,aes(x =P,ymin=Min,ymax=Max),alpha=0.3,lwd=1)+
       geom_line(data=Rslt_Uncertain.Boulder.Number,aes(y =Min ,x=P,colour="1"),lwd=1)+
       geom_line(data=Rslt_Uncertain.Boulder.Number,aes(y =Max ,x=P,colour="2"),lwd=1)+
-      
       scale_colour_manual(name="Bounding Cumulated Distribution Functions (CDF)"
                           ,values=c("lightblue","darkblue")
                           ,labels=c("Lower bound","Upper bound"))+
       coord_flip()+ #To have Probability as Y
       theme(legend.position = "top")+
       labs( y = "Released volume [1000m3]",x = "Cumulative distribution function"
-            ,caption=paste("Buffering model V2.0 used on", lubridate::today(),"| Number of runs N =",N.Runs)
-            ,title = paste("Uncertainty analysis of released volume for event:",Event.name))+
-      ggsave(paste0("2Outputs/Pbox/ReleasedVolume_EvtClass",Magnitude.class,"_Nrun_",N.Runs,"_NboulderUncertain.png")
-             , width = 16.5, height = 7,units="cm")
+            ,caption=paste("Code of",Model," used on", lubridate::today(),"| Number of runs N =",N.Runs)
+            ,title = paste("Uncertainty analysis of released volume for event:",Event.name))
+    #Save figure
+    ggsave(paste0("2Outputs/Pbox/ReleasedVolume_EvtClass",Magnitude.class,"_Nrun_",N.Runs,"_NboulderUncertain.png")
+           , width = 16.5, height = 7,units="cm")
     
+    #Save results
     save(Rslt_Uncertain.Boulder.Number,file=paste0("2Outputs/Rdata/ReleasedVolume_Evt-",Event.name,"_Nrun_",N.Runs,"_NboulderUncertain.RData"))
   }
-
+  
   #Want to perform another run
   Perform.Another.Simulation<-dlg_message(message="The computation is finished! \n Do you want to perform another set?"
-              , type = c("yesno"))$res
+                                          , type = c("yesno"))$res
   
 }
