@@ -1,25 +1,31 @@
+###Randomly generate the number of boulder passing
+#V1 with constant value of boulder probability p
+#V2 with value of probability p possibly varying with time
 
-BoulderPassing<-function(Volume.Surge,Boulders)
+BoulderPassing<-function(Volume.Surge
+                         ,Boulders.Diameters.min
+                         ,Boulders.Diameters.max
+                         ,Boulder.probabilities)
 {
   Boulder.list<-NA
   #Maximum number of boulder that may pass considering the volume of the surge
-  N.max<-round(Volume.Surge/Boulders$V,0)
+  N.max<-round(Volume.Surge/(1/6*(0.5*(Boulders.Diameters.min+Boulders.Diameters.max))^3*pi),0)
   
-  for(Boulder.Ind in (1:length(Boulders$Diameter)))
+  for(Boulder.Ind in (1:length(Boulders.Diameters.min)))
   { if(N.max[Boulder.Ind]>0)
   {#If at least one boulder may pass (N.max>1), pick up a random number of boulder of size D 
     # according to a binomial law with N.max random sampling
-    N.boulderPassing<-rbinom(1,N.max[Boulder.Ind],Boulders$P[Boulder.Ind])
+    N.boulderPassing<-rbinom(1,N.max[Boulder.Ind],Boulder.probabilities[Boulder.Ind])
     if((!is.na(N.boulderPassing) && N.boulderPassing>0)){
       #V0
-      # N.Diam.boulder<-rep(Boulders$Diameter[Boulder.Ind], #Add the diameter value
+      # N.Diam.boulder<-rep(Boulders.Diameters[Boulder.Ind], #Add the diameter value
       # N.boulderPassing)#of the randomly sampled positive values
       #V1
       # Add N.BoulderPassing of diameter in the range Dmin - Dmax of this category
-      N.Diam.boulder<-runif(N.boulderPassing,Boulders$Dmin[Boulder.Ind],Boulders$Dmax[Boulder.Ind])
+      N.Diam.boulder<-runif(N.boulderPassing,Boulders.Diameters.min[Boulder.Ind],Boulders.Diameters.max[Boulder.Ind])
       #Reduce the surge volume by the boulders detected
       #V0 all boulders were of the same size
-      # Volume.Surge<-Volume.Surge-N.boulderPassing*Boulders$V[Boulder.Ind]
+      # Volume.Surge<-Volume.Surge-N.boulderPassing*(1/6*(0.5*(Boulders.Diameters.min+Boulders.Diameters.max))^3*pi)[Boulder.Ind]
       #V1 compute
       Volume.Surge<-Volume.Surge-sum(pi/6*N.Diam.boulder^3)
     }else{N.Diam.boulder<-NA}
