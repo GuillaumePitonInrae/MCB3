@@ -4,11 +4,11 @@ authors:
 - family-names: "Piton"
   given-names: "Guillaume"
   orcid: "https://orcid.org/0000-0002-0124-0909"
-- family-names: "Goodwin"
-  given-names: "Robin"
-  orcid: "https://orcid.org/0000-0002-2935-0122"
-title: "CheekyeDebrisFlowBarrier"
-version: 2.0.4
+- family-names: "Misset"
+  given-names: "Clément"
+  orcid: "https://orcid.org/0000-0003-0748-467X"
+title: "DFbuffering"
+version: 1.0.0
 doi: XXX
-date-released: 2022-04-30
-url: "https://github.com/GuillaumePitonInrae/CheekyeDebrisFlowBarrier"
+date-released: 2023-07-19
+url: "https://github.com/GuillaumePitonInrae/DFbuffering/"
