@@ -1,8 +1,0 @@
-Name	Volume	Discharge	Return_Period_min	Return_Period_max
-Class_6	2.8	15000	3000	10000
-Class_3	0.8	3400	100	300
-Class_1	0.2	800	10	30
-Class_2	0.4	1600	30	100
-Class_4	1.4	6600	300	1000
-Class_5	2.2	11000	1000	3000
-Class_7	5.5	33000	10000	10000

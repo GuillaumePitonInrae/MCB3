@@ -16,12 +16,6 @@ The file InitialCOnditions.txt describe the initial state in the basin and barri
 -The three first columns describe the initial deposit height (min, best estimate, max) [m], it is used to define a deposit existing in the basin at the beginning of the simulation
 -The columns 4, 5 and 6 describe the height of the jam in the barrier. This is what was used to describe the bottom jam made of large wood in Piton, Goodwin et al. (2022, JGR). 
 
-The file FreqMag.txt is used only to the code DesignEvent_Release_HybridAnalysis_V0.3.R, it provided the supply of debris flow at the Cheekye barrier as in the paper Piton, Goodwin et al. (2022, JGR: Earth Surface),
--Class	is the class of the event, e.g., 1, 2...
--Volume	is the debris flow volume supply in cubic meters
--Discharge	is the debris flow peak discharge in cubic meters / seconds
--Return_Period_min	and Return_Period_max are the estimated return period of this event, in years
-
  In Opening.txt
  -The first column is the number of the opening
  -The second is the type : "slit", "slot" or "weir"
