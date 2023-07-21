@@ -16,6 +16,8 @@ library(gridBase) #Plots
 library(gridExtra) #Plots
 library(grid) #Plots
 library(sets) #Plots
+library(dplyr) #for data manipulation
+
 #start the clock for computation time recording
 # ptm <- proc.time()
 
