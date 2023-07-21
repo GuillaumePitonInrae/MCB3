@@ -5,9 +5,9 @@
 
 
 ####### a enlever - pour test
-InputDataRepository<-"T:/HYDRIMZ/Perso/DFbuffering/1Data/structure/pdd 1"
+InputDataRepository<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data/structure/pdd 1"
 
-InputDataRepository2<-"T:/HYDRIMZ/Perso/DFbuffering/1Data/structure"
+InputDataRepository2<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data/structure"
 
 ####### a enlever - pour test
 
