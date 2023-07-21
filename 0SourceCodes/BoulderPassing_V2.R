@@ -7,7 +7,7 @@ BoulderPassing<-function(Volume.Surge
                          ,Boulders.Diameters.max
                          ,Boulder.probabilities)
 {
-  Boulder.list<-NA
+  Boulder.list<-data.frame(D=NA,Class=NA)
   #Maximum number of boulder that may pass considering the volume of the surge
   N.max<-round(Volume.Surge/(1/6*(0.5*(Boulders.Diameters.min+Boulders.Diameters.max))^3*pi),0)
   
@@ -30,14 +30,15 @@ BoulderPassing<-function(Volume.Surge
       Volume.Surge<-Volume.Surge-sum(pi/6*N.Diam.boulder^3)
     }else{N.Diam.boulder<-NA}
     
-    if( (is.na(Boulder.list)  && !is.na(N.Diam.boulder)) )#Initialize the boulder list
-    {Boulder.list<-N.Diam.boulder
+    if( (is.na(Boulder.list$D)  && !is.na(N.Diam.boulder)) )#Initialize the boulder list
+    {Boulder.list<-data.frame(D=N.Diam.boulder,Class=rep(Boulder.Ind,N.boulderPassing))
     }else{
-      if( (!is.na(Boulder.list)  && !is.na(N.Diam.boulder)) ){ #Append the boulder list
-        Boulder.list<-c(Boulder.list,N.Diam.boulder)}
+      if( (!is.na(Boulder.list$D)  && !is.na(N.Diam.boulder)) ){ #Append the boulder list
+        Boulder.list<-rbind(Boulder.list,data.frame(D=N.Diam.boulder,Class=rep(Boulder.Ind,N.boulderPassing)))}
     }
   }
   }#end of the boulder loop
   return(Boulder.list)
 }
-# BoulderPassing(100,Boulders)
+# BoulderPassing(100,Boulders$Dmin,Boulders$Dmax,rep(0.1,length(Boulders$Boulder_size_category_.m.)))
+
