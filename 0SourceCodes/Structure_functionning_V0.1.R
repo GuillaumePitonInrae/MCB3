@@ -158,7 +158,7 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
   #    COMPUTATION----
   ################################
   #Initialize a data.frame to record boulders generated
-  Boulder.list.all<-data.frame(T=NULL,D=NULL,Opening=NULL,Jammed=NULL)
+  Boulder.list.all<-data.frame(T=NULL,D=NULL,Class=NULL,Opening=NULL,Jammed=NULL)
   
   #Result dataset initialisation
   Reservoir<-data.frame(T=Qin$T
@@ -168,6 +168,12 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
                         ,Z=DepositDepth.initial #level at barrier 
                         ,Qslit=0 #Discharge passing by openings only
                         ,Qspillway=0) #Discharge passing by spillway only
+  
+  
+  
+  
+  
+  
   #First step
   i<-1
   Reservoir$V[i]<-approx(x=storageElevationCurve$h,y=storageElevationCurve$s
@@ -259,12 +265,14 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
         for(Opening.Ind in (1:N.opening))
         { 
           Volume.Surge.inst<-Volume.Surge[Opening.Ind]
-          Boulder.list<-BoulderPassing(Volume.Surge.inst,Boulders$Dmin,Boulders$Dmax,as.numeric(Qin[i,(1:length(Boulders[,1])+2)]))
-          if(!is.na(Boulder.list)[1]){
-            Boulder.list<-data.frame(T=rep(i*TimeStep,length(Boulder.list))
-                                     ,D=sort(Boulder.list,na.last=TRUE,decreasing =TRUE)
-                                     ,Opening=rep(Opening.Ind,length(Boulder.list))
-                                     ,Jammed=rep("a) Unjammed",length(Boulder.list)))
+          Boulder.list<-BoulderPassing(Volume.Surge.inst,Boulders$Dmin,Boulders$Dmax,Boulder.probabilities=as.numeric(Qin[i,(1:length(Boulders[,1])+2)]))
+          
+          if(!is.na(Boulder.list$D)[1]){
+            Boulder.list<-data.frame(T=rep(Reservoir$T[i],length(Boulder.list$D))
+                                     ,D=sort(Boulder.list$D,na.last=TRUE,decreasing =TRUE)
+                                     ,Class=sort(Boulder.list$Class,na.last=TRUE,decreasing =TRUE)
+                                     ,Opening=rep(Opening.Ind,length(Boulder.list$D))
+                                     ,Jammed=rep("a) Unjammed",length(Boulder.list$D)))
             # data.frame(T=NULL,D=NULL,Opening=NULL,Jammed=NULL)
             # if(!is.na(Boulder.list)){print(Boulder.list$D)}
             
@@ -311,10 +319,36 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
   ################################
   #    RECORD THE TIME SERIES AND INDICATORS----
   ################################
+   #Add the jamming state of the openings
   Reservoir<-cbind(Reservoir
                    ,Boulderclogging.level[,(1:(N.opening-1))] #Only until N.opening-1 because clogging is a no sense on the crest
                    ,Boulderclogging.width[,(1:(N.opening-1))])#Only until N.opening-1 because clogging is a no sense on the crest
   Reservoir$LevelClogging1<-Reservoir$Z1+OpeningMinBaseLevel
+  
+  
+  #Add the number of boulders of each class to reservoir
+  for(i in c(1:length(Boulders$Dmin)))
+  {
+    Boulder.N.jammed<-Boulder.list.all %>% 
+      filter(Class==i) %>%
+      filter(Jammed!="a) Unjammed") %>%
+      group_by(T) %>%
+      summarise(N=n())
+    
+    Boulder.N.unjammed<-Boulder.list.all %>% 
+      filter(Class==i) %>%
+      filter(Jammed=="a) Unjammed") %>%
+      group_by(T) %>%
+      summarise(N=n())
+    
+    Reservoir$X<-Reservoir$Y<-0
+    Reservoir$X[match(Boulder.N.jammed$T,Reservoir$T)]<-Boulder.N.jammed$N
+    names(Reservoir)[which(names(Reservoir)=="X")]<-paste0("Class",i,".jammed")
+    
+    Reservoir$Y[match(Boulder.N.unjammed$T,Reservoir$T)]<-Boulder.N.unjammed$N
+    names(Reservoir)[which(names(Reservoir)=="Y")]<-paste0("Class",i,".unjammed")
+    
+  }
   
   #Combine the tables of clogging for later plot and analysis
   N.slot<-(Opening$Type=="slot") #which opening are slots
@@ -465,6 +499,9 @@ Synthetic_Structure_results_V0.1<-function(Reservoir)
   VoutSpillway<-sum(Reservoir$Qspillway)*TimeStep/10^3
   #Remaing part passing over the Crest
   VoutCrest<-Vout-VoutSlit-VoutSpillway
+  
+  
+  
   
   if(is.na(Reservoir$T[1]))
   {return(NA)}else
