@@ -22,7 +22,7 @@
 
 
 ##########################################To REMOVE --------------------
-InputDataRepository <-  "T:/HYDRIMZ/Perso/DFbuffering/1Data"
+InputDataRepository <-  "D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data/structure/pdd 1"
 #Load storage - elevation curve
 StorageElevation<-read.csv(paste0(InputDataRepository,"/ElevationStorageCurves.txt"),sep="\t")
 #Load the barrier definition (openings)
@@ -316,7 +316,7 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
                    ,Boulderclogging.width[,(1:(N.opening-1))])#Only until N.opening-1 because clogging is a no sense on the crest
   Reservoir$LevelClogging1<-Reservoir$Z1+OpeningMinBaseLevel
   
-  #Combine the tables of clogging for later plot
+  #Combine the tables of clogging for later plot and analysis
   N.slot<-(Opening$Type=="slot") #which opening are slots
   WidthClogging<-VerticalClogging<-NULL
   for(i in (1:(N.opening-1))) #Only until N.opening-1 because clogging is a no sense on the crest
@@ -356,13 +356,10 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
     WidthClogging$Clogging.rate[WidthClogging$Clogging.rate>1]<-1  
   }
   
+  
   #remove last line which is not computed
   Reservoir<-Reservoir[-N.time.steps,]
-  
-  #Extract the maximum level of the result data set.
-  Zmax<-max(Reservoir$Z,na.rm = T)
-  Zfinal<-Reservoir$Z[N.time.steps-1]
-  
+ 
   #Final clogging status
   Boulder.z.final<-Boulderclogging.level[(N.time.steps-1),]
   Boulder.w.final<-Boulderclogging.width[(N.time.steps-1),]
@@ -401,38 +398,6 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
   }
   
   
-  #Extract the maximum Storage of the result data set.
-  Vmax<-max(Reservoir$V,na.rm = T)
-  Vfinal<-Reservoir$V[N.time.steps-1]
-  
-  
-  #Record peak discharge at inlet
-  Qp.in<-max(Reservoir$Qi,na.rm=T)
-  
-  #Extract maximum outlet discharge
-  Qp.out<-max(Reservoir$Qo,na.rm=T)
-  
-  #Look for time step of level passing over and below the crest
-  Nmin<-min(which(Reservoir$Z>Opening$Base.Level[N.opening]))
-  Nmax<-max(which(Reservoir$Z>Opening$Base.Level[N.opening]))
-  
-  #Look for time step of level passing over and below the spillway
-  Nmin.s<-min(which(Reservoir$Z>Opening$Base.Level[(N.opening-1)]))
-  Nmax.s<-max(which(Reservoir$Z>Opening$Base.Level[(N.opening-1)]))
-  
-  #OVertopping duration
-  Tover<-TimeStep*(Nmax-Nmin)
-  Tover.s<-TimeStep*(Nmax.s-Nmin.s)
-  
-  #Released volume = sum of released discharge * timestep in Mm3
-  Vout<-round(sum(Reservoir$Qo)*TimeStep/10^3,3)
-  #Part passing by the slit
-  VoutSlit<-round(sum(Reservoir$Qslit)*TimeStep/10^3,3)
-  #Part passing over the spillway
-  VoutSpillway<-sum(Reservoir$Qspillway)*TimeStep/10^3
-  #Remaing part passing over the Crest
-  VoutCrest<-Vout-VoutSlit-VoutSpillway
-  
   #Add virtual values to extend the legend of clogging from 0 to 100%
   VerticalClogging<-rbind(VerticalClogging,data.frame(T=c(-2,-1.5,-1)*10^3
                                                       ,Opening=rep(VerticalClogging$Opening[1],3)
@@ -458,9 +423,51 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
   }
   
   ###############END OF THE FUNCTION
-  
   if(Ninter>=1000)
-  {return(rep(NA,7))}else
+  {return(rep(NA,dim(Reservoir)[2]))}else
+  {return(Reservoir)}
+}
+
+Synthetic_Structure_results_V0.1<-function(Reservoir)
+{
+  #Extract the maximum level of the result data set.
+  Zmax<-max(Reservoir$Z,na.rm = T)
+  Zfinal<-Reservoir$Z[N.time.steps-1]
+  
+  #Extract the maximum Storage of the result data set.
+  Vmax<-max(Reservoir$V,na.rm = T)
+  Vfinal<-Reservoir$V[N.time.steps-1]
+  
+  
+  #Record peak discharge at inlet
+  Qp.in<-max(Reservoir$Qi,na.rm=T)
+  
+  #Extract maximum outlet discharge
+  Qp.out<-max(Reservoir$Qo,na.rm=T)
+  
+  #Look for time step of level passing over and below the crest
+  # Nmin<-min(which(Reservoir$Z>Opening$Base.Level[N.opening]))
+  # Nmax<-max(which(Reservoir$Z>Opening$Base.Level[N.opening]))
+  
+  #Look for time step of level passing over and below the spillway
+  # Nmin.s<-min(which(Reservoir$Z>Opening$Base.Level[(N.opening-1)]))
+  # Nmax.s<-max(which(Reservoir$Z>Opening$Base.Level[(N.opening-1)]))
+  
+  #OVertopping duration
+  # Tover<-TimeStep*(Nmax-Nmin)
+  # Tover.s<-TimeStep*(Nmax.s-Nmin.s)
+  
+  #Released volume = sum of released discharge * timestep in Mm3
+  Vout<-round(sum(Reservoir$Qo)*TimeStep/10^3,3)
+  #Part passing by the slit
+  VoutSlit<-round(sum(Reservoir$Qslit)*TimeStep/10^3,3)
+  #Part passing over the spillway
+  VoutSpillway<-sum(Reservoir$Qspillway)*TimeStep/10^3
+  #Remaing part passing over the Crest
+  VoutCrest<-Vout-VoutSlit-VoutSpillway
+  
+  if(is.na(Reservoir$T[1]))
+  {return(NA)}else
   {
     RESULTS<-data.frame("Zmax"=Zmax,
                         "Zfinal"=Zfinal
@@ -468,11 +475,12 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
                         ,"Vmax"=Vmax*1000,"Vout"=Vout*1000,"Voutslit"=VoutSlit*1000
                         ,"Voutsplillway"=VoutSpillway*1000,"VoutCrest"=VoutCrest*1000
                         ,"Vfinal"=Vfinal*1000
-                        ,"Tover"=Tover,"Tover.spillway"=Tover.s
+                        # ,"Tover"=Tover,"Tover.spillway"=Tover.s
                         ,"Qp.in"=Qp.in)
     RESULTS<-cbind(RESULTS
-                   ,Boulder.z.final[1:(N.opening-1)] #only until N.opening -1 because
-                   ,Boulder.w.final[1:(N.opening-1)])#the top opening is the crest
+                   ,Reservoir[dim(Reservoir)[1],(7+1:(N.opening-1))]                    #only until N.opening -1 because
+                   ,Reservoir[dim(Reservoir)[1],(7+(N.opening-1)+1:(N.opening-1))]      #the top opening is the crest
+                   )
     
     if(Save.Rslt.Single.Run)
     {
@@ -483,7 +491,6 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
       File.Name<-str_replace_all(File.Name," ","At")
       save(list = c("RESULTS","input","Boulder.Generation.Mode"),file=File.Name)
     }
-    
     return(RESULTS)
   }
 }
