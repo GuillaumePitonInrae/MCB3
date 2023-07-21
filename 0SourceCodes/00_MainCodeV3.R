@@ -23,10 +23,10 @@ library(sets) #Plots
 Model <- "CheekyeDebrisFlowBarrier V3.0"
 
 #Selecting the repository where the source codes are stored----
-# dlg_message(message="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
-#             , type = c("ok")) ; SourceCodeRepository<-dlg_dir(title="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
-#                                                            ,default = getwd())$res
-SourceCodeRepository<-"T:/HYDRIMZ/Perso/DFbuffering/0SourceCodes"
+dlg_message(message="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
+            , type = c("ok")) ; SourceCodeRepository<-dlg_dir(title="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
+                                                           ,default = getwd())$res
+
 
 #Set this repository as working repository
 setwd(SourceCodeRepository)
@@ -39,14 +39,14 @@ source("BoulderPassing_V2.R")#Compute the number of boulders passing through an 
 source("Plot_BufferingModelResults_V0.R") #For plotting results of singular runs
 source("Create_inlet_input_V0.1.R")#define the input data of runs
 source("Create_inlet_timeseries_V0.1.R")#define the times series of the inlet of the most upstream structure
-# source("Structure_definition_V0.1")#define structure 
-# source("Structure_functionning_V0.1")#Actual buffering model 
+source("Structure_definition_V0.1.R")#define structure
+source("Structure_functionning_V0.1.R")#Actual buffering model
 
 #Selecting the repository where the source codes are stored
-# dlg_message(message="Show me where are stored the input data (Repository \"/1Data\")"
-            # , type = c("ok")) ; InputDataRepository<-dlg_dir(title="Show me where are stored the input data (Repository \"/1Data\")"
-                             # ,default = getwd())$res
-InputDataRepository <-  "T:/HYDRIMZ/Perso/DFbuffering/1Data"
+dlg_message(message="Show me where are stored the input data (Repository \"/1Data\")"
+, type = c("ok")) ; InputDataRepository<-dlg_dir(title="Show me where are stored the input data (Repository \"/1Data\")"
+,default = getwd())$res
+
 
 
 #Load initial conditions
@@ -88,12 +88,11 @@ Perform.Another.Simulation<-"yes"
   
   #Selecting the repository where one want to record the results
   setwd(InputDataRepository)
-  # dlg_message(message="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
-  #             , type = c("ok"));MainRepository<-dlg_dir(title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
-  #                                                       ,default = getwd())$res
+  dlg_message(message="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
+              , type = c("ok"));MainRepository<-dlg_dir(title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
+                                                        ,default = getwd())$res
 
-  MainRepository <-  "T:/HYDRIMZ/Perso/DFbuffering"
-  
+
   #Set this repository as working repository
   setwd(MainRepository)
   #Prepare subrepositories
@@ -194,13 +193,23 @@ Perform.Another.Simulation<-"yes"
     for(Run.ind in (1:N.Runs))
     {
       #launch computation
-      Result<-BarrierBufferingUncertainSlope_V0.3(input,Boulder.Generation.Mode)
+      Qo<-Structure_functionning_V0.1(input,Qin,Opening,StorageElevation)
+      
+      Qo$Run<-paste0("Run #",Run.ind)
+      
+      Result<-Synthetic_Structure_results_V0.1(Qo)
       print(paste0("Run #",Run.ind," finished at, ",now(),", still ",N.Runs-Run.ind," to perform"))
       #Record the run results
-      if(Run.ind==1){Result.all<-Result}else{Result.all<-rbind(Result.all,Result)}
+      if(Run.ind==1){
+        Result.all<-Result
+        Qo.all<-Qo
+      }else{
+          Result.all<-rbind(Result.all,Result)
+          Qo.all<-rbind(Qo.all,Qo)
+          }
     }
     #Save a data frame with the main results of all runs as a .Rdata file
-    save(Result.all,file=paste0("2Outputs/Rdata/Result_Evt-",Event.name,"_Run_",Run.ind,".RData"))
+    save(Result.all,Qo.all,file=paste0("2Outputs/Rdata/Result_Evt-",Event.name,"_Run_",Run.ind,".RData"))
     
     if(N.Runs>=10)
     {
