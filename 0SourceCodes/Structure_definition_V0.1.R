@@ -5,37 +5,36 @@
 
 
 ####### a enlever - pour test
-InputDataRepository<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data/structure/pdd 1"
+# InputDataRepository<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data"
 
-InputDataRepository2<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data/structure"
+# InputDataRepository2<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data"
 
 ####### a enlever - pour test
 
 
-import_structure<-function(InputDataRepository){
+import_structure<-function(InputDataRepository,StructureName){
   #### initial check of the data ####
   # number of files in the repository
-  nb_files<- length(list.files(InputDataRepository))
+  nb_files<- length(list.files(paste0(InputDataRepository,"/",StructureName)))
   
   # check strcuture is a bridge OR a lateral structure 
   if(nb_files>2){print("Warning: barrier or bridge data only ")}
   
   # check non missing files
-  if(nb_files==0){print("Warning: structure data missing ")}
+  if(nb_files==0){print(paste("Warning: structure data missing in repository of",StructureName))}
   
   # list of structure data
-  nom_files<-list.files(InputDataRepository)
+  nom_files<-list.files(paste0(InputDataRepository,"/",StructureName))
+  
+  # Load the barrier definition (openings)
+  Opening<-read.csv(paste0(InputDataRepository,"/",StructureName,"/Opening.txt"),header = T)
   
   # import bridge data in convert into storage elevation curve
   if(length(nom_files[nom_files=="bridge.txt"])==1){
     
     # read bridge data
     print("reading bridge data")
-    bridge<-read.csv(paste0(InputDataRepository,"/bridge.txt"),header = T)
-    
-    # Load the barrier definition (openings)
-    Opening<-read.csv(paste0(InputDataRepository,"/Opening.txt"),header = T)
-    
+    bridge<-read.csv(paste0(InputDataRepository,"/",StructureName,"/bridge.txt"),header = T)
     
     #### convert bridge data into elevation/storage curve ####
     # get min / max elevation values from bridge data
@@ -45,7 +44,7 @@ import_structure<-function(InputDataRepository){
       summarize(max(Param)) %>%
       pull()
     
-    # interpolate the deposition slope
+    # interpolate the deposition slope on 10 values of slopes
     seq_slope<-seq(0,bridge$slope*0.95,length.out=10)
     
     # interpolate the downstream altitude
@@ -82,13 +81,11 @@ import_structure<-function(InputDataRepository){
     print("reading barrier data")
     
     # Load the barrier storage / elevation curve
-    StorageElevation<-read.csv(paste0(InputDataRepository,"/ElevationStorageCurves.txt"),sep="")
- 
-    # creating a list with barrier data
-    structure<-list(StorageElevation=StorageElevation,Opening=Opening)
+    StorageElevation<-read.csv(paste0(InputDataRepository,"/",StructureName,"/ElevationStorageCurves.txt"),sep="")
     }
     
-
+  # creating a list with barrier data
+  structure<-list(StorageElevation=StorageElevation,Opening=Opening)
   
   return(structure)
   
@@ -98,20 +95,18 @@ import_structure<-function(InputDataRepository){
 
 
 structure_definition<-function(InputDataRepository2){
+  #list the repository available
+  names_repository<-list.dirs(InputDataRepository2,full.names = FALSE)
+  #remove the parent repository
+  names_repository<-names_repository[2:length(names_repository)]
   
-  names_files<-list.files(InputDataRepository2)
+  list_save<-as.list(rep(NA,length(names_repository)))
   
-  list_save<-as.list(rep(NA,length(names_files)))
+  names(list_save)<-names_repository
   
-  names(list_save)<-names_files
-  
-  
-  
-  for (i in 1:length(names_files))
+  for (i in 1:length(names_repository))
   {
-    
-    list_save[[i]]<-import_structure(paste0(InputDataRepository2,"/",names_files[i]))
-  
+    list_save[[i]]<-import_structure(InputDataRepository2,names_repository[i])
   }
   
   
@@ -120,7 +115,7 @@ structure_definition<-function(InputDataRepository2){
 }
 
 
-save<-structure_definition(InputDataRepository2)
+# save<-structure_definition(InputDataRepository2)
 
 
 
