@@ -1,2 +1,4 @@
-InitialDepositHeight_min	InitialDepositHeight_BestEstimate	InitialDepositHeight_max	InitialJammingHeight_min	InitialJammingHeight_BestEstimate	InitialJammingHeight_max
-0	0.01	0.02	0	0.01	0.02
+Name	InitialDepositHeight_min	InitialDepositHeight_BestEstimate	InitialDepositHeight_max	InitialJammingHeight_min	InitialJammingHeight_BestEstimate	InitialJammingHeight_max
+Empty	0	0.01	0.02	0	0.01	0.02
+2 m jam and deposit	2	2.01	2.02	2	2.01	2.02
+2 m jam, no deposit	0	0.01	0.02	2	2.01	2.02
