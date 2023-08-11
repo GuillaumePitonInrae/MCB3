@@ -1,8 +1,12 @@
-### Create structure definition and times series
+### Create structure definition
 #V0 July 2023 - G. Piton & C. Misset
 
+#Clean environment
+#rm(list=ls())
 
-
+# Load package
+#library(dplyr) #for data manipulation
+#library(readr) #for data loading
 
 ####### a enlever - pour test
 # InputDataRepository<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data"
@@ -13,23 +17,26 @@
 
 
 import_structure<-function(InputDataRepository,StructureName){
+
+#### function to load input data for structure in a given folder ####
   #### initial check of the data ####
   # number of files in the repository
   nb_files<- length(list.files(paste0(InputDataRepository,"/",StructureName)))
   
-  # check strcuture is a bridge OR a lateral structure 
+  # check if the strcuture is a bridge OR a barrier 
   if(nb_files>2){print("Warning: barrier or bridge data only ")}
   
   # check non missing files
   if(nb_files==0){print(paste("Warning: structure data missing in repository of",StructureName))}
   
+  #### import bridge or barrier data #### 
   # list of structure data
   nom_files<-list.files(paste0(InputDataRepository,"/",StructureName))
   
   # Load the barrier definition (openings)
   Opening<-read.csv(paste0(InputDataRepository,"/",StructureName,"/Opening.txt"),header = T)
   
-  # import bridge data in convert into storage elevation curve
+  # import bridge data and convert it into storage / elevation curve
   if(length(nom_files[nom_files=="bridge.txt"])==1){
     
     # read bridge data
@@ -37,12 +44,16 @@ import_structure<-function(InputDataRepository,StructureName){
     bridge<-read.csv(paste0(InputDataRepository,"/",StructureName,"/bridge.txt"),header = T)
     
     #### convert bridge data into elevation/storage curve ####
+
+    bridge<-read.csv(paste0(InputDataRepository,"/bridge.txt"),sep="")
+    
+    # Load the barrier definition (openings)
+    Opening<-read.csv(paste0(InputDataRepository,"/Opening.txt"),header = T)
+    
+    #### convert bridge data into storage / elevation curve ####
     # get min / max elevation values from bridge data
     Max.base.level<-max(Opening$Base.Level)
-    Max.deck.level<- Opening %>% 
-      filter(Type == "slot") %>%
-      summarize(max(Param)) %>%
-      pull()
+    Max.deck.level<-max(subset(Opening,Opening$Type=="slot")$Param)
     
     # interpolate the deposition slope on 10 values of slopes
     seq_slope<-seq(0,bridge$slope*0.95,length.out=10)
@@ -50,7 +61,7 @@ import_structure<-function(InputDataRepository,StructureName){
     # interpolate the downstream altitude
     seq_Z<-seq(min(Opening$Base.Level),(max(Max.base.level,Max.deck.level)+5),0.5)
     
-    # create an Elevation Storage Curves data frame
+    # create an storage / elevation Curves data frame
     elev_storage<-data.frame(matrix(ncol = length(seq_slope),
                                     nrow = length(seq_Z),
                                     data = NA))
@@ -58,26 +69,22 @@ import_structure<-function(InputDataRepository,StructureName){
     
     # put the names in good format
     name_elev_storage<-rep(NA,length(seq_slope))
-    
-    for (i in 1:length(seq_slope)){
-      name_elev_storage[i]<-paste0("S",round(seq_slope[i],3))
-    }
-    
+    for (i in 1:length(seq_slope)){name_elev_storage[i]<-paste0("S",round(seq_slope[i],3))}
     names(elev_storage)<-c("Z",name_elev_storage)
     
-    # compute the elevation storage curve
+    # compute the storage / elevation curve
     for (i in 1:nrow(elev_storage)){
       for (j in 2:(ncol(elev_storage))){
         elev_storage[i,j]<-bridge$width*0.5*(elev_storage$Z[i]-min(Opening$Base.Level))^2/(tan(bridge$slope)-tan(seq_slope[j-1]))
         }
     }
-  
-    StorageElevation<-elev_storage
+    
+    # creating a list with storage / elevation curve and opening data
+    structure<-list(StorageElevation=elev_storage,Opening=Opening)
     
   }else{
     
-
-  # Load storage - elevation curve if no bridge data
+  # Load storage / elevation curve if no bridge data
     print("reading barrier data")
     
     # Load the barrier storage / elevation curve
@@ -87,13 +94,22 @@ import_structure<-function(InputDataRepository,StructureName){
   # creating a list with barrier data
   structure<-list(StorageElevation=StorageElevation,Opening=Opening)
   
+    StorageElevation<-read.csv(paste0(InputDataRepository,"/ElevationStorageCurves.txt"),sep="")
+ 
+    # Load the barrier definition (openings)
+    Opening<-read.csv(paste0(InputDataRepository,"/Opening.txt"),header = T)
+    
+    # creating a list with barrier data
+    structure<-list(StorageElevation=StorageElevation,Opening=Opening)
+    }
+    
+  # result of the function : a list with storage / elevation curve and openings data
   return(structure)
   
 }
 
 
-
-
+#### function to load all the structures data for the model and create a list with opening and storage / elevation data ####
 structure_definition<-function(InputDataRepository2){
   #list the repository available
   names_repository<-list.dirs(InputDataRepository2,full.names = FALSE)
@@ -120,12 +136,3 @@ structure_definition<-function(InputDataRepository2){
 
 
   
-
- 
-
-
-
-
-
-
-
