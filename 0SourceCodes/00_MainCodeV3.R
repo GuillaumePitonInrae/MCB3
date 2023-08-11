@@ -203,8 +203,8 @@ while(Perform.Another.Simulation=="yes")
     for(Structure.Ind in (1:length(Structure_organisation$Name)))
     {
       #Define the structure parameters according to the available information
-      Opening<-Structure_description[[Structure.Ind]]$Opening
-      StorageElevation<-Structure_description[[Structure.Ind]]$StorageElevation
+      Opening<-Structure_description[[which(names(Structure_description) == Structure_organisation$Name[Structure.Ind])]]$Opening
+      StorageElevation<-Structure_description[[which(names(Structure_description) == Structure_organisation$Name[Structure.Ind])]]$StorageElevation
       
       if(Structure.Ind > 1){Qo.all.upstream<-Qo.all}
       
