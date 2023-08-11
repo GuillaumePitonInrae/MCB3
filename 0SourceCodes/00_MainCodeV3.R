@@ -29,7 +29,6 @@ dlg_message(message="Show me where are stored the source codes (Repository \"/0S
             , type = c("ok")) ; SourceCodeRepository<-dlg_dir(title="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
                                                            ,default = getwd())$res
 
-
 #Set this repository as working repository
 setwd(SourceCodeRepository)
 
@@ -43,20 +42,29 @@ source("Create_inlet_input_V0.1.R")#define the input data of runs
 source("Create_inlet_timeseries_V0.1.R")#define the times series of the inlet of the most upstream structure
 source("Structure_definition_V0.1.R")#define structure
 source("Structure_functionning_V0.1.R")#Actual buffering model
+source("BoulderTransfer_V0.1.R")#Compute the transformation of the time series from one structure to another
 
 #Selecting the repository where the source codes are stored
 dlg_message(message="Show me where are stored the input data (Repository \"/1Data\")"
 , type = c("ok")) ; InputDataRepository<-dlg_dir(title="Show me where are stored the input data (Repository \"/1Data\")"
 ,default = getwd())$res
 
+#Load the structure list and organisation
+Structure_organisation<-read.csv(paste0(InputDataRepository,"/StructureList.txt"),sep="\t")
+#Reorganize the table
+Structure_organisation<- data.frame(Name = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")]
+                  ,InitialCondition = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+1]
+                  ,Transfer = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+2])
 
+#Import the structure description
+Structure_description<-structure_definition(InputDataRepository)
 
 #Load initial conditions
 InitialConditions<-read.csv(paste0(InputDataRepository,"/InitialConditions.txt"),sep="\t")
 
 #Main loop within which each set of run is performed
 Perform.Another.Simulation<-"yes"
-# while(Perform.Another.Simulation=="yes")
+while(Perform.Another.Simulation=="yes")
 {
   #Select the type of approach----
   # OnlyNormalRun<-dlg_message(message="Press \"Yes\" to perform normal runs (using best estimates of the input data) \n Or press \"No\" to run a full uncertainty propagation analysis "
@@ -102,7 +110,7 @@ Perform.Another.Simulation<-"yes"
   dir.create("2Outputs/Boulders",showWarnings = FALSE)
   dir.create("2Outputs/Buffering",showWarnings = FALSE)
   dir.create("2Outputs/Hydrographs",showWarnings = FALSE)
-  dir.create("2Outputs/Pbox",showWarnings = FALSE)
+  # dir.create("2Outputs/Pbox",showWarnings = FALSE)
   dir.create("2Outputs/Rdata",showWarnings = FALSE)
   
     # Choices for the simulation----
@@ -191,84 +199,110 @@ Perform.Another.Simulation<-"yes"
     #Create input timesseries accordingly
     Qin<-Create_inlet_timeseries_V0.1(input,Boulders)
     
-    ## Computation of isolated runs ----
-    for(Run.ind in (1:N.Runs))
+    #Computation at each structure
+    for(Structure.Ind in (1:length(Structure_organisation$Name)))
     {
-      #launch computation
-      Qo<-Structure_functionning_V0.1(input,Qin,Opening,StorageElevation)
+      #Define the structure parameters according to the available information
+      Opening<-Structure_description[[Structure.Ind]]$Opening
+      StorageElevation<-Structure_description[[Structure.Ind]]$StorageElevation
       
-      Qo$Run<-paste0("Run #",Run.ind)
+      if(Structure.Ind > 1){Qo.all.upstream<-Qo.all}
       
-      Result<-Synthetic_Structure_results_V0.1(Qo)
-      print(paste0("Run #",Run.ind," finished at, ",now(),", still ",N.Runs-Run.ind," to perform"))
-      #Record the run results
-      if(Run.ind==1){
-        Result.all<-Result
-        Qo.all<-Qo
-      }else{
+      
+      ## Computation of isolated runs ----
+      for(Run.ind in (1:N.Runs))
+      {
+        if(Structure.Ind > 1)
+        {
+         Qin<-Transfer_Between_Structure(Qo = Qo.all.upstream %>% filter(Run == paste0("Run #",Run.ind))
+                                          ,Transfer.Type = Structure_organisation$Transfer[Structure.Ind-1]
+                                          ,Vmixing = as.numeric(substr(Structure_organisation$Transfer[Structure.Ind-1]
+                                                                       ,8
+                                                                       ,nchar(Structure_organisation$Transfer[Structure.Ind-1])))
+                                          )
+          #################NOTA: AJOUTER LA PRISE EN COMPTE DES CONDITIONS INITIALS SOUS FORME DE MISE A JOUR DE input[5] et input[6]
+        }
+        
+        #launch computation
+        Qo<-Structure_functionning_V0.1(input,Qin,Opening,StorageElevation)
+        Qo$Run<-paste0("Run #",Run.ind)
+        
+        Result<-Synthetic_Structure_results_V0.1(Qo)
+        print(paste0("Run #",Run.ind," finished at, ",now(),", still ",N.Runs-Run.ind," to perform for structure ",Structure_organisation$Name[Structure.Ind]))
+       
+         #Record the run results
+        if(Run.ind==1){
+          Result.all<-Result
+          Qo.all<-Qo
+        }else{
           Result.all<-rbind(Result.all,Result)
           Qo.all<-rbind(Qo.all,Qo)
-          }
-    }
-    #Save a data frame with the main results of all runs as a .Rdata file
-    save(Result.all,Qo.all,file=paste0("2Outputs/Rdata/Result_Evt-",Event.name,"_Run_",Run.ind,".RData"))
-    
-    if(N.Runs>=10)
-    {
-      # Plot a synthesis figure on Vout
-      ggplot(Result.all)+
-        theme_bw(base_size = 9)+
-        geom_histogram(aes(Vout/10^3))+
-        geom_boxplot(aes(x=Vout/10^3,y=-1))+
-        geom_vline(xintercept = Events$Volume_BestEstimate[Magnitude.class]/10^3)+
-        annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Magnitude.class]/10^3
-                 ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-        coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Magnitude.class]/10^3))+
-        labs(x="Released volume [*1000 m3]",y="count"
-             ,caption=paste("Code of",Model," used on", lubridate::today(),"| Number of runs N =",N.Runs)
-             ,title = paste("Distribution of released volume for event:",Event.name))
-      #Save figure
-      ggsave(paste0("2Outputs/Buffering/ReleasedVolume_Evt-",Event.name,"_Nrun_",N.Runs,"_ParametersAsBestEstimates.png")
-             , width = 11, height = 7,units="cm")
+        }
+      }
+      #Save a data frame with the main results of all runs as a .Rdata file
+      save(Result.all,Qo.all,file=paste0("2Outputs/Rdata/Result_Evt-",Event.name,"_Structure_",Structure_organisation$Name[Structure.Ind],".RData"))
       
-      # Plot a synthesis figure on Qpeak out
-      ggplot(Result.all)+
-        theme_bw(base_size = 9)+
-        geom_histogram(aes(Qp.out))+
-        geom_boxplot(aes(x=Qp.out,y=-1))+
-        geom_vline(xintercept = Events$PeakDischarge_BestEstimate[Magnitude.class])+
-        annotate(geom = "text", y = 0, adj=c(0,0), x = Events$PeakDischarge_BestEstimate[Magnitude.class]
-                 ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-        coord_cartesian(xlim=c(0,Events$PeakDischarge_BestEstimate[Magnitude.class]))+
-        labs(x="Peak discharge [m3/s]",y="count"
-             ,caption=paste("Code of",Model," used on", lubridate::today(),"| Number of runs N =",N.Runs)
-             ,title = paste("Distribution of released peak dischage for event:",Event.name))
-      
-      #Save figure
-      ggsave(paste0("2Outputs/Buffering/ReleasedQpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_ParametersAsBestEstimates.png")
-             , width = 11, height = 7,units="cm")
-      
-      # Plot a synthesis figure of Qpeak out VS Vout
-      ggplot(Result.all)+
-        theme_bw(base_size = 9)+
-        geom_bin2d(aes(x=Vout/10^3,y=Qp.out))+
-        scale_fill_continuous("# of Run")+
-        geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Magnitude.class])+
-        geom_vline(xintercept = Events$Volume_BestEstimate[Magnitude.class]/10^3)+
-        annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Magnitude.class]/10^3
-                 ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-        annotate(geom = "text", x = 0, adj=c(0,0), y = Events$PeakDischarge_BestEstimate[Magnitude.class]
-                 ,vjust=(1.2), label = "Supply (Best. Est.)")+
-        coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Magnitude.class])
-                        ,xlim=c(0,Events$Volume_BestEstimate[Magnitude.class]/10^3))+
-        labs(x="Released volume [*1000 m3]",y="Peak discharge [m3/s]"
-             ,caption=paste("Code of",Model," used on", lubridate::today(),"\n Number of runs N =",N.Runs)
-             # ,title = paste("Released volume and released peak dischage for event:",Event.name)
-        )
-      
-      #Save figure
-      ggsave(paste0("2Outputs/Buffering/ReleasedVolume-VS-Qpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_ParametersAsBestEstimates.png")
-             , width = 10, height = 7,units="cm") 
+      #If more than 10 runs, plot histogramms and a scatter plot of Qmax and V
+      if(N.Runs>=10)
+      {
+        # Find the event in the table
+        Magnitude.class<-which(Events$Name==Event.name)
+        
+        # Plot a synthesis figure on Vout
+        ggplot(Result.all)+
+          theme_bw(base_size = 9)+
+          geom_histogram(aes(Vout/10^3))+
+          geom_boxplot(aes(x=Vout/10^3,y=-1))+
+          geom_vline(xintercept = Events$Volume_BestEstimate[Magnitude.class]/10^3)+
+          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Magnitude.class]/10^3
+                   ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
+          coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Magnitude.class]/10^3))+
+          labs(x="Released volume [*1000 m3]",y="count"
+               ,caption=paste("Code of",Model," used on", lubridate::today(),"| Number of runs N =",N.Runs)
+               ,title = paste("Distribution of released volume for event:",Event.name))
+        #Save figure
+        ggsave(paste0("2Outputs/Buffering/ReleasedVolume_Evt-",Event.name,"_Nrun_",N.Runs,"_Structure_",Structure_organisation$Name[Structure.Ind],"_ParametersAsBestEstimates.png")
+               , width = 11, height = 7,units="cm")
+        
+        # Plot a synthesis figure on Qpeak out
+        ggplot(Result.all)+
+          theme_bw(base_size = 9)+
+          geom_histogram(aes(Qp.out))+
+          geom_boxplot(aes(x=Qp.out,y=-1))+
+          geom_vline(xintercept = Events$PeakDischarge_BestEstimate[Magnitude.class])+
+          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$PeakDischarge_BestEstimate[Magnitude.class]
+                   ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
+          coord_cartesian(xlim=c(0,Events$PeakDischarge_BestEstimate[Magnitude.class]))+
+          labs(x="Peak discharge [m3/s]",y="count"
+               ,caption=paste("Code of",Model," used on", lubridate::today(),"| Number of runs N =",N.Runs)
+               ,title = paste("Distribution of released peak dischage for event:",Event.name))
+        
+        #Save figure
+        ggsave(paste0("2Outputs/Buffering/ReleasedQpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_Structure_",Structure_organisation$Name[Structure.Ind],"_ParametersAsBestEstimates.png")
+               , width = 11, height = 7,units="cm")
+        
+        # Plot a synthesis figure of Qpeak out VS Vout
+        ggplot(Result.all)+
+          theme_bw(base_size = 9)+
+          geom_bin2d(aes(x=Vout/10^3,y=Qp.out))+
+          scale_fill_continuous("# of Run")+
+          geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Magnitude.class])+
+          geom_vline(xintercept = Events$Volume_BestEstimate[Magnitude.class]/10^3)+
+          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Magnitude.class]/10^3
+                   ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
+          annotate(geom = "text", x = 0, adj=c(0,0), y = Events$PeakDischarge_BestEstimate[Magnitude.class]
+                   ,vjust=(1.2), label = "Supply (Best. Est.)")+
+          coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Magnitude.class])
+                          ,xlim=c(0,Events$Volume_BestEstimate[Magnitude.class]/10^3))+
+          labs(x="Released volume [*1000 m3]",y="Peak discharge [m3/s]"
+               ,caption=paste("Code of",Model," used on", lubridate::today(),"\n Number of runs N =",N.Runs)
+               # ,title = paste("Released volume and released peak dischage for event:",Event.name)
+          )
+        
+        #Save figure
+        ggsave(paste0("2Outputs/Buffering/ReleasedVolume-VS-Qpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_Structure_",Structure_organisation$Name[Structure.Ind],"_ParametersAsBestEstimates.png")
+               , width = 10, height = 7,units="cm") 
+      }
     }
   }
 }
