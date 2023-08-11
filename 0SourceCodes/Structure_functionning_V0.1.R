@@ -21,13 +21,13 @@
 ###NOTA: AJOUTER UN BLOCAGE AUTOMATIQUE POUR ORIFICE DE TAILLE RESIDUELLE < DIAMETRE MINI DES CLASSES DE BLOCS
 
 
-##########################################To REMOVE --------------------
-InputDataRepository <-  "D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data/structure/pdd 1"
-#Load storage - elevation curve
-StorageElevation<-read.csv(paste0(InputDataRepository,"/ElevationStorageCurves.txt"),sep="\t")
-#Load the barrier definition (openings)
-Opening<-read.csv(paste0(InputDataRepository,"/Opening.txt"),header = T)
-##########################################To REMOVE 
+# ##########################################To REMOVE --------------------
+# InputDataRepository <-  "D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data/structure/pdd 1"
+# #Load storage - elevation curve
+# StorageElevation<-read.csv(paste0(InputDataRepository,"/ElevationStorageCurves.txt"),sep="\t")
+# #Load the barrier definition (openings)
+# Opening<-read.csv(paste0(InputDataRepository,"/Opening.txt"),header = T)
+# ##########################################To REMOVE 
 
 
 Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
@@ -38,7 +38,9 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
   
   N.time.steps<-length(Qin[,1])
   #### Duration of the surge assuming a triangular hydrograph
-  Duration<-round(input[1]*10^3/(input[2]/2),0)
+  # Duration<-round(input[1]*10^3/(input[2]/2),0)
+  Duration<-max(which(Qin$Q>max(Qin$Q/10000)))
+  
   #### Slope of deposition
   SlopeDep<-input[4]#
   #Initial deposition height
@@ -169,11 +171,6 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
                         ,Qslit=0 #Discharge passing by openings only
                         ,Qspillway=0) #Discharge passing by spillway only
   
-  
-  
-  
-  
-  
   #First step
   i<-1
   Reservoir$V[i]<-approx(x=storageElevationCurve$h,y=storageElevationCurve$s
@@ -258,16 +255,27 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
                                                    ,WidthClogging = Boulderclogging.width[i,]
                                                    ,h=Reservoir$Z[i]))
         #Alternative: integrate the volume over the full time step: assume that all boulders arrive at the same time in one 
-        # time step, considered too conservative.
+        # time step, unused because considered too conservative if the time step is long.
         # TimeStep*as.numeric(Q_CompoundBarrier(Opening = Opening,BaseClogging = Boulderclogging.level[i,],h=Reservoir$Z[i]))
         
         #Initialize the list of boulder passing through each opening
         for(Opening.Ind in (1:N.opening))
         { 
           Volume.Surge.inst<-Volume.Surge[Opening.Ind]
-          Boulder.list<-BoulderPassing(Volume.Surge.inst,Boulders$Dmin,Boulders$Dmax,Boulder.probabilities=as.numeric(Qin[i,(1:length(Boulders[,1])+2)]))
+          #Check whether the transfer from upstream is instantaneous or mixing
+          if(is.na(Qin$p1[i]))  #if probability is NA, then we must directly transfer the upstream number of boulders
+          {
+            Boulder.list <-BoulderSizing(Qin[i,(1:length(Boulders[,1])+2+length(Boulders[,1]))])
+          }else{
+            #of the probability was not NA, then we randomly sample the boulder size
+            Boulder.list<-BoulderPassing(Volume.Surge.inst
+                                         ,Boulders$Dmin,Boulders$Dmax
+                                         ,Boulder.probabilities=as.numeric(Qin[i,(1:length(Boulders[,1])+2)]))
+            
+          }
           
-          if(!is.na(Boulder.list$D)[1]){
+          if(!is.na(Boulder.list$D)[1])
+          {
             Boulder.list<-data.frame(T=rep(Reservoir$T[i],length(Boulder.list$D))
                                      ,D=sort(Boulder.list$D,na.last=TRUE,decreasing =TRUE)
                                      ,Class=sort(Boulder.list$Class,na.last=TRUE,decreasing =TRUE)
@@ -463,7 +471,10 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
 }
 
 Synthetic_Structure_results_V0.1<-function(Reservoir)
-{
+{  #Number of opening
+  N.opening<-length(Opening$Number)
+  N.time.steps<-length(Reservoir$T)
+  
   #Extract the maximum level of the result data set.
   Zmax<-max(Reservoir$Z,na.rm = T)
   Zfinal<-Reservoir$Z[N.time.steps-1]
@@ -499,9 +510,6 @@ Synthetic_Structure_results_V0.1<-function(Reservoir)
   VoutSpillway<-sum(Reservoir$Qspillway)*TimeStep/10^3
   #Remaing part passing over the Crest
   VoutCrest<-Vout-VoutSlit-VoutSpillway
-  
-  
-  
   
   if(is.na(Reservoir$T[1]))
   {return(NA)}else
