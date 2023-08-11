@@ -13,3 +13,4 @@ Subroutines (alphabetical order)
 0SourceCodes/PLOT_INPUTnew.R is used to plot input distributions
 0SourceCodes/Structure_definition_V0.1.R define structures 
 0SourceCodes/Structure_functionning_V0.1.R is the core code routing input timeseries through a structure
+0SourceCodes/BoulderTransfer_V0.1.R contains a function that takes the output data of a structure to prepare the input data to another located downstream
