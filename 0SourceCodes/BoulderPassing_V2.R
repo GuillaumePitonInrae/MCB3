@@ -42,3 +42,27 @@ BoulderPassing<-function(Volume.Surge
 }
 # BoulderPassing(100,Boulders$Dmin,Boulders$Dmax,rep(0.1,length(Boulders$Boulder_size_category_.m.)))
 
+#Compute the number and size of boulder at a given time step
+BoulderSizing<-function(Boulder.number)
+{
+  #Count number of boulders 
+  for(i in (1:length(Boulders[,1])))
+  {
+    Boulders$Dmin[i]<-as.numeric(substr(Boulders[i,1],1,(stringr::str_locate(Boulders[,1],"-")[i,1]-1)))
+    Boulders$Dmax[i]<-as.numeric(substring(Boulders[i,1],(stringr::str_locate(Boulders[,1],"-")[i,1]+1)))
+    Boulders$Number[i]<-input[6+i]
+  }
+  Boulder.list<-data.frame(D=NA,Class=NA)
+  for(Boulder.Ind in (1:length(Boulders[,1])))
+  {
+    Boulder.list<-rbind(Boulder.list,data.frame(D=runif(as.numeric(Boulder.number[Boulder.Ind])
+                                                        ,Boulders$Dmin[Boulder.Ind]
+                                                        ,Boulders$Dmax[Boulder.Ind])
+                                                  ,Class=rep(Boulder.Ind,Boulder.number[Boulder.Ind])))
+  }
+  if(length(Boulder.list>1)){Boulder.list<-Boulder.list[2:length(Boulder.list$D),]
+    return(Boulder.list)
+  }
+  
+  
+}
