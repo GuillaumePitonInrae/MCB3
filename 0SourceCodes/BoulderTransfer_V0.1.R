@@ -6,7 +6,7 @@
 # Transfer.Type <- "Mixing"
 # Vmixing <- sum(Qo$Qo)/20
 
-Transfer_Between_Structure<-function(Qo,Transfer.Type,Vmixing,Boulders)
+Transfer_Between_Structure<-function(Qo,Transfer.Type,Vmixing)
 {
   #Count the number of class of boulders
   N.boulder.class<-0.5*sum(substr(names(Qo),1,5)=="Class")
