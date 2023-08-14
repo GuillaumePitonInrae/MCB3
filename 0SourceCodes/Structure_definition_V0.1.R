@@ -47,7 +47,7 @@ import_structure<-function(InputDataRepository,StructureName)
     
     #### convert bridge data into elevation/storage curve ####
     
-    bridge<-read.csv(paste0(InputDataRepository,"/bridge.txt"),sep="")
+    bridge<-read.csv(paste0(InputDataRepository,"/",StructureName,"/bridge.txt"),sep="")
     
     #### convert bridge data into storage / elevation curve ####
     # get min / max elevation values from bridge data
@@ -88,10 +88,11 @@ import_structure<-function(InputDataRepository,StructureName)
     
     # Load the barrier storage / elevation curve
     StorageElevation<-read.csv(paste0(InputDataRepository,"/",StructureName,"/ElevationStorageCurves.txt"),sep="")
+    
+    # creating a list with barrier data
+    structure<-list(StorageElevation=StorageElevation,Opening=Opening)
   }
   
-  # creating a list with barrier data
-  structure<-list(StorageElevation=StorageElevation,Opening=Opening)
   
   # result of the function : a list with storage / elevation curve and openings data
   return(structure)
