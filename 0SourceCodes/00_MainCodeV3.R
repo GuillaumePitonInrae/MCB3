@@ -304,5 +304,9 @@ while(Perform.Another.Simulation=="yes")
                , width = 10, height = 7,units="cm") 
       }
     }
+    
+    #Want to perform another run
+    Perform.Another.Simulation<-dlg_message(message="The computation is finished! \n Do you want to perform another set?"
+                                            , type = c("yesno"))$res
   }
 }
