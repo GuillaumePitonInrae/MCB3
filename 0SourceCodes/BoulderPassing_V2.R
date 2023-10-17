@@ -30,10 +30,10 @@ BoulderPassing<-function(Volume.Surge
       Volume.Surge<-Volume.Surge-sum(pi/6*N.Diam.boulder^3)
     }else{N.Diam.boulder<-NA}
     
-    if( (is.na(Boulder.list$D)  && !is.na(N.Diam.boulder)) )#Initialize the boulder list
+    if( (is.na(Boulder.list$D[1])  && !is.na(N.Diam.boulder[1])) )#Initialize the boulder list
     {Boulder.list<-data.frame(D=N.Diam.boulder,Class=rep(Boulder.Ind,N.boulderPassing))
     }else{
-      if( (!is.na(Boulder.list$D)  && !is.na(N.Diam.boulder)) ){ #Append the boulder list
+      if( (!is.na(Boulder.list$D[1])  && !is.na(N.Diam.boulder[1])) ){ #Append the boulder list
         Boulder.list<-rbind(Boulder.list,data.frame(D=N.Diam.boulder,Class=rep(Boulder.Ind,N.boulderPassing)))}
     }
   }
