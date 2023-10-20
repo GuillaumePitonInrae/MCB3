@@ -470,7 +470,7 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
   {return(Reservoir)}
 }
 
-Synthetic_Structure_results_V0.1<-function(Reservoir)
+Synthetic_Structure_results_V0.1<-function(Reservoir, Opening)
 {  #Number of opening
   N.opening<-length(Opening$Number)
   N.time.steps<-length(Reservoir$T)

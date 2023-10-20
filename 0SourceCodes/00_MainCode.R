@@ -5,6 +5,26 @@
 #Clean environment
 rm(list=ls())
 
+# Setup HEADLESS variables
+HEADLESS <- !base::interactive()
+# HEADLESS = TRUE #REMOVE !
+if(HEADLESS) {
+  print('Running in HEADLESS mode')
+  args<-commandArgs(trailingOnly = TRUE)
+  
+  # args[1] = "/home/francois/Documents/Micro-entreprise/projets/DFBuffering/DFbuffering/params.json" #REMOVE !
+  # args[2] = "/home/francois/Documents/Micro-entreprise/projets/DFBuffering/DFbuffering/out" #REMOVE !
+
+  json <- jsonlite::fromJSON(args[1])
+  # Transfer all first-level json props to global scope:
+  list2env(json,globalenv())
+
+  # But in the future, the env method above may not be acceptable, in which case prefer
+  # using the following syntax: 
+  # OnlyNormalRun <<- json$OnlyNormalRun
+  # ... and so on...
+}
+
 
 # Load package
 library(lubridate) #To add date on plot
@@ -44,63 +64,78 @@ source("Structure_definition_V0.1.R")#define structure
 source("Structure_functionning_V0.1.R")#Actual buffering model
 source("BoulderTransfer_V0.1.R")#Compute the transformation of the time series from one structure to another
 
-#Selecting the repository where the source codes are stored
-dlg_message(message="Show me where are stored the input data (Repository \"/1Data\")"
-, type = c("ok")) ; InputDataRepository<-dlg_dir(title="Show me where are stored the input data (Repository \"/1Data\")"
-,default = getwd())$res
+if(!HEADLESS){
+  #Selecting the repository where the source codes are stored
+  dlg_message(message="Show me where are stored the input data (Repository \"/1Data\")"
+  , type = c("ok")) ; InputDataRepository<-dlg_dir(title="Show me where are stored the input data (Repository \"/1Data\")"
+  ,default = getwd())$res
 
-#Load the structure list and organisation
-Structure_organisation<-read.csv(paste0(InputDataRepository,"/StructureList.txt"),sep="\t")
-#Reorganize the table
-Structure_organisation<- data.frame(Name = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")]
-                  ,InitialCondition = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+1]
-                  ,Transfer = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+2])
+  #Load the structure list and organisation
+  Structure_organisation<-read.csv(paste0(InputDataRepository,"/StructureList.txt"),sep="\t")
+  #Load initial conditions
+  InitialConditions<-read.csv(paste0(InputDataRepository,"/InitialConditions.txt"),sep="\t")
+  #Reorganize the table
+  Structure_organisation<-data.frame(
+    Name = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")],
+    InitialCondition = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+1],
+    Transfer = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+2]
+  )
 
-#Import the structure description
-Structure_description<-structure_definition(InputDataRepository)
+  #Import the structure description
+  Structure_description<-structure_definition(InputDataRepository)
 
-#Load initial conditions
-InitialConditions<-read.csv(paste0(InputDataRepository,"/InitialConditions.txt"),sep="\t")
+  # FK TODO: Convert Structure_description and Structure_organisation to a global "Structures" variable, such that it matches the
+  # Structures set in the json file.
+}
+
 
 #Main loop within which each set of run is performed
 Perform.Another.Simulation<-"yes"
 while(Perform.Another.Simulation=="yes")
 {
-  #Select the type of approach----
-  # OnlyNormalRun<-dlg_message(message="Press \"Yes\" to perform normal runs (using best estimates of the input data) \n Or press \"No\" to run a full uncertainty propagation analysis "
-  #                            , type = c("yesno"))$res
   
-  OnlyNormalRun<-"yes"
-  #Define the number of simulations to run----
-  N.unvalidated<-TRUE
-  while(N.unvalidated)
-  {
-    if(OnlyNormalRun=="yes")
-    {N.Runs<-as.numeric(dlg_input(message = "How many simulations to you want to run (n<10 000)"
-                                  , default = "5")$res)
-    }else
-    {N.Runs<-as.numeric(dlg_input(message = "How many simulations to you want to run (10<n<10 000)"
-                                  , default = "25")$res)
-    }
-    if(N.Runs<1001){
-      N.unvalidated<-FALSE
-    }else{
-      if(N.Runs<10001){
-        Validation<-dlg_message(message="It will probably take hours! Sure?", type = c("yesno"))$res
-        if(Validation=="yes"){N.unvalidated<-FALSE}else{N.unvalidated<-TRUE}
-      }else{
-        Validation<-dlg_message(message="It will likely take days! Sure?", type = c("yesno"))$res
-        if(Validation=="yes"){N.unvalidated<-FALSE}else{N.unvalidated<-TRUE}
+  if(!HEADLESS){
+    #Select the type of approach----
+    # OnlyNormalRun<-dlg_message(message="Press \"Yes\" to perform normal runs (using best estimates of the input data) \n Or press \"No\" to run a full uncertainty propagation analysis "
+    #                            , type = c("yesno"))$res
+    
+    OnlyNormalRun<-"yes"
+    if(OnlyNormalRun=="yes"){ OnlyNormalRun<-TRUE}else{ OnlyNormalRun<-FALSE}
+    #Define the number of simulations to run----
+    N.unvalidated<-TRUE
+    while(N.unvalidated)
+    {
+      if(OnlyNormalRun)
+      {N.Runs<-as.numeric(dlg_input(message = "How many simulations to you want to run (n<10 000)"
+                                    , default = "5")$res)
+      }else
+      {N.Runs<-as.numeric(dlg_input(message = "How many simulations to you want to run (10<n<10 000)"
+                                    , default = "25")$res)
       }
-      rm(Validation)
+      if(N.Runs<1001){
+        N.unvalidated<-FALSE
+      }else{
+        if(N.Runs<10001){
+          Validation<-dlg_message(message="It will probably take hours! Sure?", type = c("yesno"))$res
+          if(Validation=="yes"){N.unvalidated<-FALSE}else{N.unvalidated<-TRUE}
+        }else{
+          Validation<-dlg_message(message="It will likely take days! Sure?", type = c("yesno"))$res
+          if(Validation=="yes"){N.unvalidated<-FALSE}else{N.unvalidated<-TRUE}
+        }
+        rm(Validation)
+      }
     }
   }
   
   #Selecting the repository where one want to record the results
-  setwd(InputDataRepository)
-  dlg_message(message="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
-              , type = c("ok"));MainRepository<-dlg_dir(title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
-                                                        ,default = getwd())$res
+  if(HEADLESS) {
+    MainRepository <- args[2]
+  } else {
+    setwd(InputDataRepository)
+    dlg_message(message="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
+                , type = c("ok"));MainRepository<-dlg_dir(title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
+                                                          ,default = getwd())$res
+  }
 
 
   #Set this repository as working repository
@@ -114,7 +149,7 @@ while(Perform.Another.Simulation=="yes")
   dir.create("2Outputs/Rdata",showWarnings = FALSE)
   
     # Choices for the simulation----
-  if(OnlyNormalRun=="yes")
+  if(OnlyNormalRun)
   {
     Compute.With.Best.Estimate.Boulder.Number<-TRUE
     Compute.With.Uncertain.Boulder.Number<-FALSE
@@ -122,12 +157,15 @@ while(Perform.Another.Simulation=="yes")
     Compute.With.Best.Estimate.Boulder.Number<-FALSE
     Compute.With.Uncertain.Boulder.Number<-TRUE
   }
-  #Saving synthesis figure for each run?
-  Print.Final.Plot<-dlg_message(message="Do you want to print a synthesis plot for each run (hydrographs, flow level, volume stored) in a .png file?", type = c("yesno"))$res
-  if(Print.Final.Plot=="yes"){ Print.Final.Plot<-TRUE}else{ Print.Final.Plot<-FALSE}
-  #Saving details?
-  Save.details<-dlg_message(message="Do you want to save the full result details (hydrographs, boulder sizes) in .Rdata files?", type = c("yesno"))$res
-  if(Save.details=="yes")
+  if(!HEADLESS){
+    #Saving synthesis figure for each run?
+    Print.Final.Plot<-dlg_message(message="Do you want to print a synthesis plot for each run (hydrographs, flow level, volume stored) in a .png file?", type = c("yesno"))$res
+    if(Print.Final.Plot=="yes"){ Print.Final.Plot<-TRUE}else{ Print.Final.Plot<-FALSE}
+    #Saving details?
+    Save.details<-dlg_message(message="Do you want to save the full result details (hydrographs, boulder sizes) in .Rdata files?", type = c("yesno"))$res
+    if(Save.details=="yes"){ Save.details<-TRUE}else{ Save.details<-FALSE}
+  }
+  if(Save.details)
   {
     Save.boulder.size<-TRUE
     Save.hydrographs<-TRUE
@@ -149,16 +187,17 @@ while(Perform.Another.Simulation=="yes")
   TimeStep<-1 #(s) Should be an integer in seconds, so no less than 1 second
   # small enough to capture the peak, the code seems to get stuck in infinite loops if set at 5 s with low slopes
   
-  
-  ##########################################To REMOVE --------------------
-  #Load boulder list
-  Boulders<-read.csv(paste0(InputDataRepository,"/RangeOfBoulders.txt"),sep="\t")
-  #Load event features
-  Events<-read.csv(paste0(InputDataRepository,"/Events.txt"),sep="\t")
-  ##########################################To REMOVE 
+  if(!HEADLESS) {
+    ##########################################To REMOVE --------------------
+    #Load boulder list
+    Boulders<-read.csv(paste0(InputDataRepository,"/RangeOfBoulders.txt"),sep="\t")
+    #Load event features
+    Events<-read.csv(paste0(InputDataRepository,"/Events.txt"),sep="\t")
+    ##########################################To REMOVE
+  }
   
   # Create input data to launch runs----
-  if(OnlyNormalRun=="yes")
+  if(OnlyNormalRun)
   {
     #If only normal runs, we only use the best estimates
     Boulder.Generation.Mode<-"Best estimate numbers"
@@ -167,7 +206,7 @@ while(Perform.Another.Simulation=="yes")
     Event.undefined<-TRUE
     while(Event.undefined)
     {
-      if(OnlyNormalRun=="yes"){ # Possible to reuse predefined values or to define the event manually
+      if(OnlyNormalRun){ # Possible to reuse predefined values or to define the event manually
         Event.name<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
                                           ,Events$Name
                                           ,"If you want to define the event manually, write \"0\" ")
@@ -194,18 +233,16 @@ while(Perform.Another.Simulation=="yes")
       }
     }
     #Create input data according to the event.name and adjustement option
-    input<-Create_inlet_input_V0.1(Event.name,Adjust.event.manually)
+    input<-Create_inlet_input_V0.1(Event.name,Adjust.event.manually, Structures[1,]$InitialConditions)
     
     #Create input timesseries accordingly
     Qin<-Create_inlet_timeseries_V0.1(input,Boulders)
     
     #Computation at each structure
-    for(Structure.Ind in (1:length(Structure_organisation$Name)))
+    for(Structure.Ind in 1:nrow(Structures))
     {
-      #Define the structure parameters according to the available information
-      Opening<-Structure_description[[which(names(Structure_description) == Structure_organisation$Name[Structure.Ind])]]$Opening
-      StorageElevation<-Structure_description[[which(names(Structure_description) == Structure_organisation$Name[Structure.Ind])]]$StorageElevation
-      
+      Structure = Structures[Structure.Ind,]
+            
       if(Structure.Ind > 1){Qo.all.upstream<-Qo.all}
       
       
@@ -214,21 +251,22 @@ while(Perform.Another.Simulation=="yes")
       {
         if(Structure.Ind > 1)
         {
-         Qin<-Transfer_Between_Structure(Qo = Qo.all.upstream %>% filter(Run == paste0("Run #",Run.ind))
-                                          ,Transfer.Type = Structure_organisation$Transfer[Structure.Ind-1]
-                                          ,Vmixing = as.numeric(substr(Structure_organisation$Transfer[Structure.Ind-1]
+          transfer = Structures[Structure.Ind-1,]$`Transfer downstream`
+          Qin<-Transfer_Between_Structure(Qo = Qo.all.upstream %>% filter(Run == paste0("Run #",Run.ind))
+                                          ,Transfer.Type = transfer
+                                          ,Vmixing = as.numeric(substr(transfer
                                                                        ,8
-                                                                       ,nchar(Structure_organisation$Transfer[Structure.Ind-1])))
+                                                                       ,nchar(transfer)))
                                           )
           #################NOTA: AJOUTER LA PRISE EN COMPTE DES CONDITIONS INITIALS SOUS FORME DE MISE A JOUR DE input[5] et input[6]
         }
-        
+        # NOTE/FIXME ABOUT Structure$Opening[[1]] and Structure$StorageElevation[[1]]: jsonlite seems to encaspulate json list of objects into a list of size one instead of creating directly a DF. So we must call the first list element with [[1]] in the lines below, but this weird behavior should be fixed in the future. 
         #launch computation
-        Qo<-Structure_functionning_V0.1(input,Qin,Opening,StorageElevation)
+        Qo<-Structure_functionning_V0.1(input,Qin,Structure$Opening[[1]],Structure$StorageElevation[[1]])
         Qo$Run<-paste0("Run #",Run.ind)
         
-        Result<-Synthetic_Structure_results_V0.1(Qo)
-        print(paste0("Run #",Run.ind," finished at, ",now(),", still ",N.Runs-Run.ind," to perform for structure ",Structure_organisation$Name[Structure.Ind]))
+        Result<-Synthetic_Structure_results_V0.1(Qo, Structure$Opening[[1]])
+        print(paste0("Run #",Run.ind," finished at, ",now(),", still ",N.Runs-Run.ind," to perform for structure ",Structure$Name))
        
          #Record the run results
         if(Run.ind==1){
@@ -240,7 +278,7 @@ while(Perform.Another.Simulation=="yes")
         }
       }
       #Save a data frame with the main results of all runs as a .Rdata file
-      save(Result.all,Qo.all,file=paste0("2Outputs/Rdata/Result_Evt-",Event.name,"_Structure_",Structure_organisation$Name[Structure.Ind],".RData"))
+      save(Result.all,Qo.all,file=paste0("2Outputs/Rdata/Result_Evt-",Event.name,"_Structure_",Structure$Name,".RData"))
       
       #If more than 10 runs, plot histogramms and a scatter plot of Qmax and V
       if(N.Runs>=10)
@@ -261,7 +299,7 @@ while(Perform.Another.Simulation=="yes")
                ,caption=paste("Code of",Model," used on", lubridate::today(),"| Number of runs N =",N.Runs)
                ,title = paste("Distribution of released volume for event:",Event.name))
         #Save figure
-        ggsave(paste0("2Outputs/Buffering/ReleasedVolume_Evt-",Event.name,"_Nrun_",N.Runs,"_Structure_",Structure_organisation$Name[Structure.Ind],"_ParametersAsBestEstimates.png")
+        ggsave(paste0("2Outputs/Buffering/ReleasedVolume_Evt-",Event.name,"_Nrun_",N.Runs,"_Structure_",Structure$Name,"_ParametersAsBestEstimates.png")
                , width = 11, height = 7,units="cm")
         
         # Plot a synthesis figure on Qpeak out
@@ -278,7 +316,7 @@ while(Perform.Another.Simulation=="yes")
                ,title = paste("Distribution of released peak dischage for event:",Event.name))
         
         #Save figure
-        ggsave(paste0("2Outputs/Buffering/ReleasedQpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_Structure_",Structure_organisation$Name[Structure.Ind],"_ParametersAsBestEstimates.png")
+        ggsave(paste0("2Outputs/Buffering/ReleasedQpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_Structure_",Structure$Name,"_ParametersAsBestEstimates.png")
                , width = 11, height = 7,units="cm")
         
         # Plot a synthesis figure of Qpeak out VS Vout
@@ -300,13 +338,17 @@ while(Perform.Another.Simulation=="yes")
           )
         
         #Save figure
-        ggsave(paste0("2Outputs/Buffering/ReleasedVolume-VS-Qpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_Structure_",Structure_organisation$Name[Structure.Ind],"_ParametersAsBestEstimates.png")
+        ggsave(paste0("2Outputs/Buffering/ReleasedVolume-VS-Qpeak_Evt-",Event.name,"_Nrun_",N.Runs,"_Structure_",Structure$Name,"_ParametersAsBestEstimates.png")
                , width = 10, height = 7,units="cm") 
       }
     }
     
+    if(HEADLESS){
+      Perform.Another.Simulation = "no"
+    } else {
     #Want to perform another run
-    Perform.Another.Simulation<-dlg_message(message="The computation is finished! \n Do you want to perform another set?"
-                                            , type = c("yesno"))$res
+      Perform.Another.Simulation<-dlg_message(message="The computation is finished! \n Do you want to perform another set?"
+                                          , type = c("yesno"))$res
+    }
   }
 }

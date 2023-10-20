@@ -18,6 +18,8 @@ install.packages("chron")#for Hyrisk
 install.packages("triangle")#For Hyrisk
 install.packages("rgenoud")#For Hyrisk
 install.packages("dplyr") #for data manipulation
+install.packages("jsonlite")#for headless mode, read all params from JSON
+
 
 # Then download the HYRISK package and its dependencies here: 
 install.packages("https://cran.r-project.org/src/contrib/Archive/kerdiest/kerdiest_1.2.tar.gz")

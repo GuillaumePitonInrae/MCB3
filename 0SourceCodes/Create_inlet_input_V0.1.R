@@ -1,7 +1,7 @@
 ### Create input files with main parameters used as upstream supply
 #V0 July 2023 - G. Piton & C. Misset
 
-Create_inlet_input_V0.1<-function(Event.name,Adjust.event.manually)
+Create_inlet_input_V0.1<-function(Event.name,Adjust.event.manually, InitialCondition)
 {
   
   # Find the event in the table
@@ -16,8 +16,8 @@ Create_inlet_input_V0.1<-function(Event.name,Adjust.event.manually)
     ,Events$TimeLag_BestEstimate[Magnitude.class] #(s) Peak lag
     ,Events$DepositionSlope_BestEstimate[Magnitude.class] #Deposition slope (%)
     #Initial state of the basin filling and jamming
-    ,InitialConditions$InitialDepositHeight_BestEstimate[1] #Initial deposit height (m)
-    ,InitialConditions$InitialJammingHeight_BestEstimate[1]  #Jam at the slit base by large wood (m)
+    ,InitialCondition$InitialDepositHeight_BestEstimate #Initial deposit height (m)
+    ,InitialCondition$InitialJammingHeight_BestEstimate  #Jam at the slit base by large wood (m)
   )
   # Adding of the number of Boulders
   for(j in (1:length(Boulders[,1])))
