@@ -3,15 +3,15 @@
 #V2 with value of probability p possibly varying with time
 
 BoulderPassing<-function(Volume.Surge
-                         ,Boulders.Diameters.min
-                         ,Boulders.Diameters.max
+                         ,BoulderDiameter_min
+                         ,BoulderDiameter_max
                          ,Boulder.probabilities)
 {
   Boulder.list<-data.frame(D=NA,Class=NA)
   #Maximum number of boulder that may pass considering the volume of the surge
-  N.max<-round(Volume.Surge/(1/6*(0.5*(Boulders.Diameters.min+Boulders.Diameters.max))^3*pi),0)
+  N.max<-round(Volume.Surge/(1/6*(0.5*(BoulderDiameter_min+BoulderDiameter_max))^3*pi),0)
   
-  for(Boulder.Ind in (1:length(Boulders.Diameters.min)))
+  for(Boulder.Ind in (1:length(BoulderDiameter_min)))
   { if(N.max[Boulder.Ind]>0)
   {#If at least one boulder may pass (N.max>1), pick up a random number of boulder of size D 
     # according to a binomial law with N.max random sampling
@@ -21,11 +21,11 @@ BoulderPassing<-function(Volume.Surge
       # N.Diam.boulder<-rep(Boulders.Diameters[Boulder.Ind], #Add the diameter value
       # N.boulderPassing)#of the randomly sampled positive values
       #V1
-      # Add N.BoulderPassing of diameter in the range Dmin - Dmax of this category
-      N.Diam.boulder<-runif(N.boulderPassing,Boulders.Diameters.min[Boulder.Ind],Boulders.Diameters.max[Boulder.Ind])
+      # Add N.BoulderPassing of diameter in the range BoulderDiameter_min - BoulderDiameter_max of this category
+      N.Diam.boulder<-runif(N.boulderPassing,BoulderDiameter_min[Boulder.Ind],BoulderDiameter_max[Boulder.Ind])
       #Reduce the surge volume by the boulders detected
       #V0 all boulders were of the same size
-      # Volume.Surge<-Volume.Surge-N.boulderPassing*(1/6*(0.5*(Boulders.Diameters.min+Boulders.Diameters.max))^3*pi)[Boulder.Ind]
+      # Volume.Surge<-Volume.Surge-N.boulderPassing*(1/6*(0.5*(BoulderDiameter_min+BoulderDiameter_max))^3*pi)[Boulder.Ind]
       #V1 compute
       Volume.Surge<-Volume.Surge-sum(pi/6*N.Diam.boulder^3)
     }else{N.Diam.boulder<-NA}
@@ -40,7 +40,7 @@ BoulderPassing<-function(Volume.Surge
   }#end of the boulder loop
   return(Boulder.list)
 }
-# BoulderPassing(100,Boulders$Dmin,Boulders$Dmax,rep(0.1,length(Boulders$Boulder_size_category_.m.)))
+# BoulderPassing(100,Boulders$BoulderDiameter_min,Boulders$BoulderDiameter_max,rep(0.1,length(Boulders$Boulder_size_category_.m.)))
 
 #Compute the number and size of boulder at a given time step
 BoulderSizing<-function(Boulder.number)
@@ -48,21 +48,17 @@ BoulderSizing<-function(Boulder.number)
   #Count number of boulders 
   for(i in (1:length(Boulders[,1])))
   {
-    Boulders$Dmin[i]<-as.numeric(substr(Boulders[i,1],1,(stringr::str_locate(Boulders[,1],"-")[i,1]-1)))
-    Boulders$Dmax[i]<-as.numeric(substring(Boulders[i,1],(stringr::str_locate(Boulders[,1],"-")[i,1]+1)))
     Boulders$Number[i]<-input[6+i]
   }
   Boulder.list<-data.frame(D=NA,Class=NA)
   for(Boulder.Ind in (1:length(Boulders[,1])))
   {
     Boulder.list<-rbind(Boulder.list,data.frame(D=runif(as.numeric(Boulder.number[Boulder.Ind])
-                                                        ,Boulders$Dmin[Boulder.Ind]
-                                                        ,Boulders$Dmax[Boulder.Ind])
+                                                        ,Boulders$BoulderDiameter_min[Boulder.Ind]
+                                                        ,Boulders$BoulderDiameter_max[Boulder.Ind])
                                                   ,Class=rep(Boulder.Ind,Boulder.number[Boulder.Ind])))
   }
   if(length(Boulder.list>1)){Boulder.list<-Boulder.list[2:length(Boulder.list$D),]
     return(Boulder.list)
   }
-  
-  
 }

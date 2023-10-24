@@ -2,11 +2,11 @@
 # G. PITON, May 2021
 
 Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
-                              ,N.opening
+                              ,N_opening
                               ,storageElevationCurve,Volume
-                              ,N.time.steps,Duration
+                              ,N_TimeStepss,Duration
                               ,OpeningMinBaseLevel,SpillwayLevel,CrestLevel
-                              ,Boulder.Generation.Mode)
+                              ,BoulderGenerationMode)
 {
   ################################
   #    SYNTHESIS PLOT----
@@ -19,7 +19,7 @@ Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
     theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
     annotate(geom = "text", x = 3*Duration/3600, y = max(Reservoir$Qi)*0.5
              ,vjust=1,hjust=1
-             , label = paste0('Boulder generation mode: ',Boulder.Generation.Mode)
+             , label = paste0('Boulder generation mode: ',BoulderGenerationMode)
              ,colour="grey50")+
     annotate(geom = "text", x = 3*Duration/3600, y = max(Reservoir$Qi)
              ,vjust=1,hjust=1
@@ -36,7 +36,7 @@ Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
   if(!is.null(WidthClogging))
   {
       WclogPlot<-ggplot(WidthClogging,aes(x=T/3600,y=Opening))+theme_bw(base_size = 9)+
-        geom_line(aes(alpha=Clogging.rate*100),col="black",lwd=7/N.opening*4)+
+        geom_line(aes(alpha=CloggingRate*100),col="black",lwd=7/N_opening*4)+
         theme(legend.position = "top")+
         guides(col="none")+
         scale_alpha_continuous("Rate of clogging in slots (Boulders higher than opening) [%]",range = c(0, 1))+
@@ -50,7 +50,7 @@ Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
   }
   
   VclogPlot<-ggplot(VerticalClogging,aes(x=T/3600,y=Opening))+theme_bw(base_size = 9)+
-    geom_line(aes(alpha=Clogging.rate*100),col="black",lwd=9/N.opening*4)+
+    geom_line(aes(alpha=CloggingRate*100),col="black",lwd=9/N_opening*4)+
     theme(legend.position = "top")+
     guides(col="none")+
     scale_alpha_continuous("Rate of vertical clogging (Boulder jamming laterally) [%]",range = c(0, 1))+
@@ -97,23 +97,23 @@ Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
     annotate(geom = "text", x = 3*Duration/3600, y = Volume/1000*1.15
              ,vjust=1,hjust=1
              , label = paste("Surge:",round(Volume/10^6,2),"Mm3"
-                             ,"| Trapped:",round(Reservoir$V[(N.time.steps-1)],0)/1000,"Mm3"
-                             ,"| Released:",round(Volume/10^6-Reservoir$V[(N.time.steps-1)]/1000,3),"Mm3"
-                             ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N.time.steps-1)]/1000)/(Volume/10^6)*100,0),"%")
+                             ,"| Trapped:",round(Reservoir$V[(N_TimeStepss-1)],0)/1000,"Mm3"
+                             ,"| Released:",round(Volume/10^6-Reservoir$V[(N_TimeStepss-1)]/1000,3),"Mm3"
+                             ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N_TimeStepss-1)]/1000)/(Volume/10^6)*100,0),"%")
     )+ 
     labs( x = "Time [h]",y = "Volume [*1000m3]"
           #,caption=paste("(e)")
           # ,subtitle = paste("Surge:",round(Volume/10^6,2),"Mm3"
-          #               ,"| Trapped:",round(Reservoir$V[(N.time.steps-1)],0)/1000,"Mm3"
-          #               ,"| Released:",round(Volume/10^6-Reservoir$V[(N.time.steps-1)]/1000,3),"Mm3"
-          #               ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N.time.steps-1)]/1000)/(Volume/10^6)*100,0),"%")
+          #               ,"| Trapped:",round(Reservoir$V[(N_TimeStepss-1)],0)/1000,"Mm3"
+          #               ,"| Released:",round(Volume/10^6-Reservoir$V[(N_TimeStepss-1)]/1000,3),"Mm3"
+          #               ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N_TimeStepss-1)]/1000)/(Volume/10^6)*100,0),"%")
           )+
     theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm"),plot.margin = unit(c(0.1,0.1,0.1,0.3), "cm"))
   
   #Plot name definition with date and hour
-  Plot.Name<-paste0("2Outputs/Buffering/",Event.name
+  Plot.Name<-paste0("2Outputs/",EventName
                     ,"_ComputedOn",lubridate::today()
-                    ,"/HydrographBuffering",lubridate::now(),".png")
+                    ,"_HydrographBuffering",lubridate::now(),".png")
   Plot.Name<-str_replace_all(Plot.Name,":","-")
   Plot.Name<-str_replace_all(Plot.Name," ","At")
   
@@ -144,7 +144,7 @@ Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
 }
 # 
 # Plot_BufferingModel(Reservoir,WidthClogging,VerticalClogging
-#                     ,N.opening,storageElevationCurve,Volume
-#                     ,N.time.steps,Duration
+#                     ,N_opening,storageElevationCurve,Volume
+#                     ,N_TimeStepss,Duration
 #                     ,OpeningMinBaseLevel,SpillwayLevel,CrestLevel
-#                     ,Boulder.Generation.Mode)
+#                     ,BoulderGenerationMode)

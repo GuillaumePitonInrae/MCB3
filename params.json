@@ -1,36 +1,40 @@
 {
     "OnlyNormalRun": true,
-    "N.Runs": 2,
-    "Print.Final.Plot": true,
-    "Save.details": true,
+    "N_runs": 2,
+    "PrintFinalPlot": true,
+    "SaveDetailsResults": true,
     "Boulders": [
         {
-            "Boulder_size_category_(m)": "0.5-1.0",
-            "Lower_bound": 100,
-            "Upper_bound": 300,
-            "Best_estimate": 200,
-            "Reference_Volume": 30000
+            "BoulderDiameter_min": 0.5,
+            "BoulderDiameter_max": 1.0,
+            "BoulderNumber_BestEstimate": 200,
+            "BoulderNumber_min": 100,
+            "BoulderNumber_max": 300,
+            "ReferenceVolume": 30000
         },
         {
-            "Boulder_size_category_(m)": "1.0-1.5",
-            "Lower_bound": 10,
-            "Upper_bound": 50,
-            "Best_estimate": 25,
-            "Reference_Volume": 30000
+            "BoulderDiameter_min": 1.0,
+            "BoulderDiameter_max": 1.5,
+            "BoulderNumber_BestEstimate": 25,
+            "BoulderNumber_min": 10,
+            "BoulderNumber_max": 50,
+            "ReferenceVolume": 30000
         },
         {
-            "Boulder_size_category_(m)": "1.5-2.0",
-            "Lower_bound": 5,
-            "Upper_bound": 15,
-            "Best_estimate": 10,
-            "Reference_Volume": 30000
+            "BoulderDiameter_min": 1.5,
+            "BoulderDiameter_max": 2.0,
+            "BoulderNumber_BestEstimate": 10,
+            "BoulderNumber_min": 5,
+            "BoulderNumber_max": 15,
+            "ReferenceVolume": 30000
         },
         {
-            "Boulder_size_category_(m)": "2.0-3.0",
-            "Lower_bound": 0,
-            "Upper_bound": 5,
-            "Best_estimate": 3,
-            "Reference_Volume": 30000
+            "BoulderDiameter_min": 2.0,
+            "BoulderDiameter_max": 3.0,
+            "BoulderNumber_BestEstimate": 3,
+            "BoulderNumber_min": 0,
+            "BoulderNumber_max": 5,
+            "ReferenceVolume": 30000
         }
     ],
     "Events": [
@@ -69,8 +73,9 @@
         {
             "Name": "pdd 1",
             "Type": "barrier",
-            "Transfer downstream": "Instantaneous",
+            "TransferDownstream": "Instantaneous",
             "InitialConditions": {
+                "Name": "Empty",
                 "InitialDepositHeight_min": 0,
                 "InitialDepositHeight_BestEstimate": 0.01,
                 "InitialDepositHeight_max": 0.02,
@@ -157,100 +162,100 @@
                     "Number": 1,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 275.4,
+                    "BaseLevel": 275.4,
                     "Param": 281.4,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Bottom outlet"
                 },
                 {
                     "Number": 2,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 282.66,
+                    "BaseLevel": 282.66,
                     "Param": 284.86,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 1"
                 },
                 {
                     "Number": 3,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 286.12,
+                    "BaseLevel": 286.12,
                     "Param": 288.32,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 2"
                 },
                 {
                     "Number": 4,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 288.18,
+                    "BaseLevel": 288.18,
                     "Param": 290.38,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 3"
                 },
                 {
                     "Number": 5,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 291.64,
+                    "BaseLevel": 291.64,
                     "Param": 293.04,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 4"
                 },
                 {
                     "Number": 6,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 294.3,
+                    "BaseLevel": 294.3,
                     "Param": 295.7,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 5"
                 },
                 {
                     "Number": 7,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 296.96,
+                    "BaseLevel": 296.96,
                     "Param": 298.36,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 6"
                 },
                 {
                     "Number": 8,
                     "Type": "weir",
                     "Width": 25,
-                    "Base.Level": 300,
+                    "BaseLevel": 300,
                     "Param": 63,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Spillway"
                 },
                 {
                     "Number": 9,
                     "Type": "weir",
                     "Width": 50,
-                    "Base.Level": 303,
+                    "BaseLevel": 303,
                     "Param": 5,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Parapet walls"
                 },
                 {
                     "Number": 10,
                     "Type": "weir",
                     "Width": 100,
-                    "Base.Level": 304,
+                    "BaseLevel": 304,
                     "Param": 90,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Dam crest"
                 }
             ]
@@ -258,9 +263,9 @@
         {
             "Name": "pdd 2",
             "Type": "barrier",
-            "Transfer downstream": "Mixing 10000",
+            "TransferDownstream": "Mixing 10000",
             "InitialConditions": {
-                "Name": "2m",
+                "Name": "2 m jam and deposit",
                 "InitialDepositHeight_min": 2,
                 "InitialDepositHeight_BestEstimate": 2.01,
                 "InitialDepositHeight_max": 2.02,
@@ -347,100 +352,100 @@
                     "Number": 1,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 275.4,
+                    "BaseLevel": 275.4,
                     "Param": 281.4,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Bottom outlet"
                 },
                 {
                     "Number": 2,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 282.66,
+                    "BaseLevel": 282.66,
                     "Param": 284.86,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 1"
                 },
                 {
                     "Number": 3,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 286.12,
+                    "BaseLevel": 286.12,
                     "Param": 288.32,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 2"
                 },
                 {
                     "Number": 4,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 288.18,
+                    "BaseLevel": 288.18,
                     "Param": 290.38,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 3"
                 },
                 {
                     "Number": 5,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 291.64,
+                    "BaseLevel": 291.64,
                     "Param": 293.04,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 4"
                 },
                 {
                     "Number": 6,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 294.3,
+                    "BaseLevel": 294.3,
                     "Param": 295.7,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 5"
                 },
                 {
                     "Number": 7,
                     "Type": "slot",
                     "Width": 6,
-                    "Base.Level": 296.96,
+                    "BaseLevel": 296.96,
                     "Param": 298.36,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 6"
                 },
                 {
                     "Number": 8,
                     "Type": "weir",
                     "Width": 25,
-                    "Base.Level": 300,
+                    "BaseLevel": 300,
                     "Param": 63,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Spillway"
                 },
                 {
                     "Number": 9,
                     "Type": "weir",
                     "Width": 50,
-                    "Base.Level": 303,
+                    "BaseLevel": 303,
                     "Param": 5,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Parapet walls"
                 },
                 {
                     "Number": 10,
                     "Type": "weir",
                     "Width": 100,
-                    "Base.Level": 304,
+                    "BaseLevel": 304,
                     "Param": 90,
-                    "Boulder.vertical.clogging": 0,
-                    "Boulder.lateral.clogging": 0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
                     "Comment": "Dam crest"
                 }
             ]
@@ -448,7 +453,7 @@
         {
             "Name": "pont 1",
             "Type": "bridge",
-            "Transfer downstream": null,
+            "TransferDownstream": null,
             "width": 40,
             "slope": 0.06
         }

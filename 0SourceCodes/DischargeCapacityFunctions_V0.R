@@ -40,8 +40,8 @@ Q_GOrifice<-function(h,a,b,mu=0.7) #Upstream water depth, orifice height, orific
       {
         if(Opening$Type[i]=="slot")
         {
-          if((Opening$Param[i]>BaseClogging[i]+Opening$Base.Level[i] & Opening$Width[i]>WidthClogging[i] )){
-            Q.Ind[i]<-Q_GOrifice(h=(h[Ind]-Opening$Base.Level[i]-BaseClogging[i])
+          if((Opening$Param[i]>BaseClogging[i]+Opening$BaseLevel[i] & Opening$Width[i]>WidthClogging[i] )){
+            Q.Ind[i]<-Q_GOrifice(h=(h[Ind]-Opening$BaseLevel[i]-BaseClogging[i])
                                  ,a=Opening$Param[i]
                                  ,b=Opening$Width[i]-WidthClogging[i]
                                  ,mu=0.65)
@@ -50,14 +50,14 @@ Q_GOrifice<-function(h,a,b,mu=0.7) #Upstream water depth, orifice height, orific
         }
         if(Opening$Type[i]=="slit")
         {
-          Q.Ind[i]<-Q_GOrifice(h=(h[Ind]-Opening$Base.Level[i]-BaseClogging[i])
-                               ,a=(Opening$Base.Level[i]+10^4) #+10^4 because slits are just slots infinitely high
+          Q.Ind[i]<-Q_GOrifice(h=(h[Ind]-Opening$BaseLevel[i]-BaseClogging[i])
+                               ,a=(Opening$BaseLevel[i]+10^4) #+10^4 because slits are just slots infinitely high
                                ,b=(Opening$Width[i]-WidthClogging[i])
                                ,mu=0.65) 
         } 
         if(Opening$Type[i]=="weir")
         {
-          Q.Ind[i]<-Q_Weir(h=(h[Ind]-Opening$Base.Level[i]-BaseClogging[i])
+          Q.Ind[i]<-Q_Weir(h=(h[Ind]-Opening$BaseLevel[i]-BaseClogging[i])
                            ,b_spillway=(Opening$Width[i]-WidthClogging[i]+2/tan(Opening$Param[i]/180*pi)*BaseClogging[i])
                            ,mu = 0.65
                            ,Phi=Opening$Param[i])

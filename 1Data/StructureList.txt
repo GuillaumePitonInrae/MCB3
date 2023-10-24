@@ -1,8 +1,9 @@
 Variable	Value
 Structure	pdd 1
-Initial condition	Empty
-Transfer downstream	Instantaneous
+InitialCondition	Empty
+TransferDownstream	Instantaneous
 Structure	pdd 2
-Initial condition	2 m jam and deposit
-Transfer downstream	Mixing 10000
+InitialCondition	2 m jam and deposit
+TransferDownstream	Mixing 10000
 Structure	pont 1
+InitialCondition	Empty

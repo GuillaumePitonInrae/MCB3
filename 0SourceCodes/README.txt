@@ -1,7 +1,7 @@
 The main code is 00_MainCodeV3.R
 
 0SourceCodes/00_InstallPackages.R install all packages required to run the simulations
-0SourceCodes/00_MainCodeV3.R is the main code to be used. It help the user to load the source codes, to define where are the input data, to define the type of simulation to be run and where to store the results
+0SourceCodes/00_MainCode.R is the main code to be used. It help the user to load the source codes, to define where are the input data, to define the type of simulation to be run and where to store the results
 
 Subroutines (alphabetical order)
 0SourceCodes/BoulderPassing_V0.3.R computes the number of boulders passing through an orifice for a given volume of debris flow (binomial distribution)

@@ -1,7 +1,7 @@
-Boulder_size_category_(m)	Lower_bound	Upper_bound	Best_estimate	Reference_Volume
-0.5-1.0	1500	6000	3000	100000
-1.0-1.5	150	850	400	100000
-1.5-2.0	60	350	150	100000
-2.0-3.0	15	150	50	100000
-3.0-4.0	0	10	1	100000
-4.0-5.0	0	5	0.5	100000
+BoulderDiameter_min	BoulderDiameter_max	BoulderNumber_BestEstimate	BoulderNumber_min	BoulderNumber_max	ReferenceVolume
+0.5	1.0	3000	1500	6000	100000
+1.0	1.5	400	150	850	100000
+1.5	2.0	150	60	350	100000
+2.0	3.0	50	15	150	100000
+3.0	4.0	1	0	10	100000
+4.0	5.0	0.5	0	5	100000

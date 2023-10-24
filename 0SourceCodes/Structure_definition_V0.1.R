@@ -11,12 +11,12 @@
 ####### a enlever - pour test
 # InputDataRepository<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data"
 
-# InputDataRepository2<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data"
+# InputDataRepository<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data"
 
 ####### a enlever - pour test
 
 
-import_structure<-function(InputDataRepository,StructureName)
+import_structure<-function(InputDataRepository,StructureList,Structure_Ind,StructureName)
 {
   
   #### function to load input data for structure in a given folder ####
@@ -24,9 +24,9 @@ import_structure<-function(InputDataRepository,StructureName)
   # number of files in the repository
   nb_files<- length(list.files(paste0(InputDataRepository,"/",StructureName)))
   
-  # check if the strcuture is a bridge OR a barrier 
-  if(nb_files>2){print("Warning: barrier or bridge data only ")}
-  
+  # check if the structure is a bridge OR a barrier 
+  if(nb_files>2){print(paste0("Warning: two many files in repository",StructureName,
+                              ", please provide data for barrier or bridge only."))}
   # check non missing files
   if(nb_files==0){print(paste("Warning: structure data missing in repository of",StructureName))}
   
@@ -43,22 +43,19 @@ import_structure<-function(InputDataRepository,StructureName)
     
     # read bridge data
     print("reading bridge data")
-    bridge<-read.csv(paste0(InputDataRepository,"/",StructureName,"/bridge.txt"),header = T)
     
-    #### convert bridge data into elevation/storage curve ####
-    
-    bridge<-read.csv(paste0(InputDataRepository,"/",StructureName,"/bridge.txt"),sep="")
+    bridge<-read.csv(paste0(InputDataRepository,"/",StructureName,"/bridge.txt"),sep="",header = T)
     
     #### convert bridge data into storage / elevation curve ####
     # get min / max elevation values from bridge data
-    Max.base.level<-max(Opening$Base.Level)
-    Max.deck.level<-max(subset(Opening,Opening$Type=="slot")$Param)
+    BaseLevel_max<-max(Opening$BaseLevel)
+    DeckLevel_max<-max(subset(Opening,Opening$Type=="slot")$Param)
     
     # interpolate the deposition slope on 10 values of slopes
     seq_slope<-seq(0,bridge$slope*0.95,length.out=10)
     
     # interpolate the downstream altitude
-    seq_Z<-seq(min(Opening$Base.Level),(max(Max.base.level,Max.deck.level)+5),0.5)
+    seq_Z<-seq(min(Opening$BaseLevel),(max(BaseLevel_max,DeckLevel_max)+5),0.5)
     
     # create an storage / elevation Curves data frame
     elev_storage<-data.frame(matrix(ncol = length(seq_slope),
@@ -74,12 +71,19 @@ import_structure<-function(InputDataRepository,StructureName)
     # compute the storage / elevation curve
     for (i in 1:nrow(elev_storage)){
       for (j in 2:(ncol(elev_storage))){
-        elev_storage[i,j]<-bridge$width*0.5*(elev_storage$Z[i]-min(Opening$Base.Level))^2/(tan(bridge$slope)-tan(seq_slope[j-1]))
+        elev_storage[i,j]<-bridge$width*0.5*(elev_storage$Z[i]-min(Opening$BaseLevel))^2/(tan(bridge$slope)-tan(seq_slope[j-1]))
       }
     }
     
-    # creating a list with storage / elevation curve and opening data
-    structure<-list(StorageElevation=elev_storage,Opening=Opening)
+   # add values of name, type,storage / elevation curve and opening data
+
+      StructureList$Name[Structure_Ind]<-StructureName
+      StructureList$Type[Structure_Ind]<-"bridge"
+      StructureList$StorageElevation[Structure_Ind]<-list(elev_storage)
+      StructureList$Opening[Structure_Ind]<- list(Opening)
+      StructureList$width[Structure_Ind] <- bridge$width
+      StructureList$slope[Structure_Ind] <- bridge$slope
+      
     
   }else{
     
@@ -89,40 +93,59 @@ import_structure<-function(InputDataRepository,StructureName)
     # Load the barrier storage / elevation curve
     StorageElevation<-read.csv(paste0(InputDataRepository,"/",StructureName,"/ElevationStorageCurves.txt"),sep="")
     
-    # creating a list with barrier data
-    structure<-list(StorageElevation=StorageElevation,Opening=Opening)
+
+      # add values of name, type,storage / elevation curve and opening data
+      
+      StructureList$Name[Structure_Ind]<-StructureName
+      StructureList$Type[Structure_Ind]<-"barrier"
+      StructureList$StorageElevation[Structure_Ind]<-list(StorageElevation)
+      StructureList$Opening[Structure_Ind]<- list(Opening)
+      
   }
   
   
+  
   # result of the function : a list with storage / elevation curve and openings data
-  return(structure)
+  return(StructureList)
   
 }
 
 
 #### function to load all the structures data for the model and create a list with opening and storage / elevation data ####
-structure_definition<-function(InputDataRepository2){
+structure_definition<-function(InputDataRepository){
   #list the repository available
-  names_repository<-list.dirs(InputDataRepository2,full.names = FALSE)
+  names_repository<-list.dirs(InputDataRepository,full.names = FALSE)
   #remove the parent repository
   names_repository<-names_repository[2:length(names_repository)]
+  N_Structure<-length(names_repository)
+  # list_save<-as.list(rep(NA,length(names_repository)))
   
-  list_save<-as.list(rep(NA,length(names_repository)))
+  # names(list_save)<-names_repository
+  #Initialize the structure list
+  StructureList<-list(Name=rep(NA,N_Structure)
+                   ,Type=rep(NA,N_Structure)
+                   ,TransferDownstream=rep(NA,N_Structure)
+                   ,InitialConditions=list(rep(NA,N_Structure))
+                   ,StorageElevation=list(rep(NA,N_Structure))
+                   ,Opening=list(rep(NA,N_Structure))
+                   ,width=rep(NA,N_Structure)
+                   ,slope=rep(NA,N_Structure))
   
-  names(list_save)<-names_repository
   
-  for (i in 1:length(names_repository))
+  for (Structure_Ind in 1:N_Structure)
   {
-    list_save[[i]]<-import_structure(InputDataRepository2,names_repository[i])
+    StructureList<-import_structure(InputDataRepository,StructureList
+                                    ,Structure_Ind,names_repository[Structure_Ind])
   }
   
   
-  return(list_save) 
+  return(StructureList) 
   
 }
 
+# TEST<-import_structure(InputDataRepository,"pont 1")
 
-# save<-structure_definition(InputDataRepository2)
+# save<-structure_definition(InputDataRepository)
 
 
 

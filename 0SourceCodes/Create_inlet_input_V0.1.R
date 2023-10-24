@@ -1,47 +1,50 @@
 ### Create input files with main parameters used as upstream supply
 #V0 July 2023 - G. Piton & C. Misset
 
-Create_inlet_input_V0.1<-function(Event.name,Adjust.event.manually, InitialCondition)
+Create_inlet_input_V0.1<-function(EventName,AdjustEventManually
+                                  # , InitialCondition
+                                  )
 {
   
   # Find the event in the table
-  Magnitude.class<-which(Events$Name==Event.name)
-  Vevent<-Events$Volume_BestEstimate[Magnitude.class]
+  MagnitudeClass<-which(Events$Name==EventName)
+  Vevent<-Events$Volume_BestEstimate[MagnitudeClass]
   
   #Define the input data for the run
   input<-c(
     #Event definition
     Vevent/10^3  #Volume * 1000 m3
-    ,Events$PeakDischarge_BestEstimate[Magnitude.class]#Qpeak m3/s,
-    ,Events$TimeLag_BestEstimate[Magnitude.class] #(s) Peak lag
-    ,Events$DepositionSlope_BestEstimate[Magnitude.class] #Deposition slope (%)
+    ,Events$PeakDischarge_BestEstimate[MagnitudeClass]#Qpeak m3/s,
+    ,Events$TimeLag_BestEstimate[MagnitudeClass] #(s) Peak lag
+    ,Events$DepositionSlope_BestEstimate[MagnitudeClass] #Deposition slope (%)
     #Initial state of the basin filling and jamming
-    ,InitialCondition$InitialDepositHeight_BestEstimate #Initial deposit height (m)
-    ,InitialCondition$InitialJammingHeight_BestEstimate  #Jam at the slit base by large wood (m)
+    ,NA#InitialCondition$InitialDepositHeight_BestEstimate #Initial deposit height (m)
+    ,NA#InitialCondition$InitialJammingHeight_BestEstimate  #Jam at the slit base by large wood (m)
   )
   # Adding of the number of Boulders
-  for(j in (1:length(Boulders[,1])))
+  for(j in (1:dim(Boulders)[1]))
   {
-    input<-c(input,Boulders$Best_estimate[j])
+    input<-c(input,Boulders$BoulderNumber_BestEstimate[j])
   }
   
   #Adjust values manually
   #Pop up windows to define the values
-  if(Adjust.event.manually){
+  if(AdjustEventManually){
     #Define the names for the pop-up windows
-    input.data.name<-c("Volume (*1000 m3)"
+    InputDataName<-c("Volume (*1000 m3)"
                        ,"Qpeak (m3/s)"
                        ,"Peak lag (-)"
                        ,"Deposition slope (%)"
                        ,"Initial deposit height (m)"
                        ,"Jam at the slit base by large wood or boulders (m)")
-    input.data.name<-c(input.data.name,paste0("Number of boulders of diameter "
-                                              ,Boulders$Boulder_size_category_.m.
+    InputDataName<-c(InputDataName,paste0("Number of boulders of diameter "
+                                              ,Boulder$BoulderDiameter_min,"-"
+                                              ,BoulderBoulderDiameter_max
                                               ," m in a volume of "
-                                              ,Boulders$Reference_Volume," m3 of deposit"))
+                                              ,Boulders$ReferenceVolume," m3 of deposit"))
     for(j in c(1:length(input)))
     {
-      input[j]<-as.numeric(dlg_input(message = paste("Please provide the value of parameter \n",input.data.name[j])
+      input[j]<-as.numeric(dlg_input(message = paste("Please provide the value of parameter \n",InputDataName[j])
                                      , default = input[j])$res)
     }
   }
