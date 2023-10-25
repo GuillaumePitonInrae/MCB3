@@ -18,9 +18,7 @@
 # Putting a Grill (or Not) in Slit Dams Aiming at Trapping Debris Flows? Lessons Learnt From France. 
 # AGHP Technical Notes : 1–5. [online] Available from: https://hal.archives-ouvertes.fr/hal-02701076
 
-###NOTA: AJOUTER UN BLOCAGE AUTOMATIQUE POUR ORIFICE DE TAILLE RESIDUELLE < DIAMETRE MINI DES CLASSES DE BLOCS
-
-Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
+Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,StorageElevation)
 {
   ################################
   #    OPEN INPUT DATA----
@@ -190,7 +188,7 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
     dZ<-10^6
     Ninter<-0
     #Look for the values of reservoir level and outlet discharge that align volume conservation
-    while(abs(dZ)>0.01*(SpillwayLevel-OpeningMinBaseLevel) && Ninter<1000) 
+    while(abs(dZ)>0.01*(CrestLevel-OpeningMinBaseLevel) && Ninter<1000) 
       #targeted reservoir level accuracy, 1% of the difference in elevation between the outlet and the spillway
     {   #Previous reservoir level recording
       Z<-Reservoir$Z[i]
@@ -211,7 +209,7 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
       Ninter<-Ninter+1
     }
     if(Ninter>=1000) #If more than 1000 iteration does not enable to converge, we kill the run
-    {print("One simulation killed")
+    {print("One simulation killed (no convergence after 1000 iteration)")
       i<-N_TimeSteps
     }
     
@@ -283,20 +281,32 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
             
             #If the jam width is larger than the opening (eventually yet partially clogged), 
             # it is jammed and the jam is as high as the biggest boulder passing
-            if(max(Jam.Width,0,na.rm = T)> Opening.Remaining.Width){
+            if(max(Jam.Width,0,na.rm = T)> Opening.Remaining.Width)
+              {
               BoulderClogging_level[i:N_TimeSteps,Opening_Ind]<-BoulderClogging_level[i,Opening_Ind]+max(Boulder_list$D,na.rm = TRUE)
               # Record the boulders
-              if(length(Boulder_list$Jammed)>1){Boulder_list$Jammed[1:2]<-"b) Laterally jammed"}else{ Boulder_list$Jammed[1]<-"b) Laterally jammed"}
-              
+              if(length(Boulder_list$Jammed)>1){Boulder_list$Jammed[1:2]<-"b) Laterally jammed"}else{Boulder_list$Jammed[1]<-"b) Laterally jammed"}
             }
             
             #Partial width clogging
             if(Opening$Type[Opening_Ind]=="slot")
-            {#Record that the opening width clogging increase by the diameters of boulders 
-              # that are bigger than slot height
+            {
+              #Record that the opening width clogging increase by the diameters of boulders that are bigger than slot height
               BoulderClogging_width[i:N_TimeSteps,Opening_Ind]<-min(Opening$Width[Opening_Ind]
                                                                      ,BoulderClogging_width[i-1,Opening_Ind]+sum(Boulder_list$D[which(Boulder_list$D>(Opening$Param[Opening_Ind]-Opening$BaseLevel[Opening_Ind]))]))
+              
+              # Record the boulders
               Boulder_list$Jammed[which(Boulder_list$Jammed!="b) Laterally jammed" & Boulder_list$D>(Opening$Param[Opening_Ind]-Opening$BaseLevel[Opening_Ind]))]<-"c) Vertically jammed"  
+              
+              #Clog the eventual residual small holes smaller than minimum boulder size (thus not clogged later)
+              if(BoulderClogging_width[i,Opening_Ind]-Opening$Width[Opening_Ind] < min(Boulders$BoulderDiameter_min))
+              {
+                BoulderClogging_width[i:N_TimeSteps,Opening_Ind]<-Opening$Width[Opening_Ind]
+              }
+              if(BoulderClogging_level[i,Opening_Ind]-Opening$Param[Opening_Ind] < min(Boulders$BoulderDiameter_min))
+              {
+                BoulderClogging_level[i:N_TimeSteps,Opening_Ind]<-Opening$Param[Opening_Ind]
+              }
             }
             Boulder_list_all<-rbind(Boulder_list_all,Boulder_list)
           }
@@ -304,19 +314,22 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
       }#end of the Timestep loop  
     #iterate on i to compute the next step
     i<-i+1
+  }
+  #Check for max flow level and whether it reached the available data
+  if(max(Reservoir$Z)==max(storageElevationCurve$h))
+    {
+    print(paste0("Level reached the maximum storage elevation level of structure:"
+  ,StructureName,".Consider providing storage volume at higher level if it is a barrier, otherwise it means that the highest bridge deck level was overtopped by more than 5 m, the buffering and discharge computed by the model are thus most probably wrong!"))
     }
+  
     
-    
-  
-  
-  
   ################################
   #    RECORD THE TIME SERIES AND INDICATORS----
   ################################
    #Add the jamming state of the openings
   Reservoir<-cbind(Reservoir
-                   ,BoulderClogging_level[,(1:(N_opening-1))] #Only until N_opening-1 because clogging is a no sense on the crest
-                   ,BoulderClogging_width[,(1:(N_opening-1))])#Only until N_opening-1 because clogging is a no sense on the crest
+                   ,BoulderClogging_level[(1:(N_opening-1))] #Only until N_opening-1 because clogging is a no sense on the crest
+                   ,BoulderClogging_width[(1:(N_opening-1))])#Only until N_opening-1 because clogging is a no sense on the crest
   Reservoir$LevelClogging1<-Reservoir$Z1+OpeningMinBaseLevel
   
   
@@ -402,30 +415,6 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
     write.csv(Opening,file="./1Data/Opening.txt",row.names = FALSE)  
   }
   
-  
-  #Save boulder sizes
-  if(SaveBoulderSize){
-    # dir.create(paste0("2Outputs/",EventName,"_ComputedOn",lubridate::today()))
-    File.Name<-paste0("2Outputs/",EventName
-                      ,"_ComputedOn",lubridate::today(),"_Boulders",lubridate::now(),".Rdata")
-    File.Name<-str_replace_all(File.Name,":","-")
-    File.Name<-str_replace_all(File.Name," ","At")
-    save(Boulder_list_all,file=File.Name)
-  }
-  
-  #Save hydrograph
-  if(SaveHydrographs){
-    # dir.create(paste0("2Outputs/Hydrographs/",EventName,"_ComputedOn",lubridate::today()))
-    File.Name<-paste0("2Outputs/",EventName
-                      ,"_ComputedOn",lubridate::today(),"_Hydrographs",lubridate::now(),".Rdata")
-    File.Name<-str_replace_all(File.Name,":","-")
-    File.Name<-str_replace_all(File.Name," ","At")
-    Hydrographs<-Reservoir[,c(1:3,6:7)]
-    save(Hydrographs,file=File.Name)
-    rm(Hydrographs)
-  }
-  
-  
   #Add virtual values to extend the legend of clogging from 0 to 100%
   VerticalClogging<-rbind(VerticalClogging,data.frame(T=c(-2,-1.5,-1)*10^3
                                                       ,Opening=rep(VerticalClogging$Opening[1],3)
@@ -443,7 +432,7 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
     # dir.create(paste0("2Outputs/",EventName,"_ComputedOn",lubridate::today())
                # ,showWarnings = FALSE,recursive = TRUE)
     
-    Plot_BufferingModel(Reservoir,WidthClogging,VerticalClogging
+    Plot_BufferingModel(ModelVersion,StructureName,Reservoir,WidthClogging,VerticalClogging
                         ,N_opening,storageElevationCurve,input[1]*1000
                         ,N_TimeSteps,Duration
                         ,OpeningMinBaseLevel,SpillwayLevel,CrestLevel
@@ -452,11 +441,11 @@ Structure_functionning_V0.1<-function(input,Qin,Opening,StorageElevation)
   
   ###############END OF THE FUNCTION
   if(Ninter>=1000)
-  {return(rep(NA,dim(Reservoir)[2]))}else
-  {return(Reservoir)}
+  {return(rep(NA,dim(Reservoir)[2]))}else{return(Reservoir)}
 }
 
-Synthetic_Structure_results_V0.1<-function(Reservoir, Opening)
+
+Synthetic_Structure_results<-function(Reservoir, Opening)
 {  #Number of opening
   N_opening<-length(Opening$Number)
   N_TimeSteps<-length(Reservoir$T)
@@ -470,8 +459,9 @@ Synthetic_Structure_results_V0.1<-function(Reservoir, Opening)
   Vfinal<-Reservoir$V[N_TimeSteps-1]
   
   
-  #Record peak discharge at inlet
+  #Record peak discharge and volume at inlet
   Qp_in<-max(Reservoir$Qi,na.rm=T)
+  Vevent<-round(sum(Reservoir$Qi)*TimeStep/10^3,3)
   
   #Extract maximum outlet discharge
   Qp_out<-max(Reservoir$Qo,na.rm=T)
@@ -494,34 +484,27 @@ Synthetic_Structure_results_V0.1<-function(Reservoir, Opening)
   VoutSlit<-round(sum(Reservoir$Qoutlet)*TimeStep/10^3,3)
   #Part passing over the spillway
   VoutSpillway<-sum(Reservoir$Qspillway)*TimeStep/10^3
-  #Remaing part passing over the Crest
+  #Remaning part passing over the Crest
   VoutCrest<-Vout-VoutSlit-VoutSpillway
   
   if(is.na(Reservoir$T[1]))
   {return(NA)}else
   {
-    RESULTS<-data.frame("Zmax"=Zmax,
-                        "Zfinal"=Zfinal
+    RESULTS<-data.frame("Qp_in"=Qp_in
+                        ,"Vevent"=Vevent*1000
+                        ,"Zmax"=Zmax
+                        ,"Zfinal"=Zfinal
                         ,"Qp_out"=Qp_out
                         ,"Vmax"=Vmax*1000,"Vout"=Vout*1000,"Voutslit"=VoutSlit*1000
                         ,"Voutsplillway"=VoutSpillway*1000,"VoutCrest"=VoutCrest*1000
                         ,"Vfinal"=Vfinal*1000
                         # ,"Tover"=Tover,"Tover.spillway"=Tover.s
-                        ,"Qp_in"=Qp_in)
+                        ,BoulderGenerationMode=BoulderGenerationMode
+                        )
     RESULTS<-cbind(RESULTS
                    ,Reservoir[dim(Reservoir)[1],(7+1:(N_opening-1))]                    #only until N_opening -1 because
                    ,Reservoir[dim(Reservoir)[1],(7+(N_opening-1)+1:(N_opening-1))]      #the top opening is the crest
                    )
-    
-    if(SaveRsltSingleRun)
-    {
-      # dir.create(paste0("2Outputs/Rdata/",EventName,"_ComputedOn",lubridate::today()))
-      File.Name<-paste0("2Outputs/",EventName
-                        ,"_ComputedOn",lubridate::today(),"_RunResults",lubridate::now(),".Rdata")
-      File.Name<-str_replace_all(File.Name,":","-")
-      File.Name<-str_replace_all(File.Name," ","At")
-      save(list = c("RESULTS","input","BoulderGenerationMode"),file=File.Name)
-    }
     return(RESULTS)
   }
 }

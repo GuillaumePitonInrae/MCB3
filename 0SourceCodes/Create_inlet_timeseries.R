@@ -1,7 +1,7 @@
 ### Create time series of discharge and boulders
 #V0 July 2023 - G. Piton & C. Misset
 
-Create_inlet_timeseries_V0.1<-function(input,Boulders)
+Create_inlet_timeseries<-function(input,Boulders)
 {
 ################################
 #    EXTRACT INPUT RUN DATA----

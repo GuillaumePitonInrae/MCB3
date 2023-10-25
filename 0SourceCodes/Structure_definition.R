@@ -1,21 +1,7 @@
 ### Create structure definition
 #V0 July 2023 - G. Piton & C. Misset
 
-#Clean environment
-#rm(list=ls())
-
-# Load package
-#library(dplyr) #for data manipulation
-#library(readr) #for data loading
-
-####### a enlever - pour test
-# InputDataRepository<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data"
-
-# InputDataRepository<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering/1Data"
-
-####### a enlever - pour test
-
-
+#Function to load the bridge or barrier data from text files
 import_structure<-function(InputDataRepository,StructureList,Structure_Ind,StructureName)
 {
   
@@ -46,40 +32,11 @@ import_structure<-function(InputDataRepository,StructureList,Structure_Ind,Struc
     
     bridge<-read.csv(paste0(InputDataRepository,"/",StructureName,"/bridge.txt"),sep="",header = T)
     
-    #### convert bridge data into storage / elevation curve ####
-    # get min / max elevation values from bridge data
-    BaseLevel_max<-max(Opening$BaseLevel)
-    DeckLevel_max<-max(subset(Opening,Opening$Type=="slot")$Param)
-    
-    # interpolate the deposition slope on 10 values of slopes
-    seq_slope<-seq(0,bridge$slope*0.95,length.out=10)
-    
-    # interpolate the downstream altitude
-    seq_Z<-seq(min(Opening$BaseLevel),(max(BaseLevel_max,DeckLevel_max)+5),0.5)
-    
-    # create an storage / elevation Curves data frame
-    elev_storage<-data.frame(matrix(ncol = length(seq_slope),
-                                    nrow = length(seq_Z),
-                                    data = NA))
-    elev_storage<-data.frame(seq_Z,elev_storage)
-    
-    # put the names in good format
-    name_elev_storage<-rep(NA,length(seq_slope))
-    for (i in 1:length(seq_slope)){name_elev_storage[i]<-paste0("S",round(seq_slope[i],3))}
-    names(elev_storage)<-c("Z",name_elev_storage)
-    
-    # compute the storage / elevation curve
-    for (i in 1:nrow(elev_storage)){
-      for (j in 2:(ncol(elev_storage))){
-        elev_storage[i,j]<-bridge$width*0.5*(elev_storage$Z[i]-min(Opening$BaseLevel))^2/(tan(bridge$slope)-tan(seq_slope[j-1]))
-      }
-    }
-    
-   # add values of name, type,storage / elevation curve and opening data
+    # add values of name, type,storage / elevation curve and opening data
 
       StructureList$Name[Structure_Ind]<-StructureName
       StructureList$Type[Structure_Ind]<-"bridge"
-      StructureList$StorageElevation[Structure_Ind]<-list(elev_storage)
+      StructureList$StorageElevation[Structure_Ind]<-list(data.frame(Z=NA,S0.00=NA))
       StructureList$Opening[Structure_Ind]<- list(Opening)
       StructureList$width[Structure_Ind] <- bridge$width
       StructureList$slope[Structure_Ind] <- bridge$slope
@@ -111,6 +68,41 @@ import_structure<-function(InputDataRepository,StructureList,Structure_Ind,Struc
 }
 
 
+##Function computing the storage elevation data from the bridge information
+define_bridgeStorageElevation<-function(Opening,width,slope)
+{
+  #### convert bridge data into storage / elevation curve ####
+  # get min / max elevation values from bridge data
+  BaseLevel_max<-max(Opening$BaseLevel)
+  DeckLevel_max<-max(subset(Opening,Opening$Type=="slot")$Param)
+  
+  # interpolate the deposition slope on 10 values of slopes
+  seq_slope<-seq(0,slope*0.95,length.out=10)
+  
+  # interpolate the downstream altitude, we do not extrapolate arbitrarilly over 5 m above the max deck level
+  seq_Z<-seq(min(Opening$BaseLevel),(max(BaseLevel_max,DeckLevel_max)+5),lenght.out=100)
+  
+  # create an storage / elevation Curves data frame
+  elev_storage<-data.frame(matrix(ncol = length(seq_slope),
+                                  nrow = length(seq_Z),
+                                  data = NA))
+  elev_storage<-data.frame(seq_Z,elev_storage)
+  
+  # put the names in good format
+  name_elev_storage<-rep(NA,length(seq_slope))
+  for (i in 1:length(seq_slope)){name_elev_storage[i]<-paste0("S",round(seq_slope[i],3))}
+  names(elev_storage)<-c("Z",name_elev_storage)
+  
+  # compute the storage / elevation curve
+  for (i in 1:nrow(elev_storage)){
+    for (j in 2:(ncol(elev_storage))){
+      elev_storage[i,j]<-width*0.5*(elev_storage$Z[i]-min(Opening$BaseLevel))^2/(tan(slope)-tan(seq_slope[j-1]))
+    }
+  }
+  return(elev_storage)
+}
+
+
 #### function to load all the structures data for the model and create a list with opening and storage / elevation data ####
 structure_definition<-function(InputDataRepository){
   #list the repository available
@@ -124,6 +116,7 @@ structure_definition<-function(InputDataRepository){
   #Initialize the structure list
   StructureList<-list(Name=rep(NA,N_Structure)
                    ,Type=rep(NA,N_Structure)
+                   ,Rank=rep(NA,N_Structure)
                    ,TransferDownstream=rep(NA,N_Structure)
                    ,InitialConditions=list(rep(NA,N_Structure))
                    ,StorageElevation=list(rep(NA,N_Structure))
@@ -145,7 +138,6 @@ structure_definition<-function(InputDataRepository){
 
 # TEST<-import_structure(InputDataRepository,"pont 1")
 
-# save<-structure_definition(InputDataRepository)
 
 
 

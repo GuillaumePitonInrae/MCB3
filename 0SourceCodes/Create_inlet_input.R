@@ -1,7 +1,7 @@
 ### Create input files with main parameters used as upstream supply
 #V0 July 2023 - G. Piton & C. Misset
 
-Create_inlet_input_V0.1<-function(EventName,AdjustEventManually
+Create_inlet_input<-function(EventName,AdjustEventManually
                                   # , InitialCondition
                                   )
 {

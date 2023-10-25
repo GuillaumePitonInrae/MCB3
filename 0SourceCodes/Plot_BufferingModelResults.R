@@ -1,7 +1,8 @@
 # Plot results of a simulation with the buffering model
 # G. PITON, May 2021
 
-Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
+Plot_BufferingModel<-function(ModelVersion,StructureName
+                              ,Reservoir,WidthClogging,VerticalClogging
                               ,N_opening
                               ,storageElevationCurve,Volume
                               ,N_TimeStepss,Duration
@@ -81,11 +82,11 @@ Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
                           ,values=c(2,2,3,1,4))+
     annotate(geom = "text", x = 3*Duration/3600, y = max(storageElevationCurve$h,na.rm=TRUE)
              ,vjust=1,hjust=1
-             , label = paste("Max level at barrier =",round(max(Reservoir$Z),1),"m.a.s.l.")
+             , label = paste("Max level reached =",round(max(Reservoir$Z),1),"m.a.s.l.")
     )+
     theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
     coord_cartesian(xlim = c(0,3*Duration/3600),ylim=c(min(storageElevationCurve$h,na.rm=TRUE),max(storageElevationCurve$h,na.rm=TRUE)))+
-    labs( x = "Time [h]",y = "Flow level [m.a.s.l.]"
+    labs( x = "Time [h]",y = "Flow level [m]"
           # ,caption=paste("(d)")
           # ,subtitle = paste("Max level at barrier =",round(max(Reservoir$Z),1),"m.a.s.l.")
           )+
@@ -111,11 +112,12 @@ Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
     theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm"),plot.margin = unit(c(0.1,0.1,0.1,0.3), "cm"))
   
   #Plot name definition with date and hour
-  Plot.Name<-paste0("2Outputs/",EventName
-                    ,"_ComputedOn",lubridate::today()
-                    ,"_HydrographBuffering",lubridate::now(),".png")
+  Plot.Name<-paste0("2Outputs/TimeSeriesOf_",EventName
+                    ,"_forStructure",StructureName
+                    ,"_computedOn",lubridate::today()
+                    ,"_at",lubridate::now(),".png")
   Plot.Name<-str_replace_all(Plot.Name,":","-")
-  Plot.Name<-str_replace_all(Plot.Name," ","At")
+  Plot.Name<-str_replace_all(Plot.Name," ","_")
   
   png(Plot.Name, width = 17, height = 20,units="cm",res=350)
   {
@@ -128,12 +130,14 @@ Plot_BufferingModel<-function(Reservoir,WidthClogging,VerticalClogging
     # Arranger les graphiques
     if(is.null(WidthClogging))
     {
-      print(Qplot, vp = define_region(1:6,1))
+      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," with model:",ModelVersion))
+            , vp = define_region(1:6,1))
       print(VclogPlot, vp = define_region(7:10,1))
       print(Zplot, vp = define_region(11:16,1))
       print(Vplot, vp = define_region(17:22,1))
     }else{
-      print(Qplot, vp = define_region(1:5,1))
+      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," with model:",ModelVersion))
+            , vp = define_region(1:5,1))
       print(VclogPlot, vp = define_region(6:9,1))
       print(WclogPlot, vp = define_region(10:13,1))
       print(Zplot, vp = define_region(14:17,1))
