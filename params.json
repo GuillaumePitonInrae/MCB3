@@ -73,6 +73,7 @@
         {
             "Name": "pdd 1",
             "Type": "barrier",
+            "Rank": 1,
             "TransferDownstream": "Instantaneous",
             "InitialConditions": {
                 "Name": "Empty",
@@ -263,6 +264,7 @@
         {
             "Name": "pdd 2",
             "Type": "barrier",
+            "Rank": 2,
             "TransferDownstream": "Mixing 10000",
             "InitialConditions": {
                 "Name": "2 m jam and deposit",
@@ -453,6 +455,7 @@
         {
             "Name": "pont 1",
             "Type": "bridge",
+            "Rank": 3,
             "TransferDownstream": null,
             "width": 40,
             "slope": 0.06
