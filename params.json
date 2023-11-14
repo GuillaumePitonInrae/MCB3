@@ -7,66 +7,82 @@
         {
             "BoulderDiameter_min": 0.5,
             "BoulderDiameter_max": 1.0,
-            "BoulderNumber_BestEstimate": 200,
+            "BoulderNumber_BestEstimate": 160,
             "BoulderNumber_min": 100,
-            "BoulderNumber_max": 300,
+            "BoulderNumber_max": 200,
             "ReferenceVolume": 30000
         },
         {
             "BoulderDiameter_min": 1.0,
             "BoulderDiameter_max": 1.5,
-            "BoulderNumber_BestEstimate": 25,
-            "BoulderNumber_min": 10,
-            "BoulderNumber_max": 50,
+            "BoulderNumber_BestEstimate": 100,
+            "BoulderNumber_min": 60,
+            "BoulderNumber_max": 160,
             "ReferenceVolume": 30000
         },
         {
             "BoulderDiameter_min": 1.5,
             "BoulderDiameter_max": 2.0,
-            "BoulderNumber_BestEstimate": 10,
-            "BoulderNumber_min": 5,
-            "BoulderNumber_max": 15,
+            "BoulderNumber_BestEstimate": 60,
+            "BoulderNumber_min": 40,
+            "BoulderNumber_max": 100,
             "ReferenceVolume": 30000
         },
         {
             "BoulderDiameter_min": 2.0,
             "BoulderDiameter_max": 3.0,
-            "BoulderNumber_BestEstimate": 3,
+            "BoulderNumber_BestEstimate": 20,
+            "BoulderNumber_min": 10,
+            "BoulderNumber_max": 60,
+            "ReferenceVolume": 30000
+        },
+        {
+            "BoulderDiameter_min": 3.0,
+            "BoulderDiameter_max": 4.0,
+            "BoulderNumber_BestEstimate": 10,
+            "BoulderNumber_min": 2,
+            "BoulderNumber_max": 16,
+            "ReferenceVolume": 30000
+        },
+        {
+            "BoulderDiameter_min": 4.0,
+            "BoulderDiameter_max": 5.0,
+            "BoulderNumber_BestEstimate": 2,
             "BoulderNumber_min": 0,
-            "BoulderNumber_max": 5,
+            "BoulderNumber_max": 6,
             "ReferenceVolume": 30000
         }
     ],
     "Events": [
         {
-            "Name": "Q100",
+            "Name": "rare",
             "Volume_min": 60000,
-            "Volume_BestEstimate": 60000,
-            "Volume_max": 60000,
-            "PeakDischarge_min": 75,
-            "PeakDischarge_BestEstimate": 112,
-            "PeakDischarge_max": 150,
+            "Volume_BestEstimate": 80000,
+            "Volume_max": 100000,
+            "PeakDischarge_min": 112,
+            "PeakDischarge_BestEstimate": 140,
+            "PeakDischarge_max": 168,
             "TimeLag_min": 0.05,
-            "TimeLag_BestEstimate": 0.1,
-            "TimeLag_max": 0.2,
-            "DepositionSlope_min": 6.1,
-            "DepositionSlope_BestEstimate": 6.1,
-            "DepositionSlope_max": 6.1
+            "TimeLag_BestEstimate": 0.2,
+            "TimeLag_max": 0.5,
+            "DepositionSlope_min": 5,
+            "DepositionSlope_BestEstimate": 5,
+            "DepositionSlope_max": 5
         },
         {
-            "Name": "Q10",
-            "Volume_min": 25000,
-            "Volume_BestEstimate": 25000,
-            "Volume_max": 25000,
-            "PeakDischarge_min": 37,
-            "PeakDischarge_BestEstimate": 56,
-            "PeakDischarge_max": 75,
+            "Name": "frequent",
+            "Volume_min": 20000,
+            "Volume_BestEstimate": 30000,
+            "Volume_max": 60000,
+            "PeakDischarge_min": 47,
+            "PeakDischarge_BestEstimate": 65,
+            "PeakDischarge_max": 112,
             "TimeLag_min": 0.05,
             "TimeLag_BestEstimate": 0.1,
             "TimeLag_max": 0.2,
-            "DepositionSlope_min": 6.1,
-            "DepositionSlope_BestEstimate": 6.1,
-            "DepositionSlope_max": 6.1
+            "DepositionSlope_min": 5,
+            "DepositionSlope_BestEstimate": 5,
+            "DepositionSlope_max": 5
         }
     ],
     "Structures": [
@@ -86,180 +102,97 @@
             },
             "StorageElevation": [
                 {
-                    "Z": 273.2,
-                    "S0.02": 0,
-                    "S0.035": 0,
-                    "S0.047": 0,
-                    "S0.05": 0,
-                    "S0.065": 0
+                    "Z": 899,
+                    "S0.04": 0,
+                    "S0.06": 0,
+                    "S0.08": 0,
+                    "S0.1": 0
                 },
                 {
-                    "Z": 280,
-                    "S0.02": 1558,
-                    "S0.035": 1946,
-                    "S0.047": 2346,
-                    "S0.05": 2612,
-                    "S0.065": 3369
+                    "Z": 901,
+                    "S0.04": 600,
+                    "S0.06": 1100,
+                    "S0.08": 2000,
+                    "S0.1": 4000
                 },
                 {
-                    "Z": 285,
-                    "S0.02": 27604,
-                    "S0.035": 37707,
-                    "S0.047": 73038,
-                    "S0.05": 73837,
-                    "S0.065": 190523
+                    "Z": 903,
+                    "S0.04": 3500,
+                    "S0.06": 5000,
+                    "S0.08": 7200,
+                    "S0.1": 9700
                 },
                 {
-                    "Z": 290,
-                    "S0.02": 128576,
-                    "S0.035": 178370,
-                    "S0.047": 307234,
-                    "S0.05": 445539,
-                    "S0.065": 1529220
+                    "Z": 905,
+                    "S0.04": 8400,
+                    "S0.06": 10500,
+                    "S0.08": 13000,
+                    "S0.1": 17000
                 },
                 {
-                    "Z": 295,
-                    "S0.02": 343543,
-                    "S0.035": 512291,
-                    "S0.047": 1141653,
-                    "S0.05": 1629075,
-                    "S0.065": 3498249
+                    "Z": 907,
+                    "S0.04": 14000,
+                    "S0.06": 17000,
+                    "S0.08": 21000,
+                    "S0.1": 25500
                 },
                 {
-                    "Z": 300,
-                    "S0.02": 784348,
-                    "S0.035": 1318019,
-                    "S0.047": 2709276,
-                    "S0.05": 3448807,
-                    "S0.065": 5607774
+                    "Z": 909,
+                    "S0.04": 21500,
+                    "S0.06": 25500,
+                    "S0.08": 30000,
+                    "S0.1": 36500
                 },
                 {
-                    "Z": 305,
-                    "S0.02": 1562941,
-                    "S0.035": 2501499,
-                    "S0.047": 4705621,
-                    "S0.05": 5482208,
-                    "S0.065": 7808682
-                },
-                {
-                    "Z": 310,
-                    "S0.02": 2583772,
-                    "S0.035": 3996715,
-                    "S0.047": 6169673,
-                    "S0.05": 7618311,
-                    "S0.065": 10092068
-                },
-                {
-                    "Z": 318,
-                    "S0.02": 5500000,
-                    "S0.035": 8200000,
-                    "S0.047": 11400000,
-                    "S0.05": 14600000,
-                    "S0.065": 18600000
+                    "Z": 911,
+                    "S0.04": 30100,
+                    "S0.06": 35700,
+                    "S0.08": 42000,
+                    "S0.1": 51100
                 }
             ],
             "Opening": [
                 {
                     "Number": 1,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 275.4,
-                    "Param": 281.4,
+                    "Type": "slit",
+                    "Width": 5,
+                    "BaseLevel": 899,
+                    "Param": 906.25,
                     "BoulderVerticalClogging": 0,
                     "BoulderLateralClogging": 0,
-                    "Comment": "Bottom outlet"
+                    "Comment": "fente"
                 },
                 {
                     "Number": 2,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 282.66,
-                    "Param": 284.86,
+                    "Type": "weir",
+                    "Width": 5,
+                    "BaseLevel": 906.25,
+                    "Param": 10,
                     "BoulderVerticalClogging": 0,
                     "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 1"
+                    "Comment": "deversoir 1"
                 },
                 {
                     "Number": 3,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 286.12,
-                    "Param": 288.32,
+                    "Type": "weir",
+                    "Width": 18,
+                    "BaseLevel": 909,
+                    "Param": 45,
                     "BoulderVerticalClogging": 0,
                     "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 2"
+                    "Comment": "deversoir 2"
                 },
                 {
                     "Number": 4,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 288.18,
-                    "Param": 290.38,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 3"
-                },
-                {
-                    "Number": 5,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 291.64,
-                    "Param": 293.04,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 4"
-                },
-                {
-                    "Number": 6,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 294.3,
-                    "Param": 295.7,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 5"
-                },
-                {
-                    "Number": 7,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 296.96,
-                    "Param": 298.36,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 6"
-                },
-                {
-                    "Number": 8,
-                    "Type": "weir",
-                    "Width": 25,
-                    "BaseLevel": 300,
-                    "Param": 63,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Spillway"
-                },
-                {
-                    "Number": 9,
                     "Type": "weir",
                     "Width": 50,
-                    "BaseLevel": 303,
-                    "Param": 5,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Parapet walls"
-                },
-                {
-                    "Number": 10,
-                    "Type": "weir",
-                    "Width": 100,
-                    "BaseLevel": 304,
+                    "BaseLevel": 910.45,
                     "Param": 90,
                     "BoulderVerticalClogging": 0,
                     "BoulderLateralClogging": 0,
-                    "Comment": "Dam crest"
+                    "Comment": "crete"
                 }
-            ]
+              ]
         },
         {
             "Name": "pdd 2",
@@ -277,178 +210,85 @@
             },
             "StorageElevation": [
                 {
-                    "Z": 273.2,
-                    "S0.02": 0,
-                    "S0.035": 0,
-                    "S0.047": 0,
-                    "S0.05": 0,
-                    "S0.065": 0
+                    "Z": 806.5,
+                    "S0.04": 0,
+                    "S0.06": 0,
+                    "S0.08": 0,
+                    "S0.1": 0
                 },
                 {
-                    "Z": 280,
-                    "S0.02": 1558,
-                    "S0.035": 1946,
-                    "S0.047": 2346,
-                    "S0.05": 2612,
-                    "S0.065": 3369
+                    "Z": 808.5,
+                    "S0.04": 3500,
+                    "S0.06": 5300,
+                    "S0.08": 8300,
+                    "S0.1": 12000
                 },
                 {
-                    "Z": 285,
-                    "S0.02": 27604,
-                    "S0.035": 37707,
-                    "S0.047": 73038,
-                    "S0.05": 73837,
-                    "S0.065": 190523
+                    "Z": 810.5,
+                    "S0.04": 8200,
+                    "S0.06": 11000,
+                    "S0.08": 15000,
+                    "S0.1": 20000
                 },
                 {
-                    "Z": 290,
-                    "S0.02": 128576,
-                    "S0.035": 178370,
-                    "S0.047": 307234,
-                    "S0.05": 445539,
-                    "S0.065": 1529220
+                    "Z": 812.5,
+                    "S0.04": 15000,
+                    "S0.06": 19000,
+                    "S0.08": 25000,
+                    "S0.1": 31000
+                },                
+                {
+                    "Z": 814.5,
+                    "S0.04": 23500,
+                    "S0.06": 30000,
+                    "S0.08": 35000,
+                    "S0.1": 44000
                 },
                 {
-                    "Z": 295,
-                    "S0.02": 343543,
-                    "S0.035": 512291,
-                    "S0.047": 1141653,
-                    "S0.05": 1629075,
-                    "S0.065": 3498249
+                    "Z": 816.5,
+                    "S0.04": 39000,
+                    "S0.06": 40000,
+                    "S0.08": 48000,
+                    "S0.1": 58000
                 },
                 {
-                    "Z": 300,
-                    "S0.02": 784348,
-                    "S0.035": 1318019,
-                    "S0.047": 2709276,
-                    "S0.05": 3448807,
-                    "S0.065": 5607774
-                },
-                {
-                    "Z": 305,
-                    "S0.02": 1562941,
-                    "S0.035": 2501499,
-                    "S0.047": 4705621,
-                    "S0.05": 5482208,
-                    "S0.065": 7808682
-                },
-                {
-                    "Z": 310,
-                    "S0.02": 2583772,
-                    "S0.035": 3996715,
-                    "S0.047": 6169673,
-                    "S0.05": 7618311,
-                    "S0.065": 10092068
-                },
-                {
-                    "Z": 318,
-                    "S0.02": 5500000,
-                    "S0.035": 8200000,
-                    "S0.047": 11400000,
-                    "S0.05": 14600000,
-                    "S0.065": 18600000
+                    "Z": 818.5,
+                    "S0.04": 46000,
+                    "S0.06": 54000,
+                    "S0.08": 63000,
+                    "S0.1": 72000
                 }
             ],
             "Opening": [
                 {
                     "Number": 1,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 275.4,
-                    "Param": 281.4,
+                    "Type": "slit",
+                    "Width": 5,
+                    "BaseLevel": 805.6,
+                    "Param":0,
                     "BoulderVerticalClogging": 0,
                     "BoulderLateralClogging": 0,
-                    "Comment": "Bottom outlet"
+                    "Comment": "fente"
                 },
                 {
                     "Number": 2,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 282.66,
-                    "Param": 284.86,
+                    "Type": "slit",
+                    "Width": 10,
+                    "BaseLevel": 813,
+                    "Param":0,
                     "BoulderVerticalClogging": 0,
                     "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 1"
+                    "Comment": "déversoir 1"
                 },
                 {
                     "Number": 3,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 286.12,
-                    "Param": 288.32,
+                    "Type": "weir",
+                    "Width": 90,
+                    "BaseLevel": 817,
+                    "Param": 10,
                     "BoulderVerticalClogging": 0,
                     "BoulderLateralClogging": 0,
                     "Comment": "Beam interspace 2"
-                },
-                {
-                    "Number": 4,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 288.18,
-                    "Param": 290.38,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 3"
-                },
-                {
-                    "Number": 5,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 291.64,
-                    "Param": 293.04,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 4"
-                },
-                {
-                    "Number": 6,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 294.3,
-                    "Param": 295.7,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 5"
-                },
-                {
-                    "Number": 7,
-                    "Type": "slot",
-                    "Width": 6,
-                    "BaseLevel": 296.96,
-                    "Param": 298.36,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Beam interspace 6"
-                },
-                {
-                    "Number": 8,
-                    "Type": "weir",
-                    "Width": 25,
-                    "BaseLevel": 300,
-                    "Param": 63,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Spillway"
-                },
-                {
-                    "Number": 9,
-                    "Type": "weir",
-                    "Width": 50,
-                    "BaseLevel": 303,
-                    "Param": 5,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Parapet walls"
-                },
-                {
-                    "Number": 10,
-                    "Type": "weir",
-                    "Width": 100,
-                    "BaseLevel": 304,
-                    "Param": 90,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
-                    "Comment": "Dam crest"
                 }
             ]
         },
@@ -457,8 +297,40 @@
             "Type": "bridge",
             "Rank": 3,
             "TransferDownstream": null,
-            "width": 40,
-            "slope": 0.06
+             "Opening": [
+                {
+                    "Number": 1,
+                    "Type": "slot",
+                    "Width": 12,
+                    "BaseLevel": 722,
+                    "Param": 725.9,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
+                    "Comment": "section pont"
+                },
+                {
+                    "Number": 2,
+                    "Type": "slit",
+                    "Width": 50,
+                    "BaseLevel": 726.9,
+                    "Param":0,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
+                    "Comment": "section tablier"
+                },
+                {
+                    "Number": 3,
+                    "Type": "weir",
+                    "Width": 60,
+                    "BaseLevel": 730,
+                    "Param": 10,
+                    "BoulderVerticalClogging": 0,
+                    "BoulderLateralClogging": 0,
+                    "Comment": "crete"
+                }
+            ],
+            "width": 12,
+            "slope": 0.105
         }
     ]
 }
