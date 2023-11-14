@@ -1,4 +1,4 @@
-### Compute the functionning of a structure
+### Compute the functionning of a structure, extract synthetic results and compute the whole cascade of structure
 #V0 July 2023 - G. Piton & C. Misset
 
 #Originally inspired by BarrierBuffering_V0.3.R
@@ -550,18 +550,18 @@ Cascade_of_structure_functionning<-function(input)
                                 )
     
     Result<-Synthetic_Structure_results(Qo, Structures$Opening[[which(Structures$Rank==Structure_Ind)]])
-    # Result$StructureRank<-Structure_Ind
+    Result$StructureRank<-Structure_Ind
     
     #record the run ID (general variable) and structure name
     Qo$Run<-paste0("Run #",Run_Ind)
-    # Qo$StructureRank<-Structure_Ind
+    Qo$StructureRank<-Structure_Ind
     
     #Record the run results
     if(Run_Ind == 1){
       Result_all<-Result
       Qo_all<-Qo
     }else{
-      load(paste0("2Outputs/Result_Evt-",EventName,"Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
+      load(paste0("2Outputs/Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
       Result_all<-rbind(Result_all,Result)
       Qo_all<-rbind(Qo_all,Qo)
     }
