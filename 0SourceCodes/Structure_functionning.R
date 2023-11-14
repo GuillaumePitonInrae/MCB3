@@ -31,10 +31,13 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   
   #### Slope of deposition
   SlopeDep<-input[4]#
+  
+  
+  StructureRank<-Structures$Rank[which(Structures$Name == StructureName)]
   #Initial deposition height
-  DepositDepthInitial<-input[5] 
+  DepositDepthInitial<-input[5+(StructureRank-1)*2] 
   #Base jam height 
-  BaseJamHeight<-input[6]
+  BaseJamHeight<-input[5+(StructureRank-1)*2+1] 
   
   
   #Interpolation of storage - elevation curve
@@ -507,5 +510,67 @@ Synthetic_Structure_results<-function(Reservoir, Opening)
                    )
     return(RESULTS)
   }
+}
+
+Cascade_of_structure_functionning<-function(input)
+{
+  #Create input timesseries accordingly
+  Qin<-Create_inlet_timeseries(input,Boulders)
+  
+  #Computation at each structure
+  for(Structure_Ind in 1:length(Structures$Name))
+  {
+    #If not the first structure, then compute first the transferred inlet discharge and boulder
+    if(Structure_Ind > 1)
+    { 
+      #record input 
+      Qo_all_upstream<-Qo_all
+      #Check type of transfert condition
+      transfer <- Structures$TransferDownstream[[which(Structures$Rank==Structure_Ind-1)]]
+      if(transfer == "Instantaneous")
+      {
+        Vmixing<-NA
+      }else{
+        Vmixing <- as.numeric(substr(transfer
+                                     ,8
+                                     ,nchar(transfer)))
+      }
+      #update the input accordingly
+      Qin<-Transfer_Between_Structure(Qo = Qo_all_upstream %>% filter(Run == paste0("Run #",Run_Ind)) %>% filter(StructureRank == (Structure_Ind-1))
+                                      ,Transfer.Type = transfer
+                                      ,Vmixing = Vmixing)
+    }
+    
+    #Compute the actual structure functionning
+    Qo<-Structure_functionning(ModelVersion=ModelVersion
+                               ,StructureName=Structures$Name[[which(Structures$Rank==Structure_Ind)]]
+                               ,input=input,Qin=Qin
+                               ,Opening=as.data.frame(Structures$Opening[[which(Structures$Rank==Structure_Ind)]])
+                               ,StorageElevation=as.data.frame(Structures$StorageElevation[[which(Structures$Rank==Structure_Ind)]])
+                                )
+    
+    Result<-Synthetic_Structure_results(Qo, Structures$Opening[[which(Structures$Rank==Structure_Ind)]])
+    # Result$StructureRank<-Structure_Ind
+    
+    #record the run ID (general variable) and structure name
+    Qo$Run<-paste0("Run #",Run_Ind)
+    # Qo$StructureRank<-Structure_Ind
+    
+    #Record the run results
+    if(Run_Ind == 1){
+      Result_all<-Result
+      Qo_all<-Qo
+    }else{
+      load(paste0("2Outputs/Result_Evt-",EventName,"Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
+      Result_all<-rbind(Result_all,Result)
+      Qo_all<-rbind(Qo_all,Qo)
+    }
+    #Save a data frame with the main results of all runs as a .Rdata file
+    save(Result_all,Qo_all,file=paste0("2Outputs/Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
+    
+  } #end of the for loop on structures
+  
+  #Return max outlet discharge at last structure
+  return(max(Qo$Qo))
 }
   

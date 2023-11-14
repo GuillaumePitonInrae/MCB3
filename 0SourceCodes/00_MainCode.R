@@ -19,7 +19,7 @@ if(HEADLESS) {
   json <- jsonlite::fromJSON(args[1])
   # Transfer all first-level json props to global scope:
   list2env(json,globalenv())
-
+  
   # But in the future, the env method above may not be acceptable, in which case prefer
   # using the following syntax: 
   # OnlyNormalRun <<- json$OnlyNormalRun
@@ -72,33 +72,33 @@ source("BoulderTransfer.R")#Compute the transformation of the time series from o
 if(!HEADLESS){
   #Selecting the repository where the source codes are stored
   dlg_message(message="Show me where are stored the input data (Repository \"/1Data\")"
-  , type = c("ok")) ; InputDataRepository<-dlg_dir(title="Show me where are stored the input data (Repository \"/1Data\")"
-  ,default = getwd())$res
-
-  #Load boulder list
-  Boulders<-read.csv(paste0(InputDataRepository,"/RangeOfBoulders.txt"),sep="\t")
-  #Load event features
-  Events<-read.csv(paste0(InputDataRepository,"/Events.txt"),sep="\t")
-  
-  #Load the structure list and organisation----
-  Structure_organisation<-read.csv(paste0(InputDataRepository,"/StructureList.txt"),sep="\t")
-  
-  #Load initial conditions
-  InitialConditions<-read.csv(paste0(InputDataRepository,"/InitialConditions.txt"),sep="\t")
-  
-  #Reorganize the table
-  Structure_organisation<-data.frame(
-    Name = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")],
-    InitialCondition = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+1],
-    Transfer = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+2])
-  
- #Import the structure description
-  Structures<-structure_definition(InputDataRepository)
-  #define rank, transfer condition and initial conditions
-  Structures$Rank<-match(Structure_organisation$Name,Structures$Name)
-  Structures$TransferDownstream<-Structure_organisation$Transfer[match(Structure_organisation$Name,Structures$Name)]
-  Structures$InitialConditions<-InitialConditions[match(Structure_organisation$InitialCondition
-                                                        ,InitialConditions$Name),]
+              , type = c("ok")) ; InputDataRepository<-dlg_dir(title="Show me where are stored the input data (Repository \"/1Data\")"
+                                                               ,default = getwd())$res
+              
+              #Load boulder list
+              Boulders<-read.csv(paste0(InputDataRepository,"/RangeOfBoulders.txt"),sep="\t")
+              #Load event features
+              Events<-read.csv(paste0(InputDataRepository,"/Events.txt"),sep="\t")
+              
+              #Load the structure list and organisation----
+              Structure_organisation<-read.csv(paste0(InputDataRepository,"/StructureList.txt"),sep="\t")
+              
+              #Load initial conditions
+              InitialConditions<-read.csv(paste0(InputDataRepository,"/InitialConditions.txt"),sep="\t")
+              
+              #Reorganize the table
+              Structure_organisation<-data.frame(
+                Name = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")],
+                InitialCondition = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+1],
+                Transfer = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+2])
+              
+              #Import the structure description
+              Structures<-structure_definition(InputDataRepository)
+              #define rank, transfer condition and initial conditions
+              Structures$Rank<-match(Structure_organisation$Name,Structures$Name)
+              Structures$TransferDownstream<-Structure_organisation$Transfer[match(Structure_organisation$Name,Structures$Name)]
+              Structures$InitialConditions<-InitialConditions[match(Structure_organisation$InitialCondition
+                                                                    ,InitialConditions$Name),]
 }
 
 #Complete the storage elevation data of each bridge elements
@@ -106,23 +106,23 @@ for(Structure_Ind in (1:length(Structures$Name)))
 {
   if(Structures$Type[[Structure_Ind]]=="bridge")
   {
-   Structures$StorageElevation[[Structure_Ind]]<-define_bridgeStorageElevation(Structures$Opening[[Structure_Ind]]
-                                                                               ,Structures$width[[Structure_Ind]]
-                                                                               ,Structures$slope[[Structure_Ind]])
+    Structures$StorageElevation[[Structure_Ind]]<-define_bridgeStorageElevation(Structures$Opening[[Structure_Ind]]
+                                                                                ,Structures$width[[Structure_Ind]]
+                                                                                ,Structures$slope[[Structure_Ind]])
   }
 }
 
 #Selecting the repository where one want to record the results
 if(HEADLESS) {
-  MainRepository <- args[2]
+  MainRep <- args[2]
 } else {
   setwd(InputDataRepository)
   dlg_message(message="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
-              , type = c("ok"));MainRepository<-dlg_dir(title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
+              , type = c("ok"));MainRep<-dlg_dir(title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
                                                         ,default = getwd())$res
 }
 #Set this repository as working repository
-setwd(MainRepository)
+setwd(MainRep)
 dir.create("2Outputs",showWarnings = FALSE)
 
 #Main loop within which each set of run is performed
@@ -164,13 +164,11 @@ while(PerformAnotherSimulation=="yes")
   }
   
   
-    # Choices of plot and save option----
+  # Choices of plot and save option----
   if(OnlyNormalRun)
   {
     ComputeWithBestEstimateBoulderNumber<-TRUE
-    ComputeWithBestEstimateBoulderNumber<-FALSE
   }else{
-    ComputeWithBestEstimateBoulderNumber<-FALSE
     ComputeWithBestEstimateBoulderNumber<-TRUE
   }
   if(!HEADLESS){
@@ -202,23 +200,23 @@ while(PerformAnotherSimulation=="yes")
     {
       if(OnlyNormalRun){ # Possible to reuse predefined values or to define the event manually
         EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
-                                          ,Events$Name
-                                          ,"If you want to define the event manually, write \"0\" ")
-                              ,default = Events$Name[1])$res
+                                         ,Events$Name
+                                         ,"If you want to define the event manually, write \"0\" ")
+                             ,default = Events$Name[1])$res
         AdjustEventManually <- TRUE
         
       }else{#Only possible to reuse predefined values 
         EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
-                                          ,Events$Name)
-                              ,default = Events$Name[1])$res
+                                         ,Events$Name)
+                             ,default = Events$Name[1])$res
         AdjustEventManually <- TRUE
       } 
       
       if(EventName == "0"){#Define values manually
         AdjustEventManually <- TRUE
         EventName<-dlg_input(message = c("OK we will adjust an event, which one do you want to take as template?, the available names are :"
-                                          ,Events$Name)
-                              ,default = Events$Name[1])$res
+                                         ,Events$Name)
+                             ,default = Events$Name[1])$res
       }else{AdjustEventManually<-FALSE}
       
       if(EventName %in% Events$Name){EventUndefined<-FALSE}else{
@@ -228,78 +226,34 @@ while(PerformAnotherSimulation=="yes")
     }#end of while loop to define the event
     
     #Create input data according to the EventName and adjustement option
-    input<-Create_inlet_input(EventName,AdjustEventManually)
+    input<-Create_inlet_input(EventName,AdjustEventManually,Structures,Boulders)
     
-    #Create input timesseries accordingly
-    Qin<-Create_inlet_timeseries(input,Boulders)
-    
-    #Computation at each structure
-    for(Structure_Ind in 1:length(Structures$Name))
+    ## Computation of isolated runs ----
+    for(Run_Ind in (1:N_runs))
     {
-      #This line is useless, we rather call the [Structure_Ind] element of the 
-      # structure list
-      # Structure <- Structures[Structure_Ind,]
-            
-      if(Structure_Ind > 1){Qo_all_upstream<-Qo_all}
+      Qoutmax<-Cascade_of_structure_functionning(input)
       
+      #Record the run results
+      if(Run_Ind==1){  Qoutmax_all<-Qoutmax }else{ Qoutmax_all<-rbind(Qoutmax_all,Qoutmax)  }
       
-      ## Computation of isolated runs ----
-      for(Run_Ind in (1:N_runs))
+      #print message
+      print(paste0("Run #",Run_Ind," finished at, ",now()," for the whole cascade of structure, still ",N_runs-Run_Ind," run to perform"))
+      
+    }
+    
+    #plots of scatterplot and histograms----
+    #If more than 10 runs, plot histograms and a scatter plot of Qmax and V
+    if(N_runs>=10)
+    {
+      # Find the event in the table
+      Magnitude.class<-which(Events$Name==EventName)
+     
+       for(Structure_Ind in 1:length(Structures$Name))
       {
-        if(Structure_Ind > 1)
-        {
-          transfer <- Structures$TransferDownstream[[which(Structures$Rank==Structure_Ind-1)]]
-          if(transfer == "Instantaneous")
-          {
-            Vmixing<-NA
-          }else{
-            Vmixing <- as.numeric(substr(transfer
-                                         ,8
-                                         ,nchar(transfer)))
-          }
-          Qin<-Transfer_Between_Structure(Qo = Qo_all_upstream %>% filter(Run == paste0("Run #",Run_Ind))
-                                          ,Transfer.Type = transfer
-                                          ,Vmixing = Vmixing)
-        }
-        #################updating of the initial conditions in input[5] et input[6]
-        input[5]<-Structures$InitialConditions$InitialDepositHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
-        
-        input[6]<-Structures$InitialConditions$InitialJammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
-        
-        # NOTE/FIXME ABOUT Structure$Opening[[1]] and Structure$StorageElevation[[1]]: jsonlite seems to encaspulate json list of objects into a list of size one instead of creating directly a DF. So we must call the first list element with [[1]] in the lines below, but this weird behavior should be fixed in the future. 
-        #launch computation
-        Qo<-Structure_functionning(ModelVersion=ModelVersion
-                                   ,StructureName=Structures$Name[[which(Structures$Rank==Structure_Ind)]]
-                                   ,input=input,Qin=Qin
-                                   ,Opening=as.data.frame(Structures$Opening[[which(Structures$Rank==Structure_Ind)]])
-                                   ,StorageElevation=as.data.frame(Structures$StorageElevation[[which(Structures$Rank==Structure_Ind)]])
-                                  )
-       Qo$Run<-paste0("Run #",Run_Ind)
-        
-        Result<-Synthetic_Structure_results(Qo, Structures$Opening[[which(Structures$Rank==Structure_Ind)]])
-        print(paste0("Run #",Run_Ind," finished at, ",now(),", still ",N_runs-Run_Ind," to perform for structure ",Structures$Name[[which(Structures$Rank==Structure_Ind)]]
-                     ," and ",length(Structures$Name)-Structure_Ind," more structures to model with ",
-                     N_runs," run for each"))
-       
-         #Record the run results
-        if(Run_Ind==1){
-          Result_all<-Result
-          Qo_all<-Qo
-        }else{
-          Result_all<-rbind(Result_all,Result)
-          Qo_all<-rbind(Qo_all,Qo)
-        }
-      }
-      #Save a data frame with the main results of all runs as a .Rdata file
-      save(Result_all,Qo_all,file=paste0("2Outputs/Result_Evt-",EventName,"_Structure_",Structures$Name[[Structure_Ind]],".RData"))
-      
-      #plots of scatterplot and histograms----
-      #If more than 10 runs, plot histograms and a scatter plot of Qmax and V
-      if(N_runs>=10)
-      {
-        # Find the event in the table
-        Magnitude.class<-which(Events$Name==EventName)
-        
+         StructureName<-Structures$Name[[which(Structures$Rank==Structure_Ind)]]
+         #load results of the structure
+         load(paste0("2Outputs/Result_Evt-",EventName,"_Structure_",StructureName,".RData"))
+         
         # Plot a synthesis figure on Vout
         ggplot(Result_all)+
           theme_bw(base_size = 9)+
@@ -311,32 +265,32 @@ while(PerformAnotherSimulation=="yes")
           coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Magnitude.class]/10^3))+
           labs(x="Released volume [*1000 m3]",y="count"
                ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
-               ,title = paste("Distribution of released volume for event:",EventName))
+               ,title = paste("Distribution of released volume for event:",EventName," at structure",StructureName))
         #Save figure
-        ggsave(paste0("2Outputs/ReleasedVolume_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",Structures$Name[[Structure_Ind]],"_ParametersAsBestEstimates.png")
+        ggsave(paste0("2Outputs/ReleasedVolume_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
                , width = 11, height = 7,units="cm")
         
         # Plot a synthesis figure on Qpeak out
         ggplot(Result_all)+
           theme_bw(base_size = 9)+
-          geom_histogram(aes(Qp.out))+
-          geom_boxplot(aes(x=Qp.out,y=-1))+
+          geom_histogram(aes(Qp_out))+
+          geom_boxplot(aes(x=Qp_out,y=-1))+
           geom_vline(xintercept = Events$PeakDischarge_BestEstimate[Magnitude.class])+
           annotate(geom = "text", y = 0, adj=c(0,0), x = Events$PeakDischarge_BestEstimate[Magnitude.class]
                    ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
           coord_cartesian(xlim=c(0,Events$PeakDischarge_BestEstimate[Magnitude.class]))+
           labs(x="Peak discharge [m3/s]",y="count"
                ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
-               ,title = paste("Distribution of released peak dischage for event:",EventName))
+               ,title = paste("Distribution of released peak dischage for event:",EventName," at structure",StructureName))
         
         #Save figure
-        ggsave(paste0("2Outputs/ReleasedQpeak_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",Structures$Name[[Structure_Ind]],"_ParametersAsBestEstimates.png")
+        ggsave(paste0("2Outputs/ReleasedQpeak_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
                , width = 11, height = 7,units="cm")
         
         # Plot a synthesis figure of Qpeak out VS Vout
         ggplot(Result_all)+
           theme_bw(base_size = 9)+
-          geom_bin2d(aes(x=Vout/10^3,y=Qp.out))+
+          geom_bin2d(aes(x=Vout/10^3,y=Qp_out))+
           scale_fill_continuous("# of Run")+
           geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Magnitude.class])+
           geom_vline(xintercept = Events$Volume_BestEstimate[Magnitude.class]/10^3)+
@@ -348,14 +302,15 @@ while(PerformAnotherSimulation=="yes")
                           ,xlim=c(0,Events$Volume_BestEstimate[Magnitude.class]/10^3))+
           labs(x="Released volume [*1000 m3]",y="Peak discharge [m3/s]"
                ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"\n Number of runs N =",N_runs)
-               # ,title = paste("Released volume and released peak dischage for event:",EventName)
+               ,title = paste("Released volume and released peak dischage for event:",EventName," at structure",StructureName)
           )
         
         #Save figure
-        ggsave(paste0("2Outputs/ReleasedVolume-VS-Qpeak_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",Structures$Name[[Structure_Ind]],"_ParametersAsBestEstimates.png")
+        ggsave(paste0("2Outputs/ReleasedVolume-VS-Qpeak_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
                , width = 10, height = 7,units="cm") 
-      }
-    } #end of the for loop on structures
+      }# en of the structure loop
+      
+    }# end of the if loop
     
   }# end of the normal run condition
   

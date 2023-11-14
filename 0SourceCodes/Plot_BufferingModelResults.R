@@ -5,7 +5,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
                               ,Reservoir,WidthClogging,VerticalClogging
                               ,N_opening
                               ,storageElevationCurve,Volume
-                              ,N_TimeStepss,Duration
+                              ,N_TimeSteps,Duration
                               ,OpeningMinBaseLevel,SpillwayLevel,CrestLevel
                               ,BoulderGenerationMode)
 {
@@ -18,16 +18,16 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     theme(legend.position = "top")+
     scale_colour_grey(name="Discharges")+
     theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
-    annotate(geom = "text", x = 3*Duration/3600, y = max(Reservoir$Qi)*0.5
+    annotate(geom = "text", x = 1*Duration/3600, y = max(Reservoir$Qi)*0.5
              ,vjust=1,hjust=1
              , label = paste0('Boulder generation mode: ',BoulderGenerationMode)
              ,colour="grey50")+
-    annotate(geom = "text", x = 3*Duration/3600, y = max(Reservoir$Qi)
+    annotate(geom = "text", x = 1*Duration/3600, y = max(Reservoir$Qi)
              ,vjust=1,hjust=1
              , label = paste("Max discharge released =",round(max(Reservoir$Qo),0)
                                         ,"m3/s | Buffering:",round((1-max(Reservoir$Qo)/max(Reservoir$Qi))*100,0),"%")
              )+
-    coord_cartesian(xlim = c(0,3*Duration/3600))+
+    coord_cartesian(xlim = c(0,1*Duration/3600))+
     labs(y = "Discharge [m3/s]"#caption=paste("(a)") ,
          # ,subtitle = paste("Max discharge released =",round(max(Reservoir$Qo),0)
          #               ,"m3/s | Buffering:",round((1-max(Reservoir$Qo)/max(Reservoir$Qi))*100,0),"%")
@@ -44,7 +44,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
         guides(alpha = guide_legend(order = 1,nrow=1))+
         theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank()
               ,legend.key.size = unit(0.5, 'cm'),legend.key=element_rect(colour = "black"))+
-        coord_cartesian(xlim = c(0,3*Duration/3600))+
+        coord_cartesian(xlim = c(0,1*Duration/3600))+
         labs(y = "Opening"#,caption=paste("(c)")
         )+
         theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm"),plot.margin = unit(c(0.1,0.1,0.1,0.5), "cm"))
@@ -56,7 +56,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     guides(col="none")+
     scale_alpha_continuous("Rate of vertical clogging (Boulder jamming laterally) [%]",range = c(0, 1))+
     guides(alpha = guide_legend(order = 1,nrow=1))+
-    coord_cartesian(xlim = c(0,3*Duration/3600))+
+    coord_cartesian(xlim = c(0,1*Duration/3600))+
     theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank()
           ,legend.key.size = unit(0.5, 'cm'),legend.key=element_rect(colour = "black"))+
     labs(y = "Opening"
@@ -80,12 +80,12 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
                                                ,"Flow"
                                                ,"Boulder jam at opening #1")
                           ,values=c(2,2,3,1,4))+
-    annotate(geom = "text", x = 3*Duration/3600, y = max(storageElevationCurve$h,na.rm=TRUE)
+    annotate(geom = "text", x = 1*Duration/3600, y = max(storageElevationCurve$h,na.rm=TRUE)
              ,vjust=1,hjust=1
              , label = paste("Max level reached =",round(max(Reservoir$Z),1),"m.a.s.l.")
     )+
     theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
-    coord_cartesian(xlim = c(0,3*Duration/3600),ylim=c(min(storageElevationCurve$h,na.rm=TRUE),max(storageElevationCurve$h,na.rm=TRUE)))+
+    coord_cartesian(xlim = c(0,1*Duration/3600),ylim=c(min(storageElevationCurve$h,na.rm=TRUE),max(storageElevationCurve$h,na.rm=TRUE)))+
     labs( x = "Time [h]",y = "Flow level [m]"
           # ,caption=paste("(d)")
           # ,subtitle = paste("Max level at barrier =",round(max(Reservoir$Z),1),"m.a.s.l.")
@@ -94,25 +94,25 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
   
   Vplot<-ggplot(Reservoir)+theme_bw(base_size = 9)+
     geom_area(aes(x=T/3600,y=V),lwd=1,col="black",alpha=0.9)+
-    coord_cartesian(xlim = c(0,3*Duration/3600),ylim=c(0,Volume/1000)*1.15)+
-    annotate(geom = "text", x = 3*Duration/3600, y = Volume/1000*1.15
+    coord_cartesian(xlim = c(0,1*Duration/3600),ylim=c(0,Volume/1000)*1.15)+
+    annotate(geom = "text", x = 1*Duration/3600, y = Volume/1000*1.15
              ,vjust=1,hjust=1
              , label = paste("Surge:",round(Volume/10^6,2),"Mm3"
-                             ,"| Trapped:",round(Reservoir$V[(N_TimeStepss-1)],0)/1000,"Mm3"
-                             ,"| Released:",round(Volume/10^6-Reservoir$V[(N_TimeStepss-1)]/1000,3),"Mm3"
-                             ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N_TimeStepss-1)]/1000)/(Volume/10^6)*100,0),"%")
+                             ,"| Trapped:",round(Reservoir$V[(N_TimeSteps-1)],0)/1000,"Mm3"
+                             ,"| Released:",round(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000,3),"Mm3"
+                             ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000)/(Volume/10^6)*100,0),"%")
     )+ 
     labs( x = "Time [h]",y = "Volume [*1000m3]"
           #,caption=paste("(e)")
           # ,subtitle = paste("Surge:",round(Volume/10^6,2),"Mm3"
-          #               ,"| Trapped:",round(Reservoir$V[(N_TimeStepss-1)],0)/1000,"Mm3"
-          #               ,"| Released:",round(Volume/10^6-Reservoir$V[(N_TimeStepss-1)]/1000,3),"Mm3"
-          #               ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N_TimeStepss-1)]/1000)/(Volume/10^6)*100,0),"%")
+          #               ,"| Trapped:",round(Reservoir$V[(N_TimeSteps-1)],0)/1000,"Mm3"
+          #               ,"| Released:",round(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000,3),"Mm3"
+          #               ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000)/(Volume/10^6)*100,0),"%")
           )+
     theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm"),plot.margin = unit(c(0.1,0.1,0.1,0.3), "cm"))
   
   #Plot name definition with date and hour
-  Plot.Name<-paste0("2Outputs/TimeSeriesOf_",EventName
+  Plot.Name<-paste0("2Outputs/TimeSeriesOfEvent_",EventName
                     ,"_forStructure",StructureName
                     ,"_computedOn",lubridate::today()
                     ,"_at",lubridate::now(),".png")
@@ -130,7 +130,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     # Arranger les graphiques
     if(is.null(WidthClogging))
     {
-      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," with model:",ModelVersion))
+      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," (model: ",ModelVersion,")"))
             , vp = define_region(1:6,1))
       print(VclogPlot, vp = define_region(7:10,1))
       print(Zplot, vp = define_region(11:16,1))
@@ -149,6 +149,6 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
 # 
 # Plot_BufferingModel(Reservoir,WidthClogging,VerticalClogging
 #                     ,N_opening,storageElevationCurve,Volume
-#                     ,N_TimeStepss,Duration
+#                     ,N_TimeSteps,Duration
 #                     ,OpeningMinBaseLevel,SpillwayLevel,CrestLevel
 #                     ,BoulderGenerationMode)

@@ -23,9 +23,10 @@ N_TimeSteps<-ceiling(SimulationDuration/TimeStep)
 SlopeDep<-input[4]#
 
 #Count number of boulders 
+IndexOfLastInitialCondition<-length(input)-length(Boulders[,1])
 for(i in (1:length(Boulders[,1])))
 {
-  Boulders$Number[i]<-input[6+i]
+  Boulders$Number[i]<-input[IndexOfLastInitialCondition+i]
 }
 #Mean boulder size of each class used to compute the typucal volume of a boulder
 Boulders$Diameter<-0.5*(Boulders$BoulderDiameter_min+Boulders$BoulderDiameter_max)

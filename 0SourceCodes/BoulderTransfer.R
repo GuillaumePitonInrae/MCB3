@@ -12,7 +12,7 @@ Transfer_Between_Structure<-function(Qo,Transfer.Type,Vmixing)
   N.boulder.class<-0.5*sum(substr(names(Qo),1,5)=="Class")
   
   Qnext<- Qo %>% 
-    #Keep only the dataneeded
+    #Keep only the data needed
     select(T,Qo,paste0("Class",(1:N.boulder.class),".unjammed"))
   
   # Add column for probabilities that are filled by NA so fit for "instantaneous" transfer mode

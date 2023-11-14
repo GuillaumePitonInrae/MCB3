@@ -79,8 +79,8 @@ define_bridgeStorageElevation<-function(Opening,width,slope)
   # interpolate the deposition slope on 10 values of slopes
   seq_slope<-seq(0,slope*0.95,length.out=10)
   
-  # interpolate the downstream altitude, we do not extrapolate arbitrarilly over 5 m above the max deck level
-  seq_Z<-seq(min(Opening$BaseLevel),(max(BaseLevel_max,DeckLevel_max)+5),lenght.out=100)
+  # interpolate the downstream altitude, we do not extrapolate arbitrarily over 5 m above the max deck level
+  seq_Z<-seq(min(Opening$BaseLevel),(max(BaseLevel_max,DeckLevel_max)+5),length.out=50)
   
   # create an storage / elevation Curves data frame
   elev_storage<-data.frame(matrix(ncol = length(seq_slope),

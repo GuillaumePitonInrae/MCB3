@@ -1,9 +1,7 @@
 ### Create input files with main parameters used as upstream supply
 #V0 July 2023 - G. Piton & C. Misset
 
-Create_inlet_input<-function(EventName,AdjustEventManually
-                                  # , InitialCondition
-                                  )
+Create_inlet_input<-function(EventName,AdjustEventManually,Structures,Boulders)
 {
   
   # Find the event in the table
@@ -17,10 +15,15 @@ Create_inlet_input<-function(EventName,AdjustEventManually
     ,Events$PeakDischarge_BestEstimate[MagnitudeClass]#Qpeak m3/s,
     ,Events$TimeLag_BestEstimate[MagnitudeClass] #(s) Peak lag
     ,Events$DepositionSlope_BestEstimate[MagnitudeClass] #Deposition slope (%)
-    #Initial state of the basin filling and jamming
-    ,NA#InitialCondition$InitialDepositHeight_BestEstimate #Initial deposit height (m)
-    ,NA#InitialCondition$InitialJammingHeight_BestEstimate  #Jam at the slit base by large wood (m)
   )
+  #Initial state of the basin filling and jamming
+  for(Structure_Ind in (1:length(Structures$Name)))
+  {
+    input<-c(input
+             ,Structures$InitialConditions$InitialDepositHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]  #Initial deposit height (m)
+             ,Structures$InitialConditions$InitialJammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)])#Jam at the slit base by large wood  or boulders(m)
+  }
+  
   # Adding of the number of Boulders
   for(j in (1:dim(Boulders)[1]))
   {
@@ -34,10 +37,13 @@ Create_inlet_input<-function(EventName,AdjustEventManually
     InputDataName<-c("Volume (*1000 m3)"
                        ,"Qpeak (m3/s)"
                        ,"Peak lag (-)"
-                       ,"Deposition slope (%)"
-                       ,"Initial deposit height (m)"
-                       ,"Jam at the slit base by large wood or boulders (m)")
-    InputDataName<-c(InputDataName,paste0("Number of boulders of diameter "
+                       ,"Deposition slope (%)")
+                       
+    InputDataName<-c(InputDataName
+                     ,paste0(c("Initial deposit height at structure "
+                               ,"Initial jam height at structure ")
+                             ,sort(rep(1:length(Structures$Name),2)))
+                     ,paste0("Number of boulders of diameter "
                                               ,Boulder$BoulderDiameter_min,"-"
                                               ,BoulderBoulderDiameter_max
                                               ," m in a volume of "
