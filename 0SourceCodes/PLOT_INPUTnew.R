@@ -11,7 +11,7 @@ PLOT_INPUTnew<-function (input, N = 1000, mode = "IND")
   ncol = ceiling(sqrt(ntot))
   nrow = ceiling(ntot/ncol)
   # dev.new()
-  par(mfrow = c(nrow, ncol), cex = 1.1, mex = 0.75, mar = c(4.5,4.005, 2, 1),bty="n")
+  par(mfrow = c(nrow, ncol), cex = 1.1, mex = 1, mar = c(4.5,4.005, 2, 1),bty="n")
   ndiscrprob = 1000
   for (i in 1:length(input)) {
     inp = input[[i]]

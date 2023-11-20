@@ -27,7 +27,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   N_TimeSteps<-length(Qin[,1])
   #### Duration of the surge assuming a triangular hydrograph
   # Duration<-round(input[1]*10^3/(input[2]/2),0)
-  Duration<-max(which(Qin$Q>max(Qin$Q/10000)))
+  Duration<-max(which(Qin$Q>(max(Qin$Q,na.rm=TRUE)/10000)))
   
   #### Slope of deposition
   SlopeDep<-input[4]#
@@ -81,10 +81,10 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   #Count number of boulders 
   for(i in (1:dim(Boulders)[1]))
   {
-    Boulders$Number[i]<-input[6+i]
+    Boulders$Number[i]<-input[(4+length(Structures$Name)*2)+i]
   }
   #Mean boulder size of each class used to compute the typucal volume of a boulder
-  Boulders$Diameter<-0.5*(Boulders$BoulderDiameter_min+Boulders$BoulderDiameter_max)
+  Boulders$Diameter<-0.5*(Boulders$Diameter_min+Boulders$Diameter_max)
   #Elementary volume of each boulder class
   Boulders$V<-pi/6*Boulders$Diameter^3
   #Clogging level and width by boulders
@@ -110,7 +110,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
       geom_hline(aes(yintercept = SpillwayLevel,lty="2"))+
       scale_linetype_manual("",labels=c("Opening base level","Spillway level"),values=c(2,3))+
       theme(legend.position = "top")
-      ggsave("2Outputs/StageVolumeBarrier.png", width = 8, height = 6,units="cm")
+    ggsave("2Outputs/StageVolumeBarrier.png", width = 8, height = 6,units="cm")
   }
   #Print stage - discharge relationship
   if(PrintDataPlot){
@@ -142,18 +142,18 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
       theme(legend.position = "top")+
       # ylim(min(storageElevationCurve$h),max(storageElevationCurve$h))+
       theme(plot.margin = unit(c(0.2,0.3,0.2,0.2), "cm"))
-      
-      ggsave("2Outputs/StageDischargeInitial.png", width = 8, height = 6,units="cm")
+    
+    ggsave("2Outputs/StageDischargeInitial.png", width = 8, height = 6,units="cm")
   }
   
   ################################
   #    COMPUTATION----
   ################################
   #Initialize a data.frame to record boulders generated
-  Boulder_list_all<-data.frame(T=NULL,D=NULL,Class=NULL,Opening=NULL,Jammed=NULL)
+  Boulder_list_all<-data.frame(Time=NULL,D=NULL,Class=NULL,Opening=NULL,Jammed=NULL)
   
   #Result dataset initialisation
-  Reservoir<-data.frame(T=Qin$T
+  Reservoir<-data.frame(Time=Qin$Time
                         ,Qi=Qin$Q
                         ,Qo=0 #Qoutlet
                         ,V=NA#/10^3 #stored volume
@@ -218,9 +218,9 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
     
     #Compute opening discharge, i.e., all but the last opening
     Reservoir$Qoutlet[i]<-sum(Q_CompoundBarrier(Opening = Opening[1:(N_opening-2),] #Top opening is the crest, before is the spillway
-                                              ,BaseClogging = BoulderClogging_level[i,(1:(N_opening-2))]
-                                              ,WidthClogging = BoulderClogging_width[i,(1:(N_opening-2))]
-                                              ,h=Reservoir$Z[i]))
+                                                ,BaseClogging = BoulderClogging_level[i,(1:(N_opening-2))]
+                                                ,WidthClogging = BoulderClogging_width[i,(1:(N_opening-2))]
+                                                ,h=Reservoir$Z[i]))
     #Compute spillway discharge, i.e., last opening
     Reservoir$Qspillway[i]<-as.numeric(Q_CompoundBarrier(Opening = Opening[(N_opening-1),] #Top opening is the crest, before is the spillway
                                                          ,BaseClogging = BoulderClogging_level[i,(N_opening-1)]
@@ -228,137 +228,153 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
                                                          ,h=Reservoir$Z[i]))
     
     
-      #At each second, compute whether some clogging occur or not
-      for(TimeStep.index in (1:round(TimeStep)))
-      {
-        #Initialize 
-        Jam.Width<-0
-        ####Clogging of the openings
-        #Compute the volume of the surge passing each second  through each opening, 
-        # i.e., instantaneous discharges
-        Volume.Surge<-as.numeric(Q_CompoundBarrier(Opening = Opening
-                                                   ,BaseClogging = BoulderClogging_level[i,]
-                                                   ,WidthClogging = BoulderClogging_width[i,]
-                                                   ,h=Reservoir$Z[i]))
-        #Alternative: integrate the volume over the full time step: assume that all boulders arrive at the same time in one 
-        # time step, unused because considered too conservative if the time step is long.
-        # TimeStep*as.numeric(Q_CompoundBarrier(Opening = Opening,BaseClogging = BoulderClogging_level[i,],h=Reservoir$Z[i]))
+    #At each second, compute whether some clogging occur or not
+    for(TimeStep.index in (1:round(TimeStep)))
+    {
+      #Initialize 
+      Jam.Width<-0
+      ####Clogging of the openings
+      #Compute the volume of the surge passing each second  through each opening, 
+      # i.e., instantaneous discharges
+      Volume.Surge<-as.numeric(Q_CompoundBarrier(Opening = Opening
+                                                 ,BaseClogging = BoulderClogging_level[i,]
+                                                 ,WidthClogging = BoulderClogging_width[i,]
+                                                 ,h=Reservoir$Z[i]))
+      #Alternative: integrate the volume over the full time step: assume that all boulders arrive at the same time in one 
+      # time step, unused because considered too conservative if the time step is long.
+      # TimeStep*as.numeric(Q_CompoundBarrier(Opening = Opening,BaseClogging = BoulderClogging_level[i,],h=Reservoir$Z[i]))
+      
+      #Initialize the list of boulder passing through each opening
+      for(Opening_Ind in (1:N_opening))
+      { 
+        VolumeSurge_inst<-Volume.Surge[Opening_Ind]
+        #Check whether the transfer from upstream is instantaneous or mixing
+        if(is.na(Qin$p1[i]))  #if probability is NA, then we must directly transfer the upstream number of boulders
+        {
+          Boulder_list <-BoulderSizing(Qin[i,(1:dim(Boulders)[1])+2+dim(Boulders)[1]])
+        }else{
+          #of the probability was not NA, then we randomly sample the boulder size
+          Boulder_list<-BoulderPassing(VolumeSurge_inst
+                                       ,Boulders$Diameter_min,Boulders$Diameter_max
+                                       ,Boulder.probabilities=as.numeric(Qin[i,(1:dim(Boulders)[1])+2]))
+          
+        }
         
-        #Initialize the list of boulder passing through each opening
-        for(Opening_Ind in (1:N_opening))
-        { 
-          VolumeSurge_inst<-Volume.Surge[Opening_Ind]
-          #Check whether the transfer from upstream is instantaneous or mixing
-          if(is.na(Qin$p1[i]))  #if probability is NA, then we must directly transfer the upstream number of boulders
+        if(!is.na(Boulder_list$D)[1])
+        {
+          Boulder_list<-data.frame(Time=rep(Reservoir$Time[i],length(Boulder_list$D))
+                                   ,D=sort(Boulder_list$D,na.last=TRUE,decreasing =TRUE)
+                                   ,Class=sort(Boulder_list$Class,na.last=TRUE,decreasing =TRUE)
+                                   ,Opening=rep(Opening_Ind,length(Boulder_list$D))
+                                   ,Jammed=rep("a) Unjammed",length(Boulder_list$D)))
+          # data.frame(Time=NULL,D=NULL,Opening=NULL,Jammed=NULL)
+          # if(!is.na(Boulder_list)){print(Boulder_list$D)}
+          
+          #Full width clogging 
+          #Sum the two biggest diameters
+          Jam.Width<-sum(Boulder_list$D[1:2],na.rm = TRUE)
+          if(Opening$Type[Opening_Ind]=="weir")
           {
-            Boulder_list <-BoulderSizing(Qin[i,(1:dim(Boulders)[1])+2+dim(Boulders)[1]])
+            #Account for trappezoidal shape if weir
+            Opening.Remaining.Width<-2/tan(Opening$Param[Opening_Ind]/180*pi)*BoulderClogging_level[i,Opening_Ind]+Opening$Width[Opening_Ind]-BoulderClogging_width[i,Opening_Ind]
           }else{
-            #of the probability was not NA, then we randomly sample the boulder size
-            Boulder_list<-BoulderPassing(VolumeSurge_inst
-                                         ,Boulders$BoulderDiameter_min,Boulders$BoulderDiameter_max
-                                         ,Boulder.probabilities=as.numeric(Qin[i,(1:dim(Boulders)[1])+2]))
-            
+            #Otherwise, use opening width minus clogging
+            Opening.Remaining.Width<-Opening$Width[Opening_Ind]-BoulderClogging_width[i,Opening_Ind]
           }
           
-          if(!is.na(Boulder_list$D)[1])
+          #If the jam width is larger than the opening (eventually yet partially clogged), 
+          # it is jammed and the jam is as high as the biggest boulder passing
+          if(max(Jam.Width,0,na.rm = T)> Opening.Remaining.Width)
           {
-            Boulder_list<-data.frame(T=rep(Reservoir$T[i],length(Boulder_list$D))
-                                     ,D=sort(Boulder_list$D,na.last=TRUE,decreasing =TRUE)
-                                     ,Class=sort(Boulder_list$Class,na.last=TRUE,decreasing =TRUE)
-                                     ,Opening=rep(Opening_Ind,length(Boulder_list$D))
-                                     ,Jammed=rep("a) Unjammed",length(Boulder_list$D)))
-            # data.frame(T=NULL,D=NULL,Opening=NULL,Jammed=NULL)
-            # if(!is.na(Boulder_list)){print(Boulder_list$D)}
-            
-            #Full width clogging 
-            #Sum the two biggest diameters
-            Jam.Width<-sum(Boulder_list$D[1:2],na.rm = TRUE)
-            if(Opening$Type[Opening_Ind]=="weir")
-            {
-              #Account for trappezoidal shape if weir
-              Opening.Remaining.Width<-2/tan(Opening$Param[Opening_Ind]/180*pi)*BoulderClogging_level[i,Opening_Ind]+Opening$Width[Opening_Ind]-BoulderClogging_width[i,Opening_Ind]
-            }else{
-              #Otherwise, use opening width minus clogging
-              Opening.Remaining.Width<-Opening$Width[Opening_Ind]-BoulderClogging_width[i,Opening_Ind]
-            }
-            
-            #If the jam width is larger than the opening (eventually yet partially clogged), 
-            # it is jammed and the jam is as high as the biggest boulder passing
-            if(max(Jam.Width,0,na.rm = T)> Opening.Remaining.Width)
-              {
-              BoulderClogging_level[i:N_TimeSteps,Opening_Ind]<-BoulderClogging_level[i,Opening_Ind]+max(Boulder_list$D,na.rm = TRUE)
-              # Record the boulders
-              if(length(Boulder_list$Jammed)>1){Boulder_list$Jammed[1:2]<-"b) Laterally jammed"}else{Boulder_list$Jammed[1]<-"b) Laterally jammed"}
-            }
-            
-            #Partial width clogging
-            if(Opening$Type[Opening_Ind]=="slot")
-            {
-              #Record that the opening width clogging increase by the diameters of boulders that are bigger than slot height
-              BoulderClogging_width[i:N_TimeSteps,Opening_Ind]<-min(Opening$Width[Opening_Ind]
-                                                                     ,BoulderClogging_width[i-1,Opening_Ind]+sum(Boulder_list$D[which(Boulder_list$D>(Opening$Param[Opening_Ind]-Opening$BaseLevel[Opening_Ind]))]))
-              
-              # Record the boulders
-              Boulder_list$Jammed[which(Boulder_list$Jammed!="b) Laterally jammed" & Boulder_list$D>(Opening$Param[Opening_Ind]-Opening$BaseLevel[Opening_Ind]))]<-"c) Vertically jammed"  
-              
-              #Clog the eventual residual small holes smaller than minimum boulder size (thus not clogged later)
-              if(BoulderClogging_width[i,Opening_Ind]-Opening$Width[Opening_Ind] < min(Boulders$BoulderDiameter_min))
-              {
-                BoulderClogging_width[i:N_TimeSteps,Opening_Ind]<-Opening$Width[Opening_Ind]
-              }
-              if(BoulderClogging_level[i,Opening_Ind]-Opening$Param[Opening_Ind] < min(Boulders$BoulderDiameter_min))
-              {
-                BoulderClogging_level[i:N_TimeSteps,Opening_Ind]<-Opening$Param[Opening_Ind]
-              }
-            }
-            Boulder_list_all<-rbind(Boulder_list_all,Boulder_list)
+            BoulderClogging_level[i:N_TimeSteps,Opening_Ind]<-BoulderClogging_level[i,Opening_Ind]+max(Boulder_list$D,na.rm = TRUE)
+            # Record the boulders
+            if(length(Boulder_list$Jammed)>1){Boulder_list$Jammed[1:2]<-"b) Laterally jammed"}else{Boulder_list$Jammed[1]<-"b) Laterally jammed"}
           }
-        }#end of the opening loop
-      }#end of the Timestep loop  
+          
+          #Partial width clogging
+          if(Opening$Type[Opening_Ind]=="slot")
+          {
+            #Record that the opening width clogging increase by the diameters of boulders that are bigger than slot height
+            BoulderClogging_width[i:N_TimeSteps,Opening_Ind]<-min(Opening$Width[Opening_Ind]
+                                                                  ,BoulderClogging_width[i-1,Opening_Ind]+sum(Boulder_list$D[which(Boulder_list$D>(Opening$Param[Opening_Ind]-Opening$BaseLevel[Opening_Ind]))]))
+            
+            # Record the boulders
+            Boulder_list$Jammed[which(Boulder_list$Jammed!="b) Laterally jammed" & Boulder_list$D>(Opening$Param[Opening_Ind]-Opening$BaseLevel[Opening_Ind]))]<-"c) Vertically jammed"  
+            
+            #Clog the eventual residual small holes smaller than minimum boulder size (thus not clogged later)
+            if(BoulderClogging_width[i,Opening_Ind]-Opening$Width[Opening_Ind] < min(Boulders$Diameter_min))
+            {
+              BoulderClogging_width[i:N_TimeSteps,Opening_Ind]<-Opening$Width[Opening_Ind]
+            }
+            if(BoulderClogging_level[i,Opening_Ind]-Opening$Param[Opening_Ind] < min(Boulders$Diameter_min))
+            {
+              BoulderClogging_level[i:N_TimeSteps,Opening_Ind]<-Opening$Param[Opening_Ind]
+            }
+          }
+          Boulder_list_all<-rbind(Boulder_list_all,Boulder_list)
+        }
+      }#end of the opening loop
+    }#end of the Timestep loop  
     #iterate on i to compute the next step
     i<-i+1
   }
   #Check for max flow level and whether it reached the available data
   if(max(Reservoir$Z)==max(storageElevationCurve$h))
-    {
+  {
     print(paste0("Level reached the maximum storage elevation level of structure:"
-  ,StructureName,".Consider providing storage volume at higher level if it is a barrier, otherwise it means that the highest bridge deck level was overtopped by more than 5 m, the buffering and discharge computed by the model are thus most probably wrong!"))
-    }
+                 ,StructureName,".Consider providing storage volume at higher level if it is a barrier, otherwise it means that the highest bridge deck level was overtopped by more than 5 m, the buffering and discharge computed by the model are thus most probably wrong!"))
+  }
   
-    
+  
   ################################
   #    RECORD THE TIME SERIES AND INDICATORS----
   ################################
-   #Add the jamming state of the openings
+  #Add the jamming state of the openings
   Reservoir<-cbind(Reservoir
                    ,BoulderClogging_level[(1:(N_opening-1))] #Only until N_opening-1 because clogging is a no sense on the crest
                    ,BoulderClogging_width[(1:(N_opening-1))])#Only until N_opening-1 because clogging is a no sense on the crest
   Reservoir$LevelClogging1<-Reservoir$Z1+OpeningMinBaseLevel
   
-  
   #Add the number of boulders of each class to reservoir
+  #With a for loop
   for(i in c(1:dim(Boulders)[1]))
   {
-    Boulder_N_jammed<-Boulder_list_all %>% 
-      filter(Class==i) %>%
-      filter(Jammed!="a) Unjammed") %>%
-      group_by(T) %>%
-      summarise(N=n())
-    
-    Boulder_N_unjammed<-Boulder_list_all %>% 
-      filter(Class==i) %>%
-      filter(Jammed=="a) Unjammed") %>%
-      group_by(T) %>%
-      summarise(N=n())
-    
     Reservoir$X<-Reservoir$Y<-0
-    Reservoir$X[match(Boulder_N_jammed$T,Reservoir$T)]<-Boulder_N_jammed$N
+
+    Boulder_N_jammed<-table(Boulder_list_all[(Boulder_list_all$Class == i & Boulder_list_all$Jammed != "a) Unjammed"),1])
+    Boulder_N_unjammed<-table(Boulder_list_all[(Boulder_list_all$Class == i & Boulder_list_all$Jammed == "a) Unjammed"),1])
+    
+    Reservoir$X[match(names(Boulder_N_jammed),Reservoir$Time)]<-Boulder_N_jammed
+    Reservoir$Y[match(names(Boulder_N_unjammed),Reservoir$Time)]<-Boulder_N_unjammed
+    
     names(Reservoir)[which(names(Reservoir)=="X")]<-paste0("Class",i,".jammed")
-    
-    Reservoir$Y[match(Boulder_N_unjammed$T,Reservoir$T)]<-Boulder_N_unjammed$N
     names(Reservoir)[which(names(Reservoir)=="Y")]<-paste0("Class",i,".unjammed")
-    
   }
+
+  #with DPLYR
+  # for(i in c(1:dim(Boulders)[1]))
+  # {
+  #   
+  #   Boulder_N_jammed<-Boulder_list_all %>%
+  #     filter(Class==i) %>%
+  #     filter(Jammed!="a) Unjammed") %>%
+  #     group_by(Time) %>%
+  #     summarise(N=n())
+  #   
+  #   Boulder_N_unjammed<-Boulder_list_all %>%
+  #     filter(Class==i) %>%
+  #     filter(Jammed=="a) Unjammed") %>%
+  #     group_by(Time) %>%
+  #     summarise(N=n())
+  #   
+  #   Reservoir$X<-Reservoir$Y<-0
+  #   Reservoir$X[match(Boulder_N_jammed$Time,Reservoir$Time)]<-Boulder_N_jammed$N
+  #   names(Reservoir)[which(names(Reservoir)=="X")]<-paste0("Class",i,".jammed")
+  #   
+  #   Reservoir$Y[match(Boulder_N_unjammed$Time,Reservoir$Time)]<-Boulder_N_unjammed$N
+  #   names(Reservoir)[which(names(Reservoir)=="Y")]<-paste0("Class",i,".unjammed")
+  #   
+  # }
   
   #Combine the tables of clogging for later plot and analysis
   N_slot<-(Opening$Type=="slot") #which opening are slots
@@ -366,27 +382,27 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   for(i in (1:(N_opening-1))) #Only until N_opening-1 because clogging is a no sense on the crest
   {
     if(i==1){ #Initialize
-      VerticalClogging<-data.frame(T=Reservoir$T,Opening="#1"
+      VerticalClogging<-data.frame(Time=Reservoir$Time,Opening="#1"
                                    ,CloggingRate=BoulderClogging_level[,i]/(Opening$Param[i]-Opening$BaseLevel[i]))
       if(N_slot[i])
       {
-        WidthClogging<-data.frame(T=Reservoir$T,Opening="#1"
+        WidthClogging<-data.frame(Time=Reservoir$Time,Opening="#1"
                                   ,CloggingRate=BoulderClogging_width[,i]/Opening$Width[i])
       }
     }
     #Append
-    VerticalClogging<-rbind(VerticalClogging,data.frame(T=Reservoir$T,Opening=paste0("#",i)
+    VerticalClogging<-rbind(VerticalClogging,data.frame(Time=Reservoir$Time,Opening=paste0("#",i)
                                                         ,CloggingRate=BoulderClogging_level[,i]/(Opening$Param[i]-Opening$BaseLevel[i])))
     
     if((N_slot[i] && is.null(WidthClogging)))
     {#Initialize
-      WidthClogging<-data.frame(T=Reservoir$T,Opening=paste0("#",i)
+      WidthClogging<-data.frame(Time=Reservoir$Time,Opening=paste0("#",i)
                                 ,CloggingRate=BoulderClogging_width[,i]/Opening$Width[i])
     }else{
       if((N_slot[i] && !is.null(WidthClogging)))
       {#Append
         WidthClogging<-rbind(WidthClogging
-                             ,data.frame(T=Reservoir$T,Opening=paste0("#",i)
+                             ,data.frame(Time=Reservoir$Time,Opening=paste0("#",i)
                                          ,CloggingRate=BoulderClogging_width[,i]/Opening$Width[i]))
       }
     }
@@ -403,7 +419,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   
   #remove last line which is not computed
   Reservoir<-Reservoir[-N_TimeSteps,]
- 
+  
   #Final clogging status
   BoulderZ_final<-BoulderClogging_level[(N_TimeSteps-1),]
   BoulderW_final<-BoulderClogging_width[(N_TimeSteps-1),]
@@ -419,12 +435,12 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   }
   
   #Add virtual values to extend the legend of clogging from 0 to 100%
-  VerticalClogging<-rbind(VerticalClogging,data.frame(T=c(-2,-1.5,-1)*10^3
+  VerticalClogging<-rbind(VerticalClogging,data.frame(Time=c(-2,-1.5,-1)*10^3
                                                       ,Opening=rep(VerticalClogging$Opening[1],3)
                                                       ,CloggingRate=c(0,1,rep(VerticalClogging$CloggingRate[1],1))))
   if(Opening$Type[1]=="slot")
   {
-    WidthClogging<-rbind(WidthClogging,data.frame(T=c(-2,-1.5,-1)*10^3
+    WidthClogging<-rbind(WidthClogging,data.frame(Time=c(-2,-1.5,-1)*10^3
                                                   ,Opening=rep(WidthClogging$Opening[1],3)
                                                   ,CloggingRate=c(0,1,rep(WidthClogging$CloggingRate[1],1))))  
   }
@@ -433,7 +449,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   if(PrintFinalPlot){
     # Create directory to save recorded buffering results
     # dir.create(paste0("2Outputs/",EventName,"_ComputedOn",lubridate::today())
-               # ,showWarnings = FALSE,recursive = TRUE)
+    # ,showWarnings = FALSE,recursive = TRUE)
     
     Plot_BufferingModel(ModelVersion,StructureName,Reservoir,WidthClogging,VerticalClogging
                         ,N_opening,storageElevationCurve,input[1]*1000
@@ -451,7 +467,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
 Synthetic_Structure_results<-function(Reservoir, Opening)
 {  #Number of opening
   N_opening<-length(Opening$Number)
-  N_TimeSteps<-length(Reservoir$T)
+  N_TimeSteps<-length(Reservoir$Time)
   
   #Extract the maximum level of the result data set.
   Zmax<-max(Reservoir$Z,na.rm = T)
@@ -490,7 +506,7 @@ Synthetic_Structure_results<-function(Reservoir, Opening)
   #Remaning part passing over the Crest
   VoutCrest<-Vout-VoutSlit-VoutSpillway
   
-  if(is.na(Reservoir$T[1]))
+  if(is.na(Reservoir$Time[1]))
   {return(NA)}else
   {
     RESULTS<-data.frame("Qp_in"=Qp_in
@@ -503,11 +519,11 @@ Synthetic_Structure_results<-function(Reservoir, Opening)
                         ,"Vfinal"=Vfinal*1000
                         # ,"Tover"=Tover,"Tover.spillway"=Tover.s
                         ,BoulderGenerationMode=BoulderGenerationMode
-                        )
+    )
     RESULTS<-cbind(RESULTS
                    ,Reservoir[dim(Reservoir)[1],(7+1:(N_opening-1))]                    #only until N_opening -1 because
                    ,Reservoir[dim(Reservoir)[1],(7+(N_opening-1)+1:(N_opening-1))]      #the top opening is the crest
-                   )
+    )
     return(RESULTS)
   }
 }
@@ -524,7 +540,7 @@ Cascade_of_structure_functionning<-function(input)
     if(Structure_Ind > 1)
     { 
       #record input 
-      Qo_all_upstream<-Qo_all
+      Qo_all_upstream<-Qo#_all
       #Check type of transfert condition
       transfer <- Structures$TransferDownstream[[which(Structures$Rank==Structure_Ind-1)]]
       if(transfer == "Instantaneous")
@@ -536,9 +552,14 @@ Cascade_of_structure_functionning<-function(input)
                                      ,nchar(transfer)))
       }
       #update the input accordingly
-      Qin<-Transfer_Between_Structure(Qo = Qo_all_upstream %>% filter(Run == paste0("Run #",Run_Ind)) %>% filter(StructureRank == (Structure_Ind-1))
+      Qo_all_upstream<-Qo_all_upstream[Qo_all_upstream$StructureRank == (Structure_Ind-1),]
+      Qin<-Transfer_Between_Structure(Qo = Qo_all_upstream 
                                       ,Transfer.Type = transfer
                                       ,Vmixing = Vmixing)
+      
+      # Qin<-Transfer_Between_Structure(Qo = Qo_all_upstream %>% filter(Run == paste0("Run #",Run_Ind)) %>% filter(StructureRank == (Structure_Ind-1))
+      #                                 ,Transfer.Type = transfer
+      #                                 ,Vmixing = Vmixing)
     }
     
     #Compute the actual structure functionning
@@ -547,30 +568,34 @@ Cascade_of_structure_functionning<-function(input)
                                ,input=input,Qin=Qin
                                ,Opening=as.data.frame(Structures$Opening[[which(Structures$Rank==Structure_Ind)]])
                                ,StorageElevation=as.data.frame(Structures$StorageElevation[[which(Structures$Rank==Structure_Ind)]])
-                                )
+                               )
     
     Result<-Synthetic_Structure_results(Qo, Structures$Opening[[which(Structures$Rank==Structure_Ind)]])
     Result$StructureRank<-Structure_Ind
     
     #record the run ID (general variable) and structure name
-    Qo$Run<-paste0("Run #",Run_Ind)
+    # Qo$Run<-paste0("Run #",Run_Ind)
     Qo$StructureRank<-Structure_Ind
     
     #Record the run results
-    if(Run_Ind == 1){
-      Result_all<-Result
-      Qo_all<-Qo
-    }else{
-      load(paste0("2Outputs/Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
-      Result_all<-rbind(Result_all,Result)
-      Qo_all<-rbind(Qo_all,Qo)
-    }
+    # if(Run_Ind == 1){
+    #   Result_all<-Result
+    #   Qo_all<-Qo
+    # }else{
+    #   load(paste0("2Outputs/Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
+    #   Result_all<-rbind(Result_all,Result)
+    #   Qo_all<-rbind(Qo_all,Qo)
+    # }
     #Save a data frame with the main results of all runs as a .Rdata file
-    save(Result_all,Qo_all,file=paste0("2Outputs/Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
+    # save(Result_all,Qo_all,file=paste0("2Outputs/Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],"_",lubridate::now(),".RData"))
+    
+    File.Name<-paste0("2Outputs/Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],"_",lubridate::now(),".Rdata")
+    File.Name<-str_replace_all(File.Name,":","-")
+    File.Name<-str_replace_all(File.Name," ","_")
+    save(Result,Qo,file=File.Name)
     
   } #end of the for loop on structures
   
   #Return max outlet discharge at last structure
   return(max(Qo$Qo))
 }
-  

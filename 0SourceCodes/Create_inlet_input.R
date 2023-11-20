@@ -20,14 +20,14 @@ Create_inlet_input<-function(EventName,AdjustEventManually,Structures,Boulders)
   for(Structure_Ind in (1:length(Structures$Name)))
   {
     input<-c(input
-             ,Structures$InitialConditions$InitialDepositHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]  #Initial deposit height (m)
-             ,Structures$InitialConditions$InitialJammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)])#Jam at the slit base by large wood  or boulders(m)
+             ,Structures$InitialConditions$DepositHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]  #Initial deposit height (m)
+             ,Structures$InitialConditions$JammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)])#Jam at the slit base by large wood  or boulders(m)
   }
   
   # Adding of the number of Boulders
   for(j in (1:dim(Boulders)[1]))
   {
-    input<-c(input,Boulders$BoulderNumber_BestEstimate[j])
+    input<-c(input,Boulders$Number_BestEstimate[j])
   }
   
   #Adjust values manually
@@ -44,15 +44,34 @@ Create_inlet_input<-function(EventName,AdjustEventManually,Structures,Boulders)
                                ,"Initial jam height at structure ")
                              ,sort(rep(1:length(Structures$Name),2)))
                      ,paste0("Number of boulders of diameter "
-                                              ,Boulder$BoulderDiameter_min,"-"
-                                              ,BoulderBoulderDiameter_max
+                                              ,Boulders$Diameter_min,"-"
+                                              ,Boulders$Diameter_max
                                               ," m in a volume of "
                                               ,Boulders$ReferenceVolume," m3 of deposit"))
     for(j in c(1:length(input)))
     {
       input[j]<-as.numeric(dlg_input(message = paste("Please provide the value of parameter \n",InputDataName[j])
                                      , default = input[j])$res)
+      if(!is.na(input[j]))
+         {
+           if(input[j]<0)
+           {input[j]<-NA}
+           }
     }
+    
+    if(sum(is.na(input))>0)
+    {
+      RedefineValue_Ind<-which(is.na(input))
+    }
+    
+    for(j in RedefineValue_Ind)
+    {
+      input[j]<-as.numeric(dlg_input(message = paste("The value you provided for parameter",InputDataName[j]
+                                                     ,"was not acceptable (positive number),"
+                                                     ,"Please provide the value of parameter")
+                                     , default = input[j])$res)
+    }
+    
   }
   return(input)
 }

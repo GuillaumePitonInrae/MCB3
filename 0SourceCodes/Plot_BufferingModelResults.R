@@ -12,16 +12,16 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
   ################################
   #    SYNTHESIS PLOT----
   ################################
-  Qplot<-ggplot(Reservoir,aes(x=T/3600))+theme_bw(base_size = 9)+
+  Qplot<-ggplot(Reservoir,aes(x=Time/3600))+theme_bw(base_size = 9)+
     geom_line(aes(y=Qi,colour="Inlet"),lwd=1.2)+
     geom_line(aes(y=Qo,colour="Outlet"),lwd=1.5)+
     theme(legend.position = "top")+
-    scale_colour_grey(name="Discharges")+
+    scale_colour_grey(name="Discharge")+
     theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
-    annotate(geom = "text", x = 1*Duration/3600, y = max(Reservoir$Qi)*0.5
-             ,vjust=1,hjust=1
-             , label = paste0('Boulder generation mode: ',BoulderGenerationMode)
-             ,colour="grey50")+
+    # annotate(geom = "text", x = 1*Duration/3600, y = max(Reservoir$Qi)*0.5
+    #          ,vjust=1,hjust=1
+    #          , label = paste0('Boulder generation mode: ',BoulderGenerationMode)
+    #          ,colour="grey50")+
     annotate(geom = "text", x = 1*Duration/3600, y = max(Reservoir$Qi)
              ,vjust=1,hjust=1
              , label = paste("Max discharge released =",round(max(Reservoir$Qo),0)
@@ -32,11 +32,13 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
          # ,subtitle = paste("Max discharge released =",round(max(Reservoir$Qo),0)
          #               ,"m3/s | Buffering:",round((1-max(Reservoir$Qo)/max(Reservoir$Qi))*100,0),"%")
          )+
-    theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm"),plot.margin = unit(c(0.1,0.1,0.1,0.1), "cm"))
+    theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm")
+          # ,plot.margin = unit(c(0.1,0.1,0.1,0.1), "cm")
+          )
     
   if(!is.null(WidthClogging))
   {
-      WclogPlot<-ggplot(WidthClogging,aes(x=T/3600,y=Opening))+theme_bw(base_size = 9)+
+      WclogPlot<-ggplot(WidthClogging,aes(x=Time/3600,y=Opening))+theme_bw(base_size = 9)+
         geom_line(aes(alpha=CloggingRate*100),col="black",lwd=7/N_opening*4)+
         theme(legend.position = "top")+
         guides(col="none")+
@@ -47,10 +49,12 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
         coord_cartesian(xlim = c(0,1*Duration/3600))+
         labs(y = "Opening"#,caption=paste("(c)")
         )+
-        theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm"),plot.margin = unit(c(0.1,0.1,0.1,0.5), "cm"))
+        theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm")
+              # ,plot.margin = unit(c(0.1,0.1,0.1,0.5), "cm")
+              )
   }
   
-  VclogPlot<-ggplot(VerticalClogging,aes(x=T/3600,y=Opening))+theme_bw(base_size = 9)+
+  VclogPlot<-ggplot(VerticalClogging,aes(x=Time/3600,y=Opening))+theme_bw(base_size = 9)+
     geom_line(aes(alpha=CloggingRate*100),col="black",lwd=9/N_opening*4)+
     theme(legend.position = "top")+
     guides(col="none")+
@@ -62,15 +66,17 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     labs(y = "Opening"
          # ,caption=paste("(b)")
          )+
-    theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm"),plot.margin = unit(c(0.1,0.1,0.1,0.5), "cm"))
+    theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm")
+          # ,plot.margin = unit(c(0.1,0.1,0.1,0.5), "cm")
+          )
   
   Zplot<-ggplot(Reservoir)+theme_bw(base_size = 9)+
     geom_hline(aes(yintercept = OpeningMinBaseLevel,colour="1",lty="1"))+
     geom_hline(aes(yintercept = SpillwayLevel,colour="2",lty="2"))+
     geom_hline(aes(yintercept = CrestLevel,colour="3",lty="3"))+
-    geom_line(aes(x=T/3600,y=Z,colour="4",lty="4"),lwd=1)+
-    geom_line(aes(x=T/3600,y=LevelClogging1,colour="5",lty="5"))+
-    geom_ribbon(aes(x=T/3600,ymax=LevelClogging1,ymin=OpeningMinBaseLevel)
+    geom_line(aes(x=Time/3600,y=Z,colour="4",lty="4"),lwd=1)+
+    geom_line(aes(x=Time/3600,y=LevelClogging1,colour="5",lty="5"))+
+    geom_ribbon(aes(x=Time/3600,ymax=LevelClogging1,ymin=OpeningMinBaseLevel)
                 ,lwd=1,col="transparent",alpha=0.2)+
     theme(legend.position = "top")+
     scale_colour_grey(name="Level",label=c("Opening base","Spillway","Crest","Flow","Boulder jam at opening #1"))+
@@ -90,10 +96,12 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
           # ,caption=paste("(d)")
           # ,subtitle = paste("Max level at barrier =",round(max(Reservoir$Z),1),"m.a.s.l.")
           )+
-    theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm"),plot.margin = unit(c(0.1,0.1,0.1,0.4), "cm"))
+    theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm")
+          # ,plot.margin = unit(c(0.1,0.1,0.1,0.4), "cm")
+          )
   
   Vplot<-ggplot(Reservoir)+theme_bw(base_size = 9)+
-    geom_area(aes(x=T/3600,y=V),lwd=1,col="black",alpha=0.9)+
+    geom_area(aes(x=Time/3600,y=V),lwd=1,col="black",alpha=0.9)+
     coord_cartesian(xlim = c(0,1*Duration/3600),ylim=c(0,Volume/1000)*1.15)+
     annotate(geom = "text", x = 1*Duration/3600, y = Volume/1000*1.15
              ,vjust=1,hjust=1
@@ -109,13 +117,14 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
           #               ,"| Released:",round(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000,3),"Mm3"
           #               ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000)/(Volume/10^6)*100,0),"%")
           )+
-    theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm"),plot.margin = unit(c(0.1,0.1,0.1,0.3), "cm"))
+    theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm")
+          # ,plot.margin = unit(c(0.1,0.1,0.1,0.3), "cm")
+          )
   
   #Plot name definition with date and hour
   Plot.Name<-paste0("2Outputs/TimeSeriesOfEvent_",EventName
-                    ,"_forStructure",StructureName
-                    ,"_computedOn",lubridate::today()
-                    ,"_at",lubridate::now(),".png")
+                    ,"_forStructure_",StructureName
+                    ,"-computedOn",lubridate::now(),".png")
   Plot.Name<-str_replace_all(Plot.Name,":","-")
   Plot.Name<-str_replace_all(Plot.Name," ","_")
   
@@ -130,13 +139,17 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     # Arranger les graphiques
     if(is.null(WidthClogging))
     {
-      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," (model: ",ModelVersion,")"))
+      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," for event:",EventName,"\n"
+                                    ,"Model version: ",ModelVersion,"\n"
+                                    ,"Boulder generation mode: ",BoulderGenerationMode))
             , vp = define_region(1:6,1))
       print(VclogPlot, vp = define_region(7:10,1))
       print(Zplot, vp = define_region(11:16,1))
       print(Vplot, vp = define_region(17:22,1))
     }else{
-      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," with model:",ModelVersion))
+      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," for event: ",EventName,"\n"
+                                    ,"Model version: ",ModelVersion,"\n"
+                                    ,"Boulder generation mode: ",BoulderGenerationMode))
             , vp = define_region(1:5,1))
       print(VclogPlot, vp = define_region(6:9,1))
       print(WclogPlot, vp = define_region(10:13,1))

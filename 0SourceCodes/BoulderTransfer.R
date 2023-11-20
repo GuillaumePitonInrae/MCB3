@@ -13,19 +13,19 @@ Transfer_Between_Structure<-function(Qo,Transfer.Type,Vmixing)
   
   Qnext<- Qo %>% 
     #Keep only the data needed
-    select(T,Qo,paste0("Class",(1:N.boulder.class),".unjammed"))
+    select(Time,Qo,paste0("Class",(1:N.boulder.class),".unjammed"))
   
   # Add column for probabilities that are filled by NA so fit for "instantaneous" transfer mode
-  Qnext <- cbind(Qnext,data.frame(matrix(NA,nrow=length(Qnext$T),ncol=N.boulder.class)))
+  Qnext <- cbind(Qnext,data.frame(matrix(NA,nrow=length(Qnext$Time),ncol=N.boulder.class)))
   
   #rename the data.frame to have the same names than an inlet input
-  names(Qnext)<-c("T","Q"
+  names(Qnext)<-c("Time","Q"
                   ,paste0("N",(1:N.boulder.class))
                   ,paste0("p",(1:N.boulder.class)))
   
   Qnext <- Qnext %>% 
     #Compute time difference between two time step
-    mutate(dT = T-c(0,Qnext$T[1:(length(Qnext$T)-1)])) %>%
+    mutate(dT = Time-c(0,Qnext$Time[1:(length(Qnext$Time)-1)])) %>%
     #Compute cumulated volume passing
     mutate(Vo = cumsum(Q * dT)) %>%
     # Initialize index such that Vo[Mixing.start:i] = Vmixing
@@ -35,14 +35,8 @@ Transfer_Between_Structure<-function(Qo,Transfer.Type,Vmixing)
   # such that the volume passing is Vmixing
   if(Transfer.Type == "Mixing")
   {
-    #recompute the volume of the boulders
-    for(j in (1:N.boulder.class))
-    {
-      Boulders$Dmin[j]<-as.numeric(substr(Boulders[j,1],1,(stringr::str_locate(Boulders[,1],"-")[j,1]-1)))
-      Boulders$Dmax[j]<-as.numeric(substring(Boulders[j,1],(stringr::str_locate(Boulders[,1],"-")[j,1]+1)))
-    }
     #Mean boulder size of each class used to compute the typucal volume of a boulder
-    Boulders$Diameter<-0.5*(Boulders$Dmin+Boulders$Dmax)
+    Boulders$Diameter<-0.5*(Boulders$Diameter_min+Boulders$Diameter_max)
     #Elementary volume of each boulder class
     Boulders$V<-pi/6*Boulders$Diameter^3
     
@@ -83,7 +77,7 @@ Transfer_Between_Structure<-function(Qo,Transfer.Type,Vmixing)
     }
   }
   #Remove temporary variables
-  Qnext<- Qnext %>% select(T,Q
+  Qnext<- Qnext %>% select(Time,Q
                            ,paste0("p",(1:N.boulder.class))
                            ,paste0("N",(1:N.boulder.class)))
   

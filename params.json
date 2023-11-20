@@ -5,51 +5,51 @@
     "SaveDetailsResults": true,
     "Boulders": [
         {
-            "BoulderDiameter_min": 0.5,
-            "BoulderDiameter_max": 1.0,
-            "BoulderNumber_BestEstimate": 160,
-            "BoulderNumber_min": 100,
-            "BoulderNumber_max": 200,
+            "Diameter_min": 0.5,
+            "Diameter_max": 1.0,
+            "Number_BestEstimate": 160,
+            "Number_min": 100,
+            "Number_max": 200,
             "ReferenceVolume": 30000
         },
         {
-            "BoulderDiameter_min": 1.0,
-            "BoulderDiameter_max": 1.5,
-            "BoulderNumber_BestEstimate": 100,
-            "BoulderNumber_min": 60,
-            "BoulderNumber_max": 160,
+            "Diameter_min": 1.0,
+            "Diameter_max": 1.5,
+            "Number_BestEstimate": 100,
+            "Number_min": 60,
+            "Number_max": 160,
             "ReferenceVolume": 30000
         },
         {
-            "BoulderDiameter_min": 1.5,
-            "BoulderDiameter_max": 2.0,
-            "BoulderNumber_BestEstimate": 60,
-            "BoulderNumber_min": 40,
-            "BoulderNumber_max": 100,
+            "Diameter_min": 1.5,
+            "Diameter_max": 2.0,
+            "Number_BestEstimate": 60,
+            "Number_min": 40,
+            "Number_max": 100,
             "ReferenceVolume": 30000
         },
         {
-            "BoulderDiameter_min": 2.0,
-            "BoulderDiameter_max": 3.0,
-            "BoulderNumber_BestEstimate": 20,
-            "BoulderNumber_min": 10,
-            "BoulderNumber_max": 60,
+            "Diameter_min": 2.0,
+            "Diameter_max": 3.0,
+            "Number_BestEstimate": 20,
+            "Number_min": 10,
+            "Number_max": 60,
             "ReferenceVolume": 30000
         },
         {
-            "BoulderDiameter_min": 3.0,
-            "BoulderDiameter_max": 4.0,
-            "BoulderNumber_BestEstimate": 10,
-            "BoulderNumber_min": 2,
-            "BoulderNumber_max": 16,
+            "Diameter_min": 3.0,
+            "Diameter_max": 4.0,
+            "Number_BestEstimate": 10,
+            "Number_min": 2,
+            "Number_max": 16,
             "ReferenceVolume": 30000
         },
         {
-            "BoulderDiameter_min": 4.0,
-            "BoulderDiameter_max": 5.0,
-            "BoulderNumber_BestEstimate": 2,
-            "BoulderNumber_min": 0,
-            "BoulderNumber_max": 6,
+            "Diameter_min": 4.0,
+            "Diameter_max": 5.0,
+            "Number_BestEstimate": 2,
+            "Number_min": 0,
+            "Number_max": 6,
             "ReferenceVolume": 30000
         }
     ],
@@ -158,8 +158,8 @@
                     "Width": 5,
                     "BaseLevel": 899,
                     "Param": 906.25,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
+                    "VerticalClogging": 0,
+                    "LateralClogging": 0,
                     "Comment": "fente"
                 },
                 {
@@ -168,8 +168,8 @@
                     "Width": 5,
                     "BaseLevel": 906.25,
                     "Param": 10,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
+                    "VerticalClogging": 0,
+                    "LateralClogging": 0,
                     "Comment": "deversoir 1"
                 },
                 {
@@ -178,8 +178,8 @@
                     "Width": 18,
                     "BaseLevel": 909,
                     "Param": 45,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
+                    "VerticalClogging": 0,
+                    "LateralClogging": 0,
                     "Comment": "deversoir 2"
                 },
                 {
@@ -188,8 +188,8 @@
                     "Width": 50,
                     "BaseLevel": 910.45,
                     "Param": 90,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
+                    "VerticalClogging": 0,
+                    "LateralClogging": 0,
                     "Comment": "crete"
                 }
               ]
@@ -266,8 +266,8 @@
                     "Width": 5,
                     "BaseLevel": 805.6,
                     "Param":0,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
+                    "VerticalClogging": 0,
+                    "LateralClogging": 0,
                     "Comment": "fente"
                 },
                 {
@@ -276,8 +276,8 @@
                     "Width": 10,
                     "BaseLevel": 813,
                     "Param":0,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
+                    "VerticalClogging": 0,
+                    "LateralClogging": 0,
                     "Comment": "déversoir 1"
                 },
                 {
@@ -286,8 +286,8 @@
                     "Width": 90,
                     "BaseLevel": 817,
                     "Param": 10,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
+                    "VerticalClogging": 0,
+                    "LateralClogging": 0,
                     "Comment": "Beam interspace 2"
                 }
             ]
@@ -304,8 +304,8 @@
                     "Width": 12,
                     "BaseLevel": 722,
                     "Param": 725.9,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
+                    "VerticalClogging": 0,
+                    "LateralClogging": 0,
                     "Comment": "section pont"
                 },
                 {
@@ -314,8 +314,8 @@
                     "Width": 50,
                     "BaseLevel": 726.9,
                     "Param":0,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
+                    "VerticalClogging": 0,
+                    "LateralClogging": 0,
                     "Comment": "section tablier"
                 },
                 {
@@ -324,8 +324,8 @@
                     "Width": 60,
                     "BaseLevel": 730,
                     "Param": 10,
-                    "BoulderVerticalClogging": 0,
-                    "BoulderLateralClogging": 0,
+                    "VerticalClogging": 0,
+                    "LateralClogging": 0,
                     "Comment": "crete"
                 }
             ],

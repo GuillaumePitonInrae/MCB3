@@ -1,4 +1,4 @@
-BoulderDiameter_min	BoulderDiameter_max	BoulderNumber_BestEstimate	BoulderNumber_min	BoulderNumber_max	ReferenceVolume
+Diameter_min	Diameter_max	Number_BestEstimate	Number_min	Number_max	ReferenceVolume
 0.5	1.0	160	100	200	30000
 1.0	1.5	100	60	160	30000
 1.5	2.0	60	40	100	30000

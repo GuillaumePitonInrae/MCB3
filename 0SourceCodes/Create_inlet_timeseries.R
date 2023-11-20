@@ -29,7 +29,7 @@ for(i in (1:length(Boulders[,1])))
   Boulders$Number[i]<-input[IndexOfLastInitialCondition+i]
 }
 #Mean boulder size of each class used to compute the typucal volume of a boulder
-Boulders$Diameter<-0.5*(Boulders$BoulderDiameter_min+Boulders$BoulderDiameter_max)
+Boulders$Diameter<-0.5*(Boulders$Diameter_min+Boulders$Diameter_max)
 #Elementary volume of each boulder class
 Boulders$V<-pi/6*Boulders$Diameter^3
 #Maximum number of boulder that could theoretically be observed in the reference volume
@@ -38,7 +38,7 @@ Boulders$Nmax<-round(Boulders$ReferenceVolume/Boulders$V,0)
 Boulders$P<-Boulders$Number/Boulders$Nmax
 
 #Result dataset initialisation
-Times.series.inlet<-data.frame(T=seq(0,SimulationDuration,length.out = N_TimeSteps)
+Times.series.inlet<-data.frame(Time=seq(0,SimulationDuration,length.out = N_TimeSteps)
                                #triangular hydrograph 
                                ,Q=approx(x=c(0,PeakLag,Duration)
                                          ,y=c(0,Qpeak,0)

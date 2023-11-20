@@ -132,10 +132,10 @@ while(PerformAnotherSimulation=="yes")
   
   if(!HEADLESS){
     #Select the type of approach----
-    # OnlyNormalRun<-dlg_message(message="Press \"Yes\" to perform normal runs (using best estimates of the input data) \n Or press \"No\" to run a full uncertainty propagation analysis "
-    #                            , type = c("yesno"))$res
+    OnlyNormalRun<-dlg_message(message="Press \"Yes\" to perform normal runs (using best estimates of the input data) \n Or press \"No\" to run a full uncertainty propagation analysis "
+                               , type = c("yesno"))$res
     
-    OnlyNormalRun<-"yes"
+    # OnlyNormalRun<-"yes"
     if(OnlyNormalRun=="yes"){ OnlyNormalRun<-TRUE}else{ OnlyNormalRun<-FALSE}
     #Define the number of simulations to run----
     N.unvalidated<-TRUE
@@ -167,15 +167,19 @@ while(PerformAnotherSimulation=="yes")
   # Choices of plot and save option----
   if(OnlyNormalRun)
   {
-    ComputeWithBestEstimateBoulderNumber<-TRUE
+    ComputeWithBestEstimateNumber<-TRUE
   }else{
-    ComputeWithBestEstimateBoulderNumber<-TRUE
+    ComputeWithBestEstimateNumber<-FALSE
   }
-  if(!HEADLESS){
-    #Saving synthesis figure for each run?
-    PrintFinalPlot<-dlg_message(message="Do you want to print a synthesis plot for each run (hydrographs, flow level, volume stored) in a .png file?", type = c("yesno"))$res
-    if(PrintFinalPlot=="yes"){ PrintFinalPlot<-TRUE}else{ PrintFinalPlot<-FALSE}
-  }
+  
+  if(OnlyNormalRun)
+  {
+    if(!HEADLESS){
+      #Saving synthesis figure for each run?
+      PrintFinalPlot<-dlg_message(message="Do you want to print a synthesis plot for each run (hydrographs, flow level, volume stored) in a .png file?", type = c("yesno"))$res
+      if(PrintFinalPlot=="yes"){ PrintFinalPlot<-TRUE}else{ PrintFinalPlot<-FALSE}
+    }
+  }else{PrintFinalPlot<-FALSE} #no plot for each run if error propagation by possibility analysis
   
   #Disabled options in this version
   PrintDataPlot<-FALSE #Plot stage - discharge Q(h) curve and stage - volume V(h) curves
@@ -187,6 +191,35 @@ while(PerformAnotherSimulation=="yes")
   # Time step
   TimeStep<-1 #(s) Should be an integer in seconds, so no less than 1 second
   # small enough to capture the peak, the code seems to get stuck in infinite loops if set at 5 s with low slopes
+  # Define the event to model----
+  EventUndefined<-TRUE
+  while(EventUndefined)
+  {
+    if(OnlyNormalRun){ # Possible to reuse predefined values or to define the event manually
+      EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
+                                       ,Events$Name
+                                       ,"If you want to define the event manually, write \"0\" ")
+                           ,default = Events$Name[1])$res
+    }else{#Only possible to reuse predefined values 
+      EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
+                                       ,Events$Name)
+                           ,default = Events$Name[1])$res
+      AdjustEventManually <- FALSE
+    } 
+    
+    if(EventName != "0"){AdjustEventManually<-FALSE}else{#Define values manually
+      AdjustEventManually <- TRUE
+      EventName<-dlg_input(message = c("OK we will adjust an event, which one do you want to take as template?, the available names are :"
+                                       ,Events$Name)
+                           ,default = Events$Name[1])$res
+    }
+    
+    if(EventName %in% Events$Name){EventUndefined<-FALSE}else{
+      dlg_message(message="The name you wrote is not in the list of the available events, please provide an available event name"
+                  , type = c("ok"))
+      EventUndefined<-TRUE
+    }
+  }#end of while loop to define the event
   
   # Create input data to launch runs----
   if(OnlyNormalRun)
@@ -194,37 +227,7 @@ while(PerformAnotherSimulation=="yes")
     #If only normal runs, we only use the best estimates
     BoulderGenerationMode<-"Best estimate numbers"
     
-    # Define the event to model----
-    EventUndefined<-TRUE
-    while(EventUndefined)
-    {
-      if(OnlyNormalRun){ # Possible to reuse predefined values or to define the event manually
-        EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
-                                         ,Events$Name
-                                         ,"If you want to define the event manually, write \"0\" ")
-                             ,default = Events$Name[1])$res
-        AdjustEventManually <- TRUE
-        
-      }else{#Only possible to reuse predefined values 
-        EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
-                                         ,Events$Name)
-                             ,default = Events$Name[1])$res
-        AdjustEventManually <- TRUE
-      } 
-      
-      if(EventName == "0"){#Define values manually
-        AdjustEventManually <- TRUE
-        EventName<-dlg_input(message = c("OK we will adjust an event, which one do you want to take as template?, the available names are :"
-                                         ,Events$Name)
-                             ,default = Events$Name[1])$res
-      }else{AdjustEventManually<-FALSE}
-      
-      if(EventName %in% Events$Name){EventUndefined<-FALSE}else{
-        dlg_message(message="The name you wrote is not in the list of the available events, please provide an available event name"
-                    , type = c("ok"))
-      }
-    }#end of while loop to define the event
-    
+
     #Create input data according to the EventName and adjustement option
     input<-Create_inlet_input(EventName,AdjustEventManually,Structures,Boulders)
     
@@ -237,16 +240,16 @@ while(PerformAnotherSimulation=="yes")
       if(Run_Ind==1){  Qoutmax_all<-Qoutmax }else{ Qoutmax_all<-rbind(Qoutmax_all,Qoutmax)  }
       
       #print message
-      print(paste0("Run #",Run_Ind," finished at, ",now()," for the whole cascade of structure, still ",N_runs-Run_Ind," run to perform"))
+      print(paste0("Run #",Run_Ind," finished at ",now()," for the whole cascade of structure, still ",N_runs-Run_Ind," run to perform"))
       
     }
     
-    #plots of scatterplot and histograms----
+    #plots of scatter plot and histograms----
     #If more than 10 runs, plot histograms and a scatter plot of Qmax and V
     if(N_runs>=10)
     {
       # Find the event in the table
-      Magnitude.class<-which(Events$Name==EventName)
+      Event_Ind<-which(Events$Name==EventName)
      
        for(Structure_Ind in 1:length(Structures$Name))
       {
@@ -259,10 +262,10 @@ while(PerformAnotherSimulation=="yes")
           theme_bw(base_size = 9)+
           geom_histogram(aes(Vout/10^3))+
           geom_boxplot(aes(x=Vout/10^3,y=-1))+
-          geom_vline(xintercept = Events$Volume_BestEstimate[Magnitude.class]/10^3)+
-          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Magnitude.class]/10^3
+          geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3)+
+          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Event_Ind]/10^3
                    ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-          coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Magnitude.class]/10^3))+
+          coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3))+
           labs(x="Released volume [*1000 m3]",y="count"
                ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
                ,title = paste("Distribution of released volume for event\n Event:",EventName," & Structure:",StructureName))
@@ -275,10 +278,10 @@ while(PerformAnotherSimulation=="yes")
           theme_bw(base_size = 9)+
           geom_histogram(aes(Qp_out))+
           geom_boxplot(aes(x=Qp_out,y=-1))+
-          geom_vline(xintercept = Events$PeakDischarge_BestEstimate[Magnitude.class])+
-          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$PeakDischarge_BestEstimate[Magnitude.class]
+          geom_vline(xintercept = Events$PeakDischarge_BestEstimate[Event_Ind])+
+          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$PeakDischarge_BestEstimate[Event_Ind]
                    ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-          coord_cartesian(xlim=c(0,Events$PeakDischarge_BestEstimate[Magnitude.class]))+
+          coord_cartesian(xlim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind]))+
           labs(x="Peak discharge [m3/s]",y="count"
                ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
                ,title = paste("Distribution of released peak dischage \n Event:",EventName," & Structure:",StructureName))
@@ -292,14 +295,14 @@ while(PerformAnotherSimulation=="yes")
           theme_bw(base_size = 9)+
           geom_bin2d(aes(x=Vout/10^3,y=Qp_out))+
           scale_fill_continuous("# of Run")+
-          geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Magnitude.class])+
-          geom_vline(xintercept = Events$Volume_BestEstimate[Magnitude.class]/10^3)+
-          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Magnitude.class]/10^3
+          geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Event_Ind])+
+          geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3)+
+          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Event_Ind]/10^3
                    ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-          annotate(geom = "text", x = 0, adj=c(0,0), y = Events$PeakDischarge_BestEstimate[Magnitude.class]
+          annotate(geom = "text", x = 0, adj=c(0,0), y = Events$PeakDischarge_BestEstimate[Event_Ind]
                    ,vjust=(1.2), label = "Supply (Best. Est.)")+
-          coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Magnitude.class])
-                          ,xlim=c(0,Events$Volume_BestEstimate[Magnitude.class]/10^3))+
+          coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])
+                          ,xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3))+
           labs(x="Released volume [*1000 m3]",y="Peak discharge [m3/s]"
                ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"\n Number of runs N =",N_runs)
                ,title = paste("Released volume and released peak dischage \n Event:",EventName," & Structure:",StructureName))
@@ -313,6 +316,10 @@ while(PerformAnotherSimulation=="yes")
     
   }else{# end of the normal run condition
     
+    BoulderGenerationMode<-"Uncertain boulder numbers"
+    # Find the event in the table
+    Event_Ind<-which(Events$Name==EventName)
+    
     # IMPERFECT DATA TO PROVIDE----
     
     ninput<-4+length(Structures$Name)*2+length(Boulders[,1]) #Number of input parameters
@@ -320,25 +327,25 @@ while(PerformAnotherSimulation=="yes")
     
     ############## Volume of debris flows, in Mm3
     #If min = best estimate = max, set the parameter as "fixed"
-    if((Events$Volume_min[Magnitude.class]==Events$Volume_BestEstimate[Magnitude.class]
+    if((Events$Volume_min[Event_Ind]==Events$Volume_BestEstimate[Event_Ind]
         &&
-        Events$Volume_BestEstimate[Magnitude.class]==Events$Volume_max[Magnitude.class]))
+        Events$Volume_BestEstimate[Event_Ind]==Events$Volume_max[Event_Ind]))
     {
       input[[1]]=CREATE_INPUT(
-        name="Volume [Mm3]",
+        name="Volume \n [Mm3]",
         type="fixed",
-        param= Events$Volume_BestEstimate[Magnitude.class]/10^6,  
+        param= Events$Volume_BestEstimate[Event_Ind]/10^6,  
         monoton = "incr"
       )
     }else{
       #Otherwise, set it as possibility distribution (triangle)
       input[[1]]=CREATE_INPUT(
-        name="Volume [Mm3]",
+        name="Volume \n [Mm3]",
         type="possi",
         distr="triangle",
-        param=CheckTriangleDistribution(Events$Volume_min[Magnitude.class],
-                                        Events$Volume_BestEstimate[Magnitude.class],
-                                        Events$Volume_max[Magnitude.class],
+        param=CheckTriangleDistribution(Events$Volume_min[Event_Ind],
+                                        Events$Volume_BestEstimate[Event_Ind],
+                                        Events$Volume_max[Event_Ind],
                                         "Volume")/10^6,
         monoton = "incr"
       )
@@ -346,25 +353,25 @@ while(PerformAnotherSimulation=="yes")
     
     #Peak discharge in m3/s
     #If min = best estimate = max, set the paramter as "fixed"
-    if((Events$PeakDischarge_min[Magnitude.class]==Events$PeakDischarge_BestEstimate[Magnitude.class]
+    if((Events$PeakDischarge_min[Event_Ind]==Events$PeakDischarge_BestEstimate[Event_Ind]
         &&
-        Events$PeakDischarge_BestEstimate[Magnitude.class]==Events$PeakDischarge_max[Magnitude.class]))
+        Events$PeakDischarge_BestEstimate[Event_Ind]==Events$PeakDischarge_max[Event_Ind]))
     {
       input[[2]]=CREATE_INPUT(
-        name="Qpeak [m3/s]",
+        name="Qpeak \n [m3/s]",
         type="fixed",
-        param= Events$PeakDischarge_BestEstimate[Magnitude.class],  
+        param= Events$PeakDischarge_BestEstimate[Event_Ind],  
         monoton = "incr"
       )
     }else{
       #Otherwise, set it as possibility distribution (triangle)
       input[[2]]=CREATE_INPUT(
-        name="Qpeak [m3/s]",
+        name="Qpeak \n [m3/s]",
         type="possi",
         distr="triangle",
-        param=CheckTriangleDistribution(Events$PeakDischarge_min[Magnitude.class],
-                                        Events$PeakDischarge_BestEstimate[Magnitude.class],
-                                        Events$PeakDischarge_max[Magnitude.class],
+        param=CheckTriangleDistribution(Events$PeakDischarge_min[Event_Ind],
+                                        Events$PeakDischarge_BestEstimate[Event_Ind],
+                                        Events$PeakDischarge_max[Event_Ind],
                                         "Qpeak"),
         monoton = "incr"
       )  
@@ -372,25 +379,25 @@ while(PerformAnotherSimulation=="yes")
     
     #Position of the peak in the triangle: Tpeak/Ttotal
     #If min = best estimate = max, set the paramter as "fixed"
-    if((Events$TimeLag_min[Magnitude.class]==Events$TimeLag_BestEstimate[Magnitude.class]
+    if((Events$TimeLag_min[Event_Ind]==Events$TimeLag_BestEstimate[Event_Ind]
         &&
-        Events$TimeLag_BestEstimate[Magnitude.class]==Events$TimeLag_max[Magnitude.class]))
+        Events$TimeLag_BestEstimate[Event_Ind]==Events$TimeLag_max[Event_Ind]))
     {
       input[[3]]=CREATE_INPUT(
-        name="Peak lag [-]",
+        name="Peak lag \n [-]",
         type="fixed",
-        param= Events$TimeLag_BestEstimate[Magnitude.class],  
+        param= Events$TimeLag_BestEstimate[Event_Ind],  
         monoton = "incr"
       )
     }else{
       #Otherwise, set it as possibility distribution (triangle)
       input[[3]]=CREATE_INPUT(
-        name="Peak lag [-]",
+        name="Peak lag \n [-]",
         type="possi",
         distr="triangle",
-        param=CheckTriangleDistribution(Events$TimeLag_min[Magnitude.class],
-                                        Events$TimeLag_BestEstimate[Magnitude.class],
-                                        Events$TimeLag_max[Magnitude.class],
+        param=CheckTriangleDistribution(Events$TimeLag_min[Event_Ind],
+                                        Events$TimeLag_BestEstimate[Event_Ind],
+                                        Events$TimeLag_max[Event_Ind],
                                         "Peak lag"),
         monoton = "incr"
       )
@@ -398,107 +405,125 @@ while(PerformAnotherSimulation=="yes")
     
     #Deposition slope
     #If min = best estimate = max, set the paramter as "fixed"
-    if((Events$DepositionSlope_min[Magnitude.class]==Events$DepositionSlope_BestEstimate[Magnitude.class]
+    if((Events$DepositionSlope_min[Event_Ind]==Events$DepositionSlope_BestEstimate[Event_Ind]
         &&
-        Events$DepositionSlope_BestEstimate[Magnitude.class]==Events$DepositionSlope_max[Magnitude.class]))
+        Events$DepositionSlope_BestEstimate[Event_Ind]==Events$DepositionSlope_max[Event_Ind]))
     {
       input[[4]]=CREATE_INPUT(
-        name="Deposition slope [%]",
+        name="Deposition slope \n [%]",
         type="fixed",
-        param= Events$DepositionSlope_BestEstimate[Magnitude.class],  
+        param= Events$DepositionSlope_BestEstimate[Event_Ind],  
         monoton = "decr"
       )
     }else{
       #Otherwise, set it as possibility distribution (triangle)
       input[[4]]=CREATE_INPUT(
-        name="Deposition slope [%]",
+        name="Deposition slope \n [%]",
         type="possi",
         distr="triangle",
-        param=CheckTriangleDistribution(Events$DepositionSlope_min[Magnitude.class],
-                                        Events$DepositionSlope_BestEstimate[Magnitude.class],
-                                        Events$DepositionSlope_max[Magnitude.class],
+        param=CheckTriangleDistribution(Events$DepositionSlope_min[Event_Ind],
+                                        Events$DepositionSlope_BestEstimate[Event_Ind],
+                                        Events$DepositionSlope_max[Event_Ind],
                                         "Deposition slope"),
         monoton = "decr"
       )
     }
     
-    ##Initial deposit level
-    #If min = best estimate = max, set the paramter as "fixed"
-    if((InitialConditions$InitialDepositHeight_min[1]==InitialConditions$InitialDepositHeight_BestEstimate[1]
-        &&
-        InitialConditions$InitialDepositHeight_BestEstimate[1]==InitialConditions$InitialDepositHeight_max[1]))
+    ##Initial deposit level and initial clogging level
+    for(Structure_Ind in (1:length(Structures$Name)))
     {
-      input[[5]]=CREATE_INPUT(
-        name="Initial deposit [m]",
-        type="fixed",
-        param= InitialConditions$InitialDepositHeight_BestEstimate[1],
-        monoton = "decr"
-      )
-    }else{
-      #Otherwise, set it as possibility distribution (triangle)
-      input[[5]]=CREATE_INPUT(
-        name="Initial deposit [m]",
-        ##### Triangular distri
-        type="possi",
-        distr="triangle",
-        param=CheckTriangleDistribution(InitialConditions$InitialDepositHeight_min[1],
-                                        InitialConditions$InitialDepositHeight_BestEstimate[1],
-                                        InitialConditions$InitialDepositHeight_max[1],
-                                        "Initial deposit"),
-        monoton = "decr"
-      )
+      DepositHeight_BestEstimate<-Structures$InitialConditions$DepositHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
+      DepositHeight_max<-
+        Structures$InitialConditions$DepositHeight_max[which(Structures$Rank==Structure_Ind)]
+      DepositHeight_min<-Structures$InitialConditions$DepositHeight_min[which(Structures$Rank==Structure_Ind)]
+      
+      #If min = best estimate = max, set the paramter as "fixed"
+      if((DepositHeight_BestEstimate  == DepositHeight_max)  
+          &&
+         (DepositHeight_BestEstimate  == DepositHeight_min))
+      {
+        input[[5+(Structure_Ind-1)*2]]=CREATE_INPUT(
+          name=paste0("Initial deposit [m] \n","structure:",Structures$Name[which(Structures$Rank==Structure_Ind)]),
+          type="fixed",
+          param= DepositHeight_BestEstimate,
+          monoton = "decr"
+        )
+      }else{
+        #Otherwise, set it as possibility distribution (triangle)
+        input[[5+(Structure_Ind-1)*2]]=CREATE_INPUT(
+          name=paste0("Initial deposit [m] \n","structure:",Structures$Name[which(Structures$Rank==Structure_Ind)]),
+          ##### Triangular distri
+          type="possi",
+          distr="triangle",
+          param=CheckTriangleDistribution(DepositHeight_min,
+                                          DepositHeight_BestEstimate,
+                                          DepositHeight_max,
+                                          paste0("Initial deposit [m] \n","structure:",Structures$Name[which(Structures$Rank==Structure_Ind)])),
+          monoton = "decr"
+        )
+      }
+      
+      # Height of the initial jamming in the barrier (Large wood and / or boulders)
+      #If min = best estimate = max, set the paramter as "fixed"
+      JammingHeight_BestEstimate<-Structures$InitialConditions$JammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
+      JammingHeight_max<-
+        Structures$InitialConditions$JammingHeight_max[which(Structures$Rank==Structure_Ind)]
+      JammingHeight_min<-Structures$InitialConditions$JammingHeight_min[which(Structures$Rank==Structure_Ind)]
+      
+      # Structures$InitialConditions$JammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)])#Jam at the slit base by large wood 
+      
+      #If min = best estimate = max, set the paramter as "fixed"
+      if((JammingHeight_BestEstimate  == JammingHeight_max)  
+         &&
+         (JammingHeight_BestEstimate  == JammingHeight_min))
+      {
+        input[[5+(Structure_Ind-1)*2+1]]=CREATE_INPUT(
+          name=paste0("Initial jam height [m] \n","structure:",Structures$Name[which(Structures$Rank==Structure_Ind)]),
+          type="fixed",
+          param= JammingHeight_BestEstimate,
+          monoton = "decr"
+        )
+      }else{
+        #Otherwise, set it as possibility distribution (triangle)
+        input[[5+(Structure_Ind-1)*2+1]]=CREATE_INPUT(
+          name=paste0("Initial jam height [m] \n","structure:",Structures$Name[which(Structures$Rank==Structure_Ind)]),
+          ##### Triangular distri
+          type="possi",
+          distr="triangle",
+          param=CheckTriangleDistribution(JammingHeight_min,
+                                          JammingHeight_BestEstimate,
+                                          JammingHeight_max,
+                                          paste0("Initial jam height [m] \n","structure:",Structures$Name[which(Structures$Rank==Structure_Ind)])),
+          monoton = "decr"
+        )
+      }
     }
     
-    # Height of the initial jamming in the barrier (Large wood and / or boulders)
-    #If min = best estimate = max, set the paramter as "fixed"
-    if((InitialConditions$InitialJammingHeight_min[1]==InitialConditions$InitialJammingHeight_BestEstimate[1]
-        &&
-        InitialConditions$InitialJammingHeight_BestEstimate[1]==InitialConditions$InitialJammingHeight_max[1]))
-    {
-      input[[6]]=CREATE_INPUT(
-        name="Initial jamming height [m]",
-        type="fixed",
-        param= InitialConditions$InitialJammingHeight_BestEstimate[1],
-        monoton = "decr"
-      )
-    }else{
-      #Otherwise, set it as possibility distribution (triangle)
-      input[[6]]=CREATE_INPUT(
-        name="Initial jamming height [m]",
-        ##### Triangular distri
-        type="possi",
-        distr="triangle",
-        param=CheckTriangleDistribution(InitialConditions$InitialJammingHeight_min[1],
-                                        InitialConditions$InitialJammingHeight_BestEstimate[1],
-                                        InitialConditions$InitialJammingHeight_max[1],
-                                        "Initial jamming height [m]"),
-        monoton = "decr")
-    }
     ###Boulders
     for(i in (1:length(Boulders[,1])))
     {
       #Boulder class i
       #If min = best estimate = max, set the parameter as "fixed"
-      if((Boulders$BoulderNumber_min[i]==Boulders$BoulderNumber_BestEstimate[i]
+      if((Boulders$Number_min[i]==Boulders$Number_BestEstimate[i]
           &&
-          Boulders$BoulderNumber_BestEstimate[i]==Boulders$BoulderNumber_max[i]))
+          Boulders$Number_BestEstimate[i]==Boulders$Number_max[i]))
       {
-        input[[(6+i)]]=CREATE_INPUT(
+        input[[(4+length(Structures$Name)*2+i)]]=CREATE_INPUT(
           name=paste0("#Boulders ",Boulders[i,1],"-",Boulders[i,2],"m"),
           type="fixed",
-          param= Boulders$BoulderNumber_BestEstimate[i],
+          param= Boulders$Number_BestEstimate[i],
           monoton = "decr"
         )
       }else{
         #Otherwise, set it as possibility distribution (triangle)
-        input[[(6+i)]]=CREATE_INPUT(
+        input[[(4+length(Structures$Name)*2+i)]]=CREATE_INPUT(
           name=paste0("#Boulders ",Boulders[i,1],"-",Boulders[i,2],"m"),
           ##### Triangular distri
           type="possi",
           distr="triangle",
-          param=CheckTriangleDistribution(Boulders$BoulderNumber_min[i]
-                                          ,Boulders$BoulderNumber_BestEstimate[i]
-                                          ,Boulders$BoulderNumber_max[i]
+          param=CheckTriangleDistribution(Boulders$Number_min[i]
+                                          ,Boulders$Number_BestEstimate[i]
+                                          ,Boulders$Number_max[i]
                                           ,paste0("#Boulders ",Boulders[i,1],"-",Boulders[i,2],"m")),
           monoton = "decr")
       }
@@ -511,7 +536,10 @@ while(PerformAnotherSimulation=="yes")
     input=CREATE_DISTR(input)
     
     ####VISU INPUT
-    png(paste0("2Outputs/PossibilityAnalysis_Evt-",Event.name,"_Nrun_",N.Runs,"_InputDistributions.png"), width = 22, height = 18,units="cm",res=350)
+    png(paste0(MainRep,"/2Outputs/PossibilityAnalysis_Evt-",EventName,"_Nrun_",N_runs,"_InputDistributions.png"), width = 22, height = 24
+        ,units="cm"
+        ,res=350
+        )
     {PLOT_INPUTnew(input)}
     dev.off()
     
@@ -522,10 +550,10 @@ while(PerformAnotherSimulation=="yes")
     #Hybrid uncertainty propagation on released volume----
     ###HYBRID UNCERTAINTY PROPAGATION
     
-    Rslt_Uncertain.Boulder.Number<-PROPAG(N=N.Runs,input
-                                          ,CheekyeBufferingModel_UncertainBoulderNumber_Vtot
+    Rslt_Uncertain.Boulder.Number<-PROPAG(N=N_runs,input
+                                          ,Cascade_of_structure_functionning
                                           ,choice_opt,param_opt,mode="IRS")
-    Rslt_Uncertain.Boulder.Number<-data.frame(P=seq(0,1,length.out = N.Runs)
+    Rslt_Uncertain.Boulder.Number<-data.frame(P=seq(0,1,length.out = N_runs)
                                               ,Min=sort(Rslt_Uncertain.Boulder.Number[1,])/10^3
                                               ,Max=sort(Rslt_Uncertain.Boulder.Number[2,])/10^3)
     #       
@@ -534,10 +562,10 @@ while(PerformAnotherSimulation=="yes")
     ggplot()+theme_bw(base_size = 9)+
       geom_vline(aes(xintercept = 1))+
       geom_vline(aes(xintercept = 0))+
-      geom_hline(aes(yintercept=Events$Volume_min[Magnitude.class]/10^3),lty=2)+
-      geom_hline(aes(yintercept=Events$Volume_BestEstimate[Magnitude.class]/10^3))+
-      geom_hline(aes(yintercept=Events$Volume_max[Magnitude.class]/10^3),lty=2)+
-      annotate(geom = "text", x = 0.5, y = Events$Volume_BestEstimate[Magnitude.class]/10^3
+      geom_hline(aes(yintercept=Events$Volume_min[Event_Ind]/10^3),lty=2)+
+      geom_hline(aes(yintercept=Events$Volume_BestEstimate[Event_Ind]/10^3))+
+      geom_hline(aes(yintercept=Events$Volume_max[Event_Ind]/10^3),lty=2)+
+      annotate(geom = "text", x = 0.5, y = Events$Volume_BestEstimate[Event_Ind]/10^3
                ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
       geom_ribbon(data=Rslt_Uncertain.Boulder.Number,aes(x =P,ymin=Min,ymax=Max),alpha=0.3,lwd=1)+
       geom_line(data=Rslt_Uncertain.Boulder.Number,aes(y =Min ,x=P,colour="1"),lwd=1)+
@@ -548,14 +576,14 @@ while(PerformAnotherSimulation=="yes")
       coord_flip()+ #To have Probability as Y
       theme(legend.position = "top")+
       labs( y = "Released volume [1000m3]",x = "Cumulative distribution function"
-            ,caption=paste("Code of",Model," used on", lubridate::today(),"| Number of runs N =",N.Runs)
-            ,title = paste("Uncertainty analysis of released volume for event:",Event.name))
+            ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
+            ,title = paste("Uncertainty analysis of released volume for event:",EventName))
     #Save figure
-    ggsave(paste0("2Outputs/Pbox/ReleasedVolume_EvtClass",Magnitude.class,"_Nrun_",N.Runs,"_NboulderUncertain.png")
+    ggsave(paste0("2Outputs/ReleasedVolume_Evt-",EventName,"_Nrun_",N_runs,"_NboulderUncertain.png")
            , width = 16.5, height = 7,units="cm")
     
     #Save results
-    save(Rslt_Uncertain.Boulder.Number,file=paste0("2Outputs/Rdata/ReleasedVolume_Evt-",Event.name,"_Nrun_",N.Runs,"_NboulderUncertain.RData"))
+    save(Rslt_Uncertain.Boulder.Number,file=paste0("2Outputs/ReleasedPeakDischarge_Evt-",EventName,"_Nrun_",N_runs,"_NboulderUncertain.RData"))
   }#end of the uncertainty propagation condition
   
   
