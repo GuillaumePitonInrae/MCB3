@@ -62,16 +62,16 @@ Create_inlet_input<-function(EventName,AdjustEventManually,Structures,Boulders)
     if(sum(is.na(input))>0)
     {
       RedefineValue_Ind<-which(is.na(input))
+      
+      
+      for(j in RedefineValue_Ind)
+      {
+        input[j]<-as.numeric(dlg_input(message = paste("The value you provided for parameter",InputDataName[j]
+                                                       ,"was not acceptable (positive number),"
+                                                       ,"Please provide the value of parameter")
+                                       , default = input[j])$res)
+      }
     }
-    
-    for(j in RedefineValue_Ind)
-    {
-      input[j]<-as.numeric(dlg_input(message = paste("The value you provided for parameter",InputDataName[j]
-                                                     ,"was not acceptable (positive number),"
-                                                     ,"Please provide the value of parameter")
-                                     , default = input[j])$res)
-    }
-    
   }
   return(input)
 }

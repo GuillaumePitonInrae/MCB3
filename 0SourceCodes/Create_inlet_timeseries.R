@@ -13,7 +13,7 @@ Qpeak<-input[2]
 Duration<-round(Volume/(Qpeak/2),0)
 PeakLag<-input[3]*Duration
 # #Duration of the simulation = input hydrograph duration * FactorOfDuration
-FactorOfDuration<-5
+FactorOfDuration<-3
 SimulationDuration<-round(FactorOfDuration*Duration)
 
 #Number of time steps
@@ -38,7 +38,7 @@ Boulders$Nmax<-round(Boulders$ReferenceVolume/Boulders$V,0)
 Boulders$P<-Boulders$Number/Boulders$Nmax
 
 #Result dataset initialisation
-Times.series.inlet<-data.frame(Time=seq(0,SimulationDuration,length.out = N_TimeSteps)
+Times.series.inlet<-data.frame(Time=seq(1,SimulationDuration,by = TimeStep)
                                #triangular hydrograph 
                                ,Q=approx(x=c(0,PeakLag,Duration)
                                          ,y=c(0,Qpeak,0)

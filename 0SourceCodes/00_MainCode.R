@@ -123,7 +123,7 @@ if(HEADLESS) {
 }
 #Set this repository as working repository
 setwd(MainRep)
-dir.create("2Outputs",showWarnings = FALSE)
+dir.create(paste0(MainRep,"/2Outputs"),showWarnings = FALSE)
 
 #Main loop within which each set of run is performed
 PerformAnotherSimulation<-"yes"
@@ -332,21 +332,21 @@ while(PerformAnotherSimulation=="yes")
         Events$Volume_BestEstimate[Event_Ind]==Events$Volume_max[Event_Ind]))
     {
       input[[1]]=CREATE_INPUT(
-        name="Volume \n [Mm3]",
+        name="Volume \n [*1000m3]",
         type="fixed",
-        param= Events$Volume_BestEstimate[Event_Ind]/10^6,  
+        param= Events$Volume_BestEstimate[Event_Ind]/10^3,  
         monoton = "incr"
       )
     }else{
       #Otherwise, set it as possibility distribution (triangle)
       input[[1]]=CREATE_INPUT(
-        name="Volume \n [Mm3]",
+        name="Volume \n [*1000m3]",
         type="possi",
         distr="triangle",
         param=CheckTriangleDistribution(Events$Volume_min[Event_Ind],
                                         Events$Volume_BestEstimate[Event_Ind],
                                         Events$Volume_max[Event_Ind],
-                                        "Volume")/10^6,
+                                        "Volume")/10^3,
         monoton = "incr"
       )
     }
@@ -358,7 +358,7 @@ while(PerformAnotherSimulation=="yes")
         Events$PeakDischarge_BestEstimate[Event_Ind]==Events$PeakDischarge_max[Event_Ind]))
     {
       input[[2]]=CREATE_INPUT(
-        name="Qpeak \n [m3/s]",
+        name="Peak discharge \n [m3/s]",
         type="fixed",
         param= Events$PeakDischarge_BestEstimate[Event_Ind],  
         monoton = "incr"
@@ -366,7 +366,7 @@ while(PerformAnotherSimulation=="yes")
     }else{
       #Otherwise, set it as possibility distribution (triangle)
       input[[2]]=CREATE_INPUT(
-        name="Qpeak \n [m3/s]",
+        name="Peak discharge \n [m3/s]",
         type="possi",
         distr="triangle",
         param=CheckTriangleDistribution(Events$PeakDischarge_min[Event_Ind],
@@ -451,14 +451,14 @@ while(PerformAnotherSimulation=="yes")
       }else{
         #Otherwise, set it as possibility distribution (triangle)
         input[[5+(Structure_Ind-1)*2]]=CREATE_INPUT(
-          name=paste0("Initial deposit [m] \n","structure:",Structures$Name[which(Structures$Rank==Structure_Ind)]),
+          name=paste0("Initial deposit [m] \n","(",Structures$Name[which(Structures$Rank==Structure_Ind)],")"),
           ##### Triangular distri
           type="possi",
           distr="triangle",
           param=CheckTriangleDistribution(DepositHeight_min,
                                           DepositHeight_BestEstimate,
                                           DepositHeight_max,
-                                          paste0("Initial deposit [m] \n","structure:",Structures$Name[which(Structures$Rank==Structure_Ind)])),
+                                          paste0("Initial deposit [m] \n","(",Structures$Name[which(Structures$Rank==Structure_Ind)],")")),
           monoton = "decr"
         )
       }
@@ -509,7 +509,7 @@ while(PerformAnotherSimulation=="yes")
           Boulders$Number_BestEstimate[i]==Boulders$Number_max[i]))
       {
         input[[(4+length(Structures$Name)*2+i)]]=CREATE_INPUT(
-          name=paste0("#Boulders ",Boulders[i,1],"-",Boulders[i,2],"m"),
+          name=paste0("#Boulders \n ","D=",Boulders[i,1],"-",Boulders[i,2],"m"),
           type="fixed",
           param= Boulders$Number_BestEstimate[i],
           monoton = "decr"
@@ -524,7 +524,7 @@ while(PerformAnotherSimulation=="yes")
           param=CheckTriangleDistribution(Boulders$Number_min[i]
                                           ,Boulders$Number_BestEstimate[i]
                                           ,Boulders$Number_max[i]
-                                          ,paste0("#Boulders ",Boulders[i,1],"-",Boulders[i,2],"m")),
+                                          ,paste0("#Boulders \n ","D=",Boulders[i,1],"-",Boulders[i,2],"m")),
           monoton = "decr")
       }
     }
@@ -542,30 +542,29 @@ while(PerformAnotherSimulation=="yes")
         )
     {PLOT_INPUTnew(input)}
     dev.off()
-    
-    ### OPTIMZATION CHOICES
+
+    # ### OPTIMZATION CHOICES
     choice_opt=NULL #no optimization needed because monotony known
     param_opt=NULL
-    
+
     #Hybrid uncertainty propagation on released volume----
     ###HYBRID UNCERTAINTY PROPAGATION
-    
     Rslt_Uncertain.Boulder.Number<-PROPAG(N=N_runs,input
                                           ,Cascade_of_structure_functionning
                                           ,choice_opt,param_opt,mode="IRS")
     Rslt_Uncertain.Boulder.Number<-data.frame(P=seq(0,1,length.out = N_runs)
-                                              ,Min=sort(Rslt_Uncertain.Boulder.Number[1,])/10^3
-                                              ,Max=sort(Rslt_Uncertain.Boulder.Number[2,])/10^3)
+                                              ,Min=sort(Rslt_Uncertain.Boulder.Number[1,])
+                                              ,Max=sort(Rslt_Uncertain.Boulder.Number[2,]))
     #       
     ###################Plot Pbox----
     #       
     ggplot()+theme_bw(base_size = 9)+
       geom_vline(aes(xintercept = 1))+
       geom_vline(aes(xintercept = 0))+
-      geom_hline(aes(yintercept=Events$Volume_min[Event_Ind]/10^3),lty=2)+
-      geom_hline(aes(yintercept=Events$Volume_BestEstimate[Event_Ind]/10^3))+
-      geom_hline(aes(yintercept=Events$Volume_max[Event_Ind]/10^3),lty=2)+
-      annotate(geom = "text", x = 0.5, y = Events$Volume_BestEstimate[Event_Ind]/10^3
+      geom_hline(aes(yintercept=Events$PeakDischarge_min[Event_Ind]),lty=2)+
+      geom_hline(aes(yintercept=Events$PeakDischarge_BestEstimate[Event_Ind]))+
+      geom_hline(aes(yintercept=Events$PeakDischarge_max[Event_Ind]),lty=2)+
+      annotate(geom = "text", x = 0.5, y = Events$PeakDischarge_BestEstimate[Event_Ind]
                ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
       geom_ribbon(data=Rslt_Uncertain.Boulder.Number,aes(x =P,ymin=Min,ymax=Max),alpha=0.3,lwd=1)+
       geom_line(data=Rslt_Uncertain.Boulder.Number,aes(y =Min ,x=P,colour="1"),lwd=1)+
@@ -575,11 +574,12 @@ while(PerformAnotherSimulation=="yes")
                           ,labels=c("Lower bound","Upper bound"))+
       coord_flip()+ #To have Probability as Y
       theme(legend.position = "top")+
-      labs( y = "Released volume [1000m3]",x = "Cumulative distribution function"
-            ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
-            ,title = paste("Uncertainty analysis of released volume for event:",EventName))
+      labs( y = "Peak discharge [m3/s]",x = "Cumulative distribution function"
+            ,caption=paste("Model:",ModelVersion," used on"
+                           , lubridate::today(),"| Number of runs N =",N_runs)
+            ,title = paste("Uncertainty analysis of peak discharge downstream all structures (event:",EventName,")"))
     #Save figure
-    ggsave(paste0("2Outputs/ReleasedVolume_Evt-",EventName,"_Nrun_",N_runs,"_NboulderUncertain.png")
+    ggsave(paste0("2Outputs/ReleasedPeakDischarge_Evt-",EventName,"_Nrun_",N_runs,"_NboulderUncertain.png")
            , width = 16.5, height = 7,units="cm")
     
     #Save results

@@ -75,8 +75,8 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     geom_hline(aes(yintercept = SpillwayLevel,colour="2",lty="2"))+
     geom_hline(aes(yintercept = CrestLevel,colour="3",lty="3"))+
     geom_line(aes(x=Time/3600,y=Z,colour="4",lty="4"),lwd=1)+
-    geom_line(aes(x=Time/3600,y=LevelClogging1,colour="5",lty="5"))+
-    geom_ribbon(aes(x=Time/3600,ymax=LevelClogging1,ymin=OpeningMinBaseLevel)
+    geom_line(aes(x=Time/3600,y=BaseLevelJam,colour="5",lty="5"))+
+    geom_ribbon(aes(x=Time/3600,ymax=BaseLevelJam,ymin=OpeningMinBaseLevel)
                 ,lwd=1,col="transparent",alpha=0.2)+
     theme(legend.position = "top")+
     scale_colour_grey(name="Level",label=c("Opening base","Spillway","Crest","Flow","Boulder jam at opening #1"))+
@@ -91,7 +91,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
              , label = paste("Max level reached =",round(max(Reservoir$Z),1),"m.a.s.l.")
     )+
     theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
-    coord_cartesian(xlim = c(0,1*Duration/3600),ylim=c(min(storageElevationCurve$h,na.rm=TRUE),max(storageElevationCurve$h,na.rm=TRUE)))+
+    coord_cartesian(xlim = c(0,1*Duration/3600),ylim=c(OpeningMinBaseLevel,max(storageElevationCurve$h,na.rm=TRUE)))+
     labs( x = "Time [h]",y = "Flow level [m]"
           # ,caption=paste("(d)")
           # ,subtitle = paste("Max level at barrier =",round(max(Reservoir$Z),1),"m.a.s.l.")
