@@ -343,45 +343,45 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   
   #Add the number of boulders of each class to reservoir
   #With a for loop
-  for(i in c(1:dim(Boulders)[1]))
-  {
-    Reservoir$X<-Reservoir$Y<-0
-
-    Boulder_N_jammed<-table(Boulder_list_all[(Boulder_list_all$Class == i & Boulder_list_all$Jammed != "a) Unjammed"),1])
-    Boulder_N_unjammed<-table(Boulder_list_all[(Boulder_list_all$Class == i & Boulder_list_all$Jammed == "a) Unjammed"),1])
-    
-    Reservoir$X[match(names(Boulder_N_jammed),Reservoir$Time)]<-Boulder_N_jammed
-    Reservoir$Y[match(names(Boulder_N_unjammed),Reservoir$Time)]<-Boulder_N_unjammed
-    
-    names(Reservoir)[which(names(Reservoir)=="X")]<-paste0("Class",i,".jammed")
-    names(Reservoir)[which(names(Reservoir)=="Y")]<-paste0("Class",i,".unjammed")
-  }
-
-  #with DPLYR
   # for(i in c(1:dim(Boulders)[1]))
   # {
-  #   
-  #   Boulder_N_jammed<-Boulder_list_all %>%
-  #     filter(Class==i) %>%
-  #     filter(Jammed!="a) Unjammed") %>%
-  #     group_by(Time) %>%
-  #     summarise(N=n())
-  #   
-  #   Boulder_N_unjammed<-Boulder_list_all %>%
-  #     filter(Class==i) %>%
-  #     filter(Jammed=="a) Unjammed") %>%
-  #     group_by(Time) %>%
-  #     summarise(N=n())
-  #   
   #   Reservoir$X<-Reservoir$Y<-0
-  #   Reservoir$X[match(Boulder_N_jammed$Time,Reservoir$Time)]<-Boulder_N_jammed$N
+  # 
+  #   Boulder_N_jammed<-table(Boulder_list_all[(Boulder_list_all$Class == i & Boulder_list_all$Jammed != "a) Unjammed"),1])
+  #   Boulder_N_unjammed<-table(Boulder_list_all[(Boulder_list_all$Class == i & Boulder_list_all$Jammed == "a) Unjammed"),1])
+  #   
+  #   Reservoir$X[match(names(Boulder_N_jammed),Reservoir$Time)]<-Boulder_N_jammed
+  #   Reservoir$Y[match(names(Boulder_N_unjammed),Reservoir$Time)]<-Boulder_N_unjammed
+  #   
   #   names(Reservoir)[which(names(Reservoir)=="X")]<-paste0("Class",i,".jammed")
-  #   
-  #   Reservoir$Y[match(Boulder_N_unjammed$Time,Reservoir$Time)]<-Boulder_N_unjammed$N
   #   names(Reservoir)[which(names(Reservoir)=="Y")]<-paste0("Class",i,".unjammed")
-  #   
   # }
-  
+
+  #with DPLYR
+  for(i in c(1:dim(Boulders)[1]))
+  {
+
+    Boulder_N_jammed<-Boulder_list_all %>%
+      filter(Class==i) %>%
+      filter(Jammed!="a) Unjammed") %>%
+      group_by(Time) %>%
+      summarise(N=n())
+
+    Boulder_N_unjammed<-Boulder_list_all %>%
+      filter(Class==i) %>%
+      filter(Jammed=="a) Unjammed") %>%
+      group_by(Time) %>%
+      summarise(N=n())
+
+    Reservoir$X<-Reservoir$Y<-0
+    Reservoir$X[match(Boulder_N_jammed$Time,Reservoir$Time)]<-Boulder_N_jammed$N
+    names(Reservoir)[which(names(Reservoir)=="X")]<-paste0("Class",i,".jammed")
+
+    Reservoir$Y[match(Boulder_N_unjammed$Time,Reservoir$Time)]<-Boulder_N_unjammed$N
+    names(Reservoir)[which(names(Reservoir)=="Y")]<-paste0("Class",i,".unjammed")
+
+  }
+
   #Combine the tables of clogging for later plot and analysis
   N_slot<-(Opening$Type=="slot") #which opening are slots
   WidthClogging<-VerticalClogging<-NULL
@@ -556,7 +556,7 @@ Cascade_of_structure_functionning<-function(input)
       TransferType <- Structures$TransferDownstream[[which(Structures$Rank==Structure_Ind-1)]]
       if(substr(TransferType,1,6) != "Mixing")
       {
-        Vmixing<-1
+        Vmixing<-1#Default value to define a value but which is unused.
       }else{
         Vmixing <- as.numeric(substr(TransferType
                                      ,8
