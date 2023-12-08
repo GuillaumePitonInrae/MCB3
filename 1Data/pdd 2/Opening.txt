@@ -1,4 +1,4 @@
-Number,Type,Width,BaseLevel,Param,BoulderVerticalClogging,BoulderLateralClogging,Comment
+Number,Type,Width,BaseLevel,Param,VerticalClogging,LateralClogging,Comment
 1,slit,5,805.6,,0,0,fente
 2,slit,10,813,,0,0,déversoir 1
 3,weir,90,817,10,0,0,crête

@@ -1,4 +1,4 @@
-Number,Type,Width,BaseLevel,Param,BoulderVerticalClogging,BoulderLateralClogging,Comment
+Number,Type,Width,BaseLevel,Param,VerticalClogging,LateralClogging,Comment
 1,slot,12,722,725.9,0,0,section pont
 2,slit,50,726.9,0,0,0,section tablier
 3,weir,60,730,10,0,0,crete

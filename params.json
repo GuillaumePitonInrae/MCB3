@@ -93,12 +93,12 @@
             "TransferDownstream": "Instantaneous",
             "InitialConditions": {
                 "Name": "Empty",
-                "InitialDepositHeight_min": 0,
-                "InitialDepositHeight_BestEstimate": 0.01,
-                "InitialDepositHeight_max": 0.02,
-                "InitialJammingHeight_min": 0,
-                "InitialJammingHeight_BestEstimate": 0.01,
-                "InitialJammingHeight_max": 0.02
+                "DepositHeight_min": 0,
+                "DepositHeight_BestEstimate": 0.01,
+                "DepositHeight_max": 0.02,
+                "JammingHeight_min": 0,
+                "JammingHeight_BestEstimate": 0.01,
+                "JammingHeight_max": 0.02
             },
             "StorageElevation": [
                 {
@@ -201,12 +201,12 @@
             "TransferDownstream": "Mixing 10000",
             "InitialConditions": {
                 "Name": "2 m jam and deposit",
-                "InitialDepositHeight_min": 2,
-                "InitialDepositHeight_BestEstimate": 2.01,
-                "InitialDepositHeight_max": 2.02,
-                "InitialJammingHeight_min": 2,
-                "InitialJammingHeight_BestEstimate": 2.01,
-                "InitialJammingHeight_max": 2.02
+                "DepositHeight_min": 2,
+                "DepositHeight_BestEstimate": 2.01,
+                "DepositHeight_max": 2.02,
+                "JammingHeight_min": 2,
+                "JammingHeight_BestEstimate": 2.01,
+                "JammingHeight_max": 2.02
             },
             "StorageElevation": [
                 {
