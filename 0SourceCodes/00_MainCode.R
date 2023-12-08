@@ -18,7 +18,13 @@ if(HEADLESS) {
   args[2] <- paste0(MainRep,"/out") #REMOVE !
   json <- jsonlite::fromJSON(args[1])
   # Transfer all first-level json props to global scope:
-  list2env(json,globalenv())
+  if("sim" %in% names(json)){
+    # the whole data may be wrapped in a "sim" object in json...
+    list2env(json$sim,globalenv())
+  } else {
+    # ... or not.
+    list2env(json,globalenv())
+  }
   
   # But in the future, the env method above may not be acceptable, in which case prefer
   # using the following syntax: 
