@@ -577,11 +577,11 @@ Cascade_of_structure_functionning<-function(input)
     Qo<-Structure_functionning(ModelVersion=ModelVersion
                                ,StructureName=Structures$Name[[which(Structures$Rank==Structure_Ind)]]
                                ,input=input,Qin=Qin
-                               ,Opening=as.data.frame(Structures$Opening[[which(Structures$Rank==Structure_Ind)]])
+                               ,Opening=as.data.frame(Structures$Openings[[which(Structures$Rank==Structure_Ind)]])
                                ,StorageElevation=as.data.frame(Structures$StorageElevation[[which(Structures$Rank==Structure_Ind)]])
                                )
     
-    Result<-Synthetic_Structure_results(Qo, Structures$Opening[[which(Structures$Rank==Structure_Ind)]])
+    Result<-Synthetic_Structure_results(Qo, Structures$Openings[[which(Structures$Rank==Structure_Ind)]])
     Result$StructureRank<-Structure_Ind
     
     #record the run ID (general variable) and structure name

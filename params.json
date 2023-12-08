@@ -151,7 +151,7 @@
                     "S0.1": 51100
                 }
             ],
-            "Opening": [
+            "Openings": [
                 {
                     "Number": 1,
                     "Type": "slit",
@@ -259,7 +259,7 @@
                     "S0.1": 72000
                 }
             ],
-            "Opening": [
+            "Openings": [
                 {
                     "Number": 1,
                     "Type": "slit",
@@ -297,7 +297,7 @@
             "Type": "bridge",
             "Rank": 3,
             "TransferDownstream": null,
-             "Opening": [
+             "Openings": [
                 {
                     "Number": 1,
                     "Type": "slot",

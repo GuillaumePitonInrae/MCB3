@@ -37,7 +37,7 @@ import_structure<-function(InputDataRepository,StructureList,Structure_Ind,Struc
       StructureList$Name[Structure_Ind]<-StructureName
       StructureList$Type[Structure_Ind]<-"bridge"
       StructureList$StorageElevation[Structure_Ind]<-list(data.frame(Z=NA,S0.00=NA))
-      StructureList$Opening[Structure_Ind]<- list(Opening)
+      StructureList$Openings[Structure_Ind]<- list(Opening)
       StructureList$width[Structure_Ind] <- bridge$width
       StructureList$slope[Structure_Ind] <- bridge$slope
       
@@ -56,7 +56,7 @@ import_structure<-function(InputDataRepository,StructureList,Structure_Ind,Struc
       StructureList$Name[Structure_Ind]<-StructureName
       StructureList$Type[Structure_Ind]<-"barrier"
       StructureList$StorageElevation[Structure_Ind]<-list(StorageElevation)
-      StructureList$Opening[Structure_Ind]<- list(Opening)
+      StructureList$Openings[Structure_Ind]<- list(Opening)
       
   }
   

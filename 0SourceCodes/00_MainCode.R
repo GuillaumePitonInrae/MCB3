@@ -106,7 +106,7 @@ for(Structure_Ind in (1:length(Structures$Name)))
 {
   if(Structures$Type[[Structure_Ind]]=="bridge")
   {
-    Structures$StorageElevation[[Structure_Ind]]<-define_bridgeStorageElevation(Structures$Opening[[Structure_Ind]]
+    Structures$StorageElevation[[Structure_Ind]]<-define_bridgeStorageElevation(Structures$Openings[[Structure_Ind]]
                                                                                 ,Structures$width[[Structure_Ind]]
                                                                                 ,Structures$slope[[Structure_Ind]])
   }
