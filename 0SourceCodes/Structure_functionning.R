@@ -92,12 +92,12 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   #Elementary volume of each boulder class
   Boulders$V<-pi/6*Boulders$Diameter^3
   #Clogging level and width by boulders
-  BoulderClogging_level<-data.frame(matrix(Opening$BoulderVerticalClogging, N_TimeSteps, N_opening,byrow=TRUE),stringsAsFactors=F)
+  BoulderClogging_level<-data.frame(matrix(Opening$VerticalClogging, N_TimeSteps, N_opening,byrow=TRUE),stringsAsFactors=F)
   names(BoulderClogging_level)<-paste0("Z",(1:N_opening))
   #For initial clogging we take the maximum between the pre-existing clogging height and the base jam height arriving at the surge front
   BoulderClogging_level[,1]<-max(BoulderClogging_level[,1],BaseJamHeight)
   
-  BoulderClogging_width<-data.frame(matrix(Opening$BoulderLateralClogging, N_TimeSteps, N_opening,byrow=TRUE),stringsAsFactors=F)
+  BoulderClogging_width<-data.frame(matrix(Opening$LateralClogging, N_TimeSteps, N_opening,byrow=TRUE),stringsAsFactors=F)
   names(BoulderClogging_width)<-paste0("W",(1:N_opening))
   
   
@@ -433,8 +433,8 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   
   #update the new clogging status in the text fill to be used 
   # at the next run with the final clogging status
-  Opening$BoulderVerticalClogging<-as.numeric(BoulderZ_final)
-  Opening$BoulderLateralClogging<-as.numeric(BoulderW_final)
+  Opening$VerticalClogging<-as.numeric(BoulderZ_final)
+  Opening$LateralClogging<-as.numeric(BoulderW_final)
   if( KeepTrackOfCloggingState)
   {
     write.csv(Opening,file="./1Data/Opening.txt",row.names = FALSE)  
