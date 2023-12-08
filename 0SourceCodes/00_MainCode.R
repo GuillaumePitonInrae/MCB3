@@ -11,9 +11,10 @@ if(HEADLESS) {
   print('Running in HEADLESS mode')
   args<-commandArgs(trailingOnly = TRUE)
   #François
-  MainRep<-"/home/francois/Documents/Micro-entreprise/projets/DFBuffering/DFbuffering"
+  # MainRep<-"/home/francois/Documents/Micro-entreprise/projets/DFBuffering/DFbuffering"
   # Guillaume
   MainRep<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
+  
   args[1] <- paste0(MainRep,"/params.json") #REMOVE !
   args[2] <- paste0(MainRep,"/out") #REMOVE !
   json <- jsonlite::fromJSON(args[1])
@@ -30,6 +31,9 @@ if(HEADLESS) {
   # using the following syntax: 
   # OnlyNormalRun <<- json$OnlyNormalRun
   # ... and so on...
+  # Guillaume
+  MainRep<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
+  setwd(MainRep)
 }
 
 
@@ -246,7 +250,8 @@ while(PerformAnotherSimulation=="yes")
       if(Run_Ind==1){  Qoutmax_all<-Qoutmax }else{ Qoutmax_all<-rbind(Qoutmax_all,Qoutmax)  }
       
       #print message
-      print(paste0("Run #",Run_Ind," finished at ",now()," for the whole cascade of structure, still ",N_runs-Run_Ind," run to perform"))
+      # print(paste0("Run #",Run_Ind," finished at ",now()," for the whole cascade of structure, still ",N_runs-Run_Ind," run to perform"))
+      print(paste0("PROGRESS[",Run_Ind,"/",N_runs,"]"))
       
     }
     

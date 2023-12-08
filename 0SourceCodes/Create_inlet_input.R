@@ -19,9 +19,14 @@ Create_inlet_input<-function(EventName,AdjustEventManually,Structures,Boulders)
   #Initial state of the basin filling and jamming
   for(Structure_Ind in (1:length(Structures$Name)))
   {
-    input<-c(input
-             ,Structures$InitialConditions$DepositHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]  #Initial deposit height (m)
-             ,Structures$InitialConditions$JammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)])#Jam at the slit base by large wood  or boulders(m)
+    #Initial deposit height (m)
+    InitialDeposit<-Structures$InitialConditions$DepositHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
+    if(is.na(InitialDeposit)){InitialDeposit<-0}
+    #Jam at the slit base by large wood  or boulders(m)
+    InitialJam<-Structures$InitialConditions$JammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
+    if(is.na(InitialJam)){InitialJam<-0}
+    
+    input<-c(input ,InitialDeposit ,InitialJam)
   }
   
   # Adding of the number of Boulders

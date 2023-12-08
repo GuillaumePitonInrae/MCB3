@@ -27,7 +27,7 @@ The file InitialCOnditions.txt describe the initial state in the basin and barri
 	- for weir it is the angle between the wing and the horizontal in degrees. A weir with Param = 90 is actually a slit
  -The sixth is the vertical clogging of the opening by boulders in meters at the beggining of the run
  -The seventh is the lateral clogging of the opening by boulders in meters at the beggining of the run
- -The heighth is a comment column to keep track of what are these openings, e.g., "crest", "spillway", "bottom slit"
+ -The eighth is a comment column to keep track of what are these openings, e.g., "crest", "spillway", "bottom slit"
  
  
 In RangeOfBoulders.txt, the column titles must be: Boulder_size_category_(m)	Lower_bound	Upper_bound	Best_estimate	Reference_Volume
