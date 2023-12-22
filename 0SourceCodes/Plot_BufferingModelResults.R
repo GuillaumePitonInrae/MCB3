@@ -141,7 +141,8 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     {
       print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," for event:",EventName,"\n"
                                     ,"Model version: ",ModelVersion,"\n"
-                                    ,"Boulder generation mode: ",BoulderGenerationMode))
+                                    ,"Boulder generation mode: ",BoulderGenerationMode))+ 
+              theme(plot.title = element_text(size=8))
             , vp = define_region(1:6,1))
       print(VclogPlot, vp = define_region(7:10,1))
       print(Zplot, vp = define_region(11:16,1))

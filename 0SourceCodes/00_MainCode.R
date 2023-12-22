@@ -6,7 +6,7 @@ library(jsonlite)
 
 # Setup HEADLESS variables
 HEADLESS <- !base::interactive()
-# HEADLESS = TRUE #REMOVE !
+HEADLESS = TRUE #REMOVE !
 if(HEADLESS) {
   print('Running in HEADLESS mode')
   args<-commandArgs(trailingOnly = TRUE)
@@ -32,8 +32,8 @@ if(HEADLESS) {
   # OnlyNormalRun <<- json$OnlyNormalRun
   # ... and so on...
   # Guillaume
-  MainRep<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
-  setwd(MainRep)
+  # MainRep<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
+  # setwd(MainRep)
 }
 
 
@@ -48,9 +48,6 @@ library(gridExtra) #Plots
 library(grid) #Plots
 library(sets) #Plots
 library(dplyr) #for data manipulation
-
-#start the clock for computation time recording
-# ptm <- proc.time()
 
 #Model version
 ModelVersion <- "CheekyeDebrisFlowBarrier V3.0"
@@ -606,3 +603,4 @@ while(PerformAnotherSimulation=="yes")
     PerformAnotherSimulation<-dlg_message(message="The computation is finished! \n Do you want to perform another set?", type = c("yesno"))$res
   }
 }
+

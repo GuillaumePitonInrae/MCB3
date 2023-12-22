@@ -36,8 +36,10 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   StructureRank<-Structures$Rank[which(Structures$Name == StructureName)]
   #Initial deposition height
   DepositDepthInitial<-input[5+(StructureRank-1)*2] 
+  if(is.na(DepositDepthInitial)){DepositDepthInitial<-0}
   #Base jam height 
   BaseJamHeight<-input[5+(StructureRank-1)*2+1] 
+  if(is.na(BaseJamHeight)){BaseJamHeight<-0}
   
   #Extract the height of the openings
   Opening$Height<-Opening$Param
