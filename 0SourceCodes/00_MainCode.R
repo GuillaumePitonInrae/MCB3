@@ -6,17 +6,17 @@ library(jsonlite)
 
 # Setup HEADLESS variables
 HEADLESS <- !base::interactive()
-HEADLESS = TRUE #REMOVE !
+if(HEADLESS) {
+  args<-commandArgs(trailingOnly = TRUE)
+}
+
+# For Guillaume P. only, to emulate the headless mode under RStudio:
+# HEADLESS = TRUE
+# rootDir<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
+# args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
+
 if(HEADLESS) {
   print('Running in HEADLESS mode')
-  args<-commandArgs(trailingOnly = TRUE)
-  #François
-  # MainRep<-"/home/francois/Documents/Micro-entreprise/projets/DFBuffering/DFbuffering"
-  # Guillaume
-  MainRep<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
-  
-  args[1] <- paste0(MainRep,"/params.json") #REMOVE !
-  args[2] <- paste0(MainRep,"/out") #REMOVE !
   json <- jsonlite::fromJSON(args[1])
   # Transfer all first-level json props to global scope:
   if("sim" %in% names(json)){
@@ -31,9 +31,6 @@ if(HEADLESS) {
   # using the following syntax: 
   # OnlyNormalRun <<- json$OnlyNormalRun
   # ... and so on...
-  # Guillaume
-  # MainRep<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
-  # setwd(MainRep)
 }
 
 
@@ -59,9 +56,9 @@ if(!HEADLESS)
               , type = c("ok")) ; SourceCodeRepository<-dlg_dir(title="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
                                                                 ,default = getwd())$res
               
+  #Set this repository as working repository
+  setwd(SourceCodeRepository)
 }
-#Set this repository as working repository
-setwd(SourceCodeRepository)
 
 #Load the source codes
 source("PLOT_INPUTnew.R")#To plot input distrib
@@ -124,9 +121,13 @@ if(HEADLESS) {
   MainRep <- args[2]
 } else {
   setwd(InputDataRepository)
-  dlg_message(message="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
-              , type = c("ok"));MainRep<-dlg_dir(title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
-                                                        ,default = getwd())$res
+  dlg_message(
+    message="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)", type = c("ok")
+  )
+  MainRep<-dlg_dir(
+    title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)",
+    default = getwd()
+  )$res
 }
 #Set this repository as working repository
 setwd(MainRep)
