@@ -122,11 +122,13 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
           )
   
   #Plot name definition with date and hour
-  Plot.Name<-paste0("2Outputs/TimeSeriesOfEvent_",EventName
+  Plot.Name<-paste0("TimeSeriesOfEvent_",EventName
                     ,"_forStructure_",StructureName
-                    ,"-computedOn",lubridate::now(),".png")
-  Plot.Name<-str_replace_all(Plot.Name,":","-")
-  Plot.Name<-str_replace_all(Plot.Name," ","_")
+                    ,"-computedOn",lubridate::now())
+  # Plot.Name<-str_replace_all(Plot.Name,":","At")
+  # Plot.Name<-str_replace_all(Plot.Name," ","_")
+  Plot.Name<-str_replace_all(Plot.Name, "[^[:alnum:]]", "_")
+  Plot.Name<-paste0(Plot.Name,".png")
   
   png(Plot.Name, width = 17, height = 20,units="cm",res=350)
   {
@@ -142,7 +144,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
       print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," for event:",EventName,"\n"
                                     ,"Model version: ",ModelVersion,"\n"
                                     ,"Boulder generation mode: ",BoulderGenerationMode))+ 
-              theme(plot.title = element_text(size=8))
+              theme(plot.title = element_text(size=8.5))
             , vp = define_region(1:6,1))
       print(VclogPlot, vp = define_region(7:10,1))
       print(Zplot, vp = define_region(11:16,1))

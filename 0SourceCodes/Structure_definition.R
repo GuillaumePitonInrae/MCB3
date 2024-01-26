@@ -105,18 +105,31 @@ define_bridgeStorageElevation<-function(Opening,width,slope)
 
 #### function to load all the structures data for the model and create a list with opening and storage / elevation data ####
 structure_definition<-function(InputDataRepository){
+  
+  #Load the structure list and organisation----
+  Structure_organisation<-read.csv(paste0(InputDataRepository,"/StructureList.txt"),sep="\t")
+  
+  # #Load initial conditions
+  # InitialConditions<-read.csv(paste0(InputDataRepository,"/InitialConditions.txt"),sep="\t")
+  # 
+  #Reorganize the table
+  Structure_organisation<-data.frame(
+    Name = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")],
+    InitialCondition = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+1],
+    Transfer = Structure_organisation$Value[which(Structure_organisation$Variable=="Structure")+2])
+  
   #list the repository available
   names_repository<-list.dirs(InputDataRepository,full.names = FALSE)
   #remove the parent repository
   names_repository<-names_repository[2:length(names_repository)]
-  N_Structure<-length(names_repository)
+  N_Structure<-length(Structure_organisation$Name)
   # list_save<-as.list(rep(NA,length(names_repository)))
   
   # names(list_save)<-names_repository
   #Initialize the structure list
   StructureList<-list(Name=rep(NA,N_Structure)
                    ,Type=rep(NA,N_Structure)
-                   ,Rank=rep(NA,N_Structure)
+                   ,Rank=rep(0,N_Structure)
                    ,TransferDownstream=rep(NA,N_Structure)
                    ,InitialConditions=list(rep(NA,N_Structure))
                    ,StorageElevation=list(rep(NA,N_Structure))
@@ -128,7 +141,8 @@ structure_definition<-function(InputDataRepository){
   for (Structure_Ind in 1:N_Structure)
   {
     StructureList<-import_structure(InputDataRepository,StructureList
-                                    ,Structure_Ind,names_repository[Structure_Ind])
+                                    ,Structure_Ind,
+                                    names_repository[match(Structure_organisation$Name[Structure_Ind],names_repository)])
   }
   
   

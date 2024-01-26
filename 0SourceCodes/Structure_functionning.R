@@ -77,7 +77,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   
   OpeningMinBaseLevel<-min(Opening$BaseLevel)
   #by default, the spillway should be the opening below the top one (top one is the crest)
-  SpillwayLevel<-Opening$BaseLevel[(N_opening-1)] 
+  SpillwayLevel<-Opening$BaseLevel[max(N_opening-1,1)] 
   #But for dams with complex crest shape, one can write in Opening.txt which open is the 'Spillway' (Case sensitive test)
   if(sum(Opening$Comment=="Spillway")>0){
     SpillwayLevel<-Opening$BaseLevel[which(Opening$Comment=="Spillway")]
@@ -116,7 +116,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
       geom_hline(aes(yintercept = SpillwayLevel,lty="2"))+
       scale_linetype_manual("",labels=c("Opening base level","Spillway level"),values=c(2,3))+
       theme(legend.position = "top")
-    ggsave("2Outputs/StageVolumeBarrier.png", width = 8, height = 6,units="cm")
+    ggsave("StageVolumeBarrier.png", width = 8, height = 6,units="cm")
   }
   #Print stage - discharge relationship
   if(PrintDataPlot){
@@ -149,7 +149,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
       # ylim(min(storageElevationCurve$h),max(storageElevationCurve$h))+
       theme(plot.margin = unit(c(0.2,0.3,0.2,0.2), "cm"))
     
-    ggsave("2Outputs/StageDischargeInitial.png", width = 8, height = 6,units="cm")
+    ggsave("StageDischargeInitial.png", width = 8, height = 6,units="cm")
   }
   
   ################################
@@ -224,16 +224,38 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
       i<-N_TimeSteps
     }
     
-    #Compute opening discharge, i.e., all but the last opening
-    Reservoir$Qoutlet[i]<-sum(Q_CompoundBarrier(Opening = Opening[1:(N_opening-2),] #Top opening is the crest, before is the spillway
-                                                ,BaseClogging = BoulderClogging_level[i,(1:(N_opening-2))]
-                                                ,WidthClogging = BoulderClogging_width[i,(1:(N_opening-2))]
-                                                ,h=Reservoir$Z[i]))
-    #Compute spillway discharge, i.e., last opening
-    Reservoir$Qspillway[i]<-as.numeric(Q_CompoundBarrier(Opening = Opening[(N_opening-1),] #Top opening is the crest, before is the spillway
-                                                         ,BaseClogging = BoulderClogging_level[i,(N_opening-1)]
-                                                         ,WidthClogging = BoulderClogging_width[i,(N_opening-1)]
-                                                         ,h=Reservoir$Z[i]))
+    if(N_opening>2)#case with opening(s) + spillway + crest
+    {
+      #Compute opening discharge, i.e., all but the last opening
+      Reservoir$Qoutlet[i]<-sum(Q_CompoundBarrier(Opening = Opening[1:(N_opening - 2),] #Top opening is the crest, before is the spillway
+                                                  ,BaseClogging = BoulderClogging_level[i,(1:(N_opening - 2))]
+                                                  ,WidthClogging = BoulderClogging_width[i,(1:(N_opening - 2))]
+                                                  ,h=Reservoir$Z[i]))
+      #Compute spillway discharge, i.e., opening below the crest
+      Reservoir$Qspillway[i]<-as.numeric(Q_CompoundBarrier(Opening = Opening[(N_opening-1),] #Top opening is the crest, before is the spillway
+                                                           ,BaseClogging = BoulderClogging_level[i,(N_opening-1)]
+                                                           ,WidthClogging = BoulderClogging_width[i,(N_opening-1)]
+                                                           ,h=Reservoir$Z[i]))  
+    }else{
+      if(N_opening == 2)#case with one opening + crest
+      {
+        #Compute opening discharge, i.e., all but the last opening
+        Reservoir$Qoutlet[i]<-sum(Q_CompoundBarrier(Opening = Opening[1:(N_opening - 1),] #Top opening is the crest, before is the spillway
+                                                    ,BaseClogging = BoulderClogging_level[i,(1:(N_opening - 1))]
+                                                    ,WidthClogging = BoulderClogging_width[i,(1:(N_opening - 1))]
+                                                    ,h=Reservoir$Z[i]))
+        #Compute spillway discharge, i.e., last opening
+        Reservoir$Qspillway[i]<-as.numeric(Q_CompoundBarrier(Opening = Opening[N_opening,] #Top opening is the crest, before is the spillway
+                                                             ,BaseClogging = BoulderClogging_level[i,N_opening]
+                                                             ,WidthClogging = BoulderClogging_width[i,N_opening]
+                                                             ,h=Reservoir$Z[i]))
+      }else{#case with one opening only
+        Reservoir$Qoutlet[i]<-Reservoir$Qo[i]
+        Reservoir$Qspillway[i]<-0
+      }
+      
+    }
+    
     
     
     #At each second, compute whether some clogging occur or not
@@ -339,55 +361,55 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   ################################
   #Add the jamming state of the openings
   Reservoir<-cbind(Reservoir
-                   ,BoulderClogging_level[(1:(N_opening-1))] #Only until N_opening-1 because clogging is a no sense on the crest
-                   ,BoulderClogging_width[(1:(N_opening-1))])#Only until N_opening-1 because clogging is a no sense on the crest
+                   ,BoulderClogging_level[(1:max(N_opening-1,1))] #Only until N_opening-1 because clogging is a no sense on the crest
+                   ,BoulderClogging_width[(1:max(N_opening-1,1))])#Only until N_opening-1 because clogging is a no sense on the crest
   Reservoir$BaseLevelJam<-Reservoir$Z1+OpeningMinBaseLevel
   
   #Add the number of boulders of each class to reservoir
   #With a for loop
-  # for(i in c(1:dim(Boulders)[1]))
-  # {
-  #   Reservoir$X<-Reservoir$Y<-0
-  # 
-  #   Boulder_N_jammed<-table(Boulder_list_all[(Boulder_list_all$Class == i & Boulder_list_all$Jammed != "a) Unjammed"),1])
-  #   Boulder_N_unjammed<-table(Boulder_list_all[(Boulder_list_all$Class == i & Boulder_list_all$Jammed == "a) Unjammed"),1])
-  #   
-  #   Reservoir$X[match(names(Boulder_N_jammed),Reservoir$Time)]<-Boulder_N_jammed
-  #   Reservoir$Y[match(names(Boulder_N_unjammed),Reservoir$Time)]<-Boulder_N_unjammed
-  #   
-  #   names(Reservoir)[which(names(Reservoir)=="X")]<-paste0("Class",i,".jammed")
-  #   names(Reservoir)[which(names(Reservoir)=="Y")]<-paste0("Class",i,".unjammed")
-  # }
-
-  #with DPLYR
   for(i in c(1:dim(Boulders)[1]))
   {
-
-    Boulder_N_jammed<-Boulder_list_all %>%
-      filter(Class==i) %>%
-      filter(Jammed!="a) Unjammed") %>%
-      group_by(Time) %>%
-      summarise(N=n())
-
-    Boulder_N_unjammed<-Boulder_list_all %>%
-      filter(Class==i) %>%
-      filter(Jammed=="a) Unjammed") %>%
-      group_by(Time) %>%
-      summarise(N=n())
-
     Reservoir$X<-Reservoir$Y<-0
-    Reservoir$X[match(Boulder_N_jammed$Time,Reservoir$Time)]<-Boulder_N_jammed$N
+
+    Boulder_N_jammed<-table(Boulder_list_all[(Boulder_list_all$Class == i && Boulder_list_all$Jammed != "a) Unjammed"),1])
+    Boulder_N_unjammed<-table(Boulder_list_all[(Boulder_list_all$Class == i && Boulder_list_all$Jammed == "a) Unjammed"),1])
+
+    Reservoir$X[match(names(Boulder_N_jammed),Reservoir$Time)]<-Boulder_N_jammed
+    Reservoir$Y[match(names(Boulder_N_unjammed),Reservoir$Time)]<-Boulder_N_unjammed
+
     names(Reservoir)[which(names(Reservoir)=="X")]<-paste0("Class",i,".jammed")
-
-    Reservoir$Y[match(Boulder_N_unjammed$Time,Reservoir$Time)]<-Boulder_N_unjammed$N
     names(Reservoir)[which(names(Reservoir)=="Y")]<-paste0("Class",i,".unjammed")
-
   }
+
+  #with DPLYR
+  # for(i in c(1:dim(Boulders)[1]))
+  # {
+  # 
+  #   Boulder_N_jammed<-Boulder_list_all %>%
+  #     filter(Class == i) %>%
+  #     filter(Jammed != "a) Unjammed") %>%
+  #     group_by(Time) %>%
+  #     summarise(N=n())
+  # 
+  #   Boulder_N_unjammed<-Boulder_list_all %>%
+  #     filter(Class == i) %>%
+  #     filter(Jammed == "a) Unjammed") %>%
+  #     group_by(Time) %>%
+  #     summarise(N=n())
+  # 
+  #   Reservoir$X<-Reservoir$Y<-0
+  #   Reservoir$X[match(Boulder_N_jammed$Time,Reservoir$Time)]<-Boulder_N_jammed$N
+  #   names(Reservoir)[which(names(Reservoir)=="X")]<-paste0("Class",i,".jammed")
+  # 
+  #   Reservoir$Y[match(Boulder_N_unjammed$Time,Reservoir$Time)]<-Boulder_N_unjammed$N
+  #   names(Reservoir)[which(names(Reservoir)=="Y")]<-paste0("Class",i,".unjammed")
+  # 
+  # }
 
   #Combine the tables of clogging for later plot and analysis
   N_slot<-(Opening$Type=="slot") #which opening are slots
   WidthClogging<-VerticalClogging<-NULL
-  for(i in (1:(N_opening-1))) #Only until N_opening-1 because clogging is a no sense on the crest
+  for(i in (1:max(1,(N_opening-1)))) #Only until N_opening-1 because clogging is a no sense on the crest
   {
     if(i==1){ #Initialize
       VerticalClogging<-data.frame(Time=Reservoir$Time,Opening="#1"
@@ -458,7 +480,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   
   if(PrintFinalPlot){
     # Create directory to save recorded buffering results
-    # dir.create(paste0("2Outputs/",EventName,"_ComputedOn",lubridate::today())
+    # dir.create(paste0("",EventName,"_ComputedOn",lubridate::today())
     # ,showWarnings = FALSE,recursive = TRUE)
     
     Plot_BufferingModel(ModelVersion,StructureName,Reservoir,WidthClogging,VerticalClogging
@@ -503,8 +525,8 @@ Synthetic_Structure_results<-function(Reservoir, Opening)
   # Nmax<-max(which(Reservoir$Z>Opening$BaseLevel[N_opening]))
   
   #Look for time step of level passing over and below the spillway
-  # Nmin.s<-min(which(Reservoir$Z>Opening$BaseLevel[(N_opening-1)]))
-  # Nmax.s<-max(which(Reservoir$Z>Opening$BaseLevel[(N_opening-1)]))
+  # Nmin.s<-min(which(Reservoir$Z>Opening$BaseLevel[max(N_opening-1,1)]))
+  # Nmax.s<-max(which(Reservoir$Z>Opening$BaseLevel[max(N_opening-1,1)]))
   
   #OVertopping duration
   # Tover<-TimeStep*(Nmax-Nmin)
@@ -534,8 +556,8 @@ Synthetic_Structure_results<-function(Reservoir, Opening)
                         ,BoulderGenerationMode=BoulderGenerationMode
     )
     RESULTS<-cbind(RESULTS
-                   ,Reservoir[dim(Reservoir)[1],(7+1:(N_opening-1))]                    #only until N_opening -1 because
-                   ,Reservoir[dim(Reservoir)[1],(7+(N_opening-1)+1:(N_opening-1))]      #the top opening is the crest
+                   ,Reservoir[dim(Reservoir)[1],(7+1:max(N_opening-1,1))]                    #only until N_opening -1 because
+                   ,Reservoir[dim(Reservoir)[1],(7+max(N_opening-1,1)+1:max(N_opening-1,1))]      #the top opening is the crest
     )
     return(RESULTS)
   }
@@ -547,7 +569,7 @@ Cascade_of_structure_functionning<-function(input)
   Qin<-Create_inlet_timeseries(input,Boulders)
   
   #Computation at each structure
-  for(Structure_Ind in 1:length(Structures$Name))
+  for(Structure_Ind in 1:sum(!is.na(Structures$Rank)))
   {
     #If not the first structure, then compute first the transferred inlet discharge and boulder
     if(Structure_Ind > 1)
@@ -569,10 +591,6 @@ Cascade_of_structure_functionning<-function(input)
       Qin<-Transfer_Between_Structure(Qo = Qo_all_upstream 
                                       ,TransferType = TransferType
                                       ,Vmixing = Vmixing)
-      
-      # Qin<-Transfer_Between_Structure(Qo = Qo_all_upstream %>% filter(Run == paste0("Run #",Run_Ind)) %>% filter(StructureRank == (Structure_Ind-1))
-      #                                 ,Transfer.Type = transfer
-      #                                 ,Vmixing = Vmixing)
     }
     
     #Compute the actual structure functionning
@@ -595,15 +613,15 @@ Cascade_of_structure_functionning<-function(input)
     #   Result_all<-Result
     #   Qo_all<-Qo
     # }else{
-    #   load(paste0("2Outputs/Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData")
+    #   load(paste0("Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData")
     #        ,envir=globalenv())
     #   Result_all<-rbind(Result_all,Result)
     #   Qo_all<-rbind(Qo_all,Qo)
     # }
-    # save(Result,Qo,file=paste0("2Outputs/Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
+    # save(Result,Qo,file=paste0("Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
     
     # Save a data frame with the main results of all runs as a .Rdata file
-    File.Name<-paste0("2Outputs/Result_Evt-@-",EventName,"-_Structure_@-",Structures$Name[[which(Structures$Rank==Structure_Ind)]],"-",lubridate::now(),".Rdata")
+    File.Name<-paste0("Result_Evt-",EventName,"-_Structure_@-",Structures$Name[[which(Structures$Rank==Structure_Ind)]],"-ComputedOn",lubridate::now(),".Rdata")
     File.Name<-str_replace_all(File.Name,":","-")
     File.Name<-str_replace_all(File.Name," ","_")
     save(Result,Qo,file=File.Name)
