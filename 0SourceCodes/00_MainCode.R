@@ -11,9 +11,10 @@ if(HEADLESS) {
 }
 
 # For Guillaume P. only, to emulate the headless mode under RStudio:
-# HEADLESS = TRUE
-# rootDir<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
-# args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
+HEADLESS = TRUE
+rootDir<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
+args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
+setwd(paste0(rootDir,"/0SourceCodes"))
 
 if(HEADLESS) {
   print('Running in HEADLESS mode')
@@ -48,7 +49,7 @@ library(dplyr) #for data manipulation
 
 #Model version
 ModelVersion <- "CheekyeDebrisFlowBarrier V3.0"
-SourceCodeRepository<-paste0(getwd(),"/0SourceCodes")
+
 if(!HEADLESS)
 {
   #Selecting the source codes repository ----
@@ -99,11 +100,16 @@ if(!HEADLESS){
               #Import the structure description
               Structures<-structure_definition(InputDataRepository)
               #define rank, transfer condition and initial conditions
-              Structures$Rank<-match(Structure_organisation$Name,Structures$Name)
+              # Structures$Rank[Structures$Name %in% Structure_organisation$Name]<-match(Structure_organisation$Name,Structures$Name)
+              Structures$Rank<-match(Structures$Name,Structure_organisation$Name)
               Structures$TransferDownstream<-Structure_organisation$Transfer[match(Structure_organisation$Name,Structures$Name)]
               Structures$InitialConditions<-InitialConditions[match(Structure_organisation$InitialCondition
                                                                     ,InitialConditions$Name),]
-}
+}#else{
+  #SourceCodeRepository<-paste0(MainRep,"/0SourceCodes/")
+#}
+#Set this repository as working repository
+#setwd(SourceCodeRepository)
 
 #Complete the storage elevation data of each bridge elements
 for(Structure_Ind in (1:length(Structures$Name)))
@@ -119,23 +125,30 @@ for(Structure_Ind in (1:length(Structures$Name)))
 #Selecting the repository where one want to record the results
 if(HEADLESS) {
   MainRep <- args[2]
+  #Set this repository as working repository
+  setwd(MainRep)
 } else {
-  setwd(InputDataRepository)
-  dlg_message(
-    message="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)", type = c("ok")
-  )
-  MainRep<-dlg_dir(
-    title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)",
-    default = getwd()
-  )$res
+  # setwd(InputDataRepository)
+  # dlg_message(message="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
+  #             , type = c("ok"));MainRep<-dlg_dir(title="Show me where you want to store the results (e.g., the parent directory where /0SourceCode and /1Data are stored)"
+  #                                                       ,default = getwd())$res
+  #Look for relevant name of repository (where are stored the input data)
+  RepoistoryListName<-unlist(strsplit(x=getwd(),split=c("/")))
+  RepositoryName<-paste0(RepoistoryListName[1],"/")
+  for(i in (2:(length( RepoistoryListName)-1)))
+  {
+    RepositoryName<-paste0(RepositoryName,RepoistoryListName[i],"/")
+  }
+  MainRep<-RepositoryName
+  rm(RepositoryName,RepoistoryListName)
+  dir.create(paste0(MainRep,"/out"),showWarnings = FALSE)
+  #Set this repository as working repository
+  setwd(paste0(MainRep,"/out"))
 }
-#Set this repository as working repository
-setwd(MainRep)
-dir.create(paste0(MainRep,"/2Outputs"),showWarnings = FALSE)
 
 #Main loop within which each set of run is performed
-PerformAnotherSimulation<-"yes"
-while(PerformAnotherSimulation=="yes")
+PerformAnotherSimulation <- "yes"
+while(PerformAnotherSimulation == "yes")
 {
   
   if(!HEADLESS){
@@ -184,8 +197,9 @@ while(PerformAnotherSimulation=="yes")
   {
     if(!HEADLESS){
       #Saving synthesis figure for each run?
-      PrintFinalPlot<-dlg_message(message="Do you want to print a synthesis plot for each run (hydrographs, flow level, volume stored) in a .png file?", type = c("yesno"))$res
-      if(PrintFinalPlot=="yes"){ PrintFinalPlot<-TRUE}else{ PrintFinalPlot<-FALSE}
+      # PrintFinalPlot<-dlg_message(message="Do you want to print a synthesis plot for each run (hydrographs, flow level, volume stored) in a .png file?", type = c("yesno"))$res
+      # if(PrintFinalPlot=="yes"){ PrintFinalPlot<-TRUE}else{ PrintFinalPlot<-FALSE}
+      if(N_runs <= 10){ PrintFinalPlot <- TRUE }else{ PrintFinalPlot <- FALSE} #no plot if more than 10 runs
     }
   }else{PrintFinalPlot<-FALSE} #no plot for each run if error propagation by possibility analysis
   
@@ -200,34 +214,40 @@ while(PerformAnotherSimulation=="yes")
   TimeStep<-1 #(s) Should be an integer in seconds, so no less than 1 second
   # small enough to capture the peak, the code seems to get stuck in infinite loops if set at 5 s with low slopes
   # Define the event to model----
-  EventUndefined<-TRUE
-  while(EventUndefined)
+  if(!HEADLESS) 
   {
-    if(OnlyNormalRun){ # Possible to reuse predefined values or to define the event manually
-      EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
-                                       ,Events$Name
-                                       ,"If you want to define the event manually, write \"0\" ")
-                           ,default = Events$Name[1])$res
-    }else{#Only possible to reuse predefined values 
-      EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
-                                       ,Events$Name)
-                           ,default = Events$Name[1])$res
-      AdjustEventManually <- FALSE
-    } 
-    
-    if(EventName != "0"){AdjustEventManually<-FALSE}else{#Define values manually
-      AdjustEventManually <- TRUE
-      EventName<-dlg_input(message = c("OK we will adjust an event, which one do you want to take as template?, the available names are :"
-                                       ,Events$Name)
-                           ,default = Events$Name[1])$res
-    }
-    
-    if(EventName %in% Events$Name){EventUndefined<-FALSE}else{
-      dlg_message(message="The name you wrote is not in the list of the available events, please provide an available event name"
-                  , type = c("ok"))
-      EventUndefined<-TRUE
-    }
-  }#end of while loop to define the event
+    EventUndefined<-TRUE
+    while(EventUndefined)
+    {
+      if(OnlyNormalRun){ # Possible to reuse predefined values or to define the event manually
+        EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
+                                         ,Events$Name
+                                         ,"If you want to define the event manually, write \"0\" ")
+                             ,default = Events$Name[1])$res
+      }else{#Only possible to reuse predefined values 
+        EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
+                                         ,Events$Name)
+                             ,default = Events$Name[1])$res
+        AdjustEventManually <- FALSE
+      } 
+      
+      if(EventName != "0"){AdjustEventManually<-FALSE}else{#Define values manually
+        AdjustEventManually <- TRUE
+        EventName<-dlg_input(message = c("OK we will adjust an event, which one do you want to take as template?, the available names are :"
+                                         ,Events$Name)
+                             ,default = Events$Name[1])$res
+      }
+      
+      if(EventName %in% Events$Name){EventUndefined<-FALSE}else{
+        dlg_message(message="The name you wrote is not in the list of the available events, please provide an available event name"
+                    , type = c("ok"))
+        EventUndefined<-TRUE
+      }
+    }#end of while loop to define the event
+  }else{
+    EventName <- Events$Name[1]
+    AdjustEventManually<-FALSE}
+  
   
   # Create input data to launch runs----
   if(OnlyNormalRun)
@@ -252,77 +272,7 @@ while(PerformAnotherSimulation=="yes")
       print(paste0("PROGRESS[",Run_Ind,"/",N_runs,"]"))
       
     }
-    
-    #plots of scatter plot and histograms----
-    #If more than 10 runs, plot histograms and a scatter plot of Qmax and V
-    if(N_runs>=10)
-    {
-      # Find the event in the table
-      Event_Ind<-which(Events$Name==EventName)
-     
-       for(Structure_Ind in 1:length(Structures$Name))
-      {
-         StructureName<-Structures$Name[[which(Structures$Rank==Structure_Ind)]]
-         #load results of the structure
-         load(paste0("2Outputs/Result_Evt-",EventName,"_Structure_",StructureName,".RData"))
-         
-        # Plot a synthesis figure on Vout
-        ggplot(Result_all)+
-          theme_bw(base_size = 9)+
-          geom_histogram(aes(Vout/10^3))+
-          geom_boxplot(aes(x=Vout/10^3,y=-1))+
-          geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3)+
-          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Event_Ind]/10^3
-                   ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-          coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3))+
-          labs(x="Released volume [*1000 m3]",y="count"
-               ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
-               ,title = paste("Distribution of released volume for event\n Event:",EventName," & Structure:",StructureName))
-        #Save figure
-        ggsave(paste0("2Outputs/ReleasedVolume_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
-               , width = 11, height = 7,units="cm")
-        
-        # Plot a synthesis figure on Qpeak out
-        ggplot(Result_all)+
-          theme_bw(base_size = 9)+
-          geom_histogram(aes(Qp_out))+
-          geom_boxplot(aes(x=Qp_out,y=-1))+
-          geom_vline(xintercept = Events$PeakDischarge_BestEstimate[Event_Ind])+
-          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$PeakDischarge_BestEstimate[Event_Ind]
-                   ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-          coord_cartesian(xlim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind]))+
-          labs(x="Peak discharge [m3/s]",y="count"
-               ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
-               ,title = paste("Distribution of released peak dischage \n Event:",EventName," & Structure:",StructureName))
-        
-        #Save figure
-        ggsave(paste0("2Outputs/ReleasedQpeak_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
-               , width = 11, height = 7,units="cm")
-        
-        # Plot a synthesis figure of Qpeak out VS Vout
-        ggplot(Result_all)+
-          theme_bw(base_size = 9)+
-          geom_bin2d(aes(x=Vout/10^3,y=Qp_out))+
-          scale_fill_continuous("# of Run")+
-          geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Event_Ind])+
-          geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3)+
-          annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Event_Ind]/10^3
-                   ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-          annotate(geom = "text", x = 0, adj=c(0,0), y = Events$PeakDischarge_BestEstimate[Event_Ind]
-                   ,vjust=(1.2), label = "Supply (Best. Est.)")+
-          coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])
-                          ,xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3))+
-          labs(x="Released volume [*1000 m3]",y="Peak discharge [m3/s]"
-               ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"\n Number of runs N =",N_runs)
-               ,title = paste("Released volume and released peak dischage \n Event:",EventName," & Structure:",StructureName))
-        
-        #Save figure
-        ggsave(paste0("2Outputs/ReleasedVolume-VS-Qpeak_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
-               , width = 10, height = 7,units="cm") 
-      }# en of the structure loop
-      
-    }# end of the if loop to plot synthesis plots
-    
+
   }else{# end of the normal run condition
     
     BoulderGenerationMode<-"Uncertain boulder numbers"
@@ -545,7 +495,7 @@ while(PerformAnotherSimulation=="yes")
     input=CREATE_DISTR(input)
     
     ####VISU INPUT
-    png(paste0(MainRep,"/2Outputs/PossibilityAnalysis_Evt-",EventName,"_Nrun_",N_runs,"_InputDistributions.png"), width = 22, height = 24
+    png(paste0(MainRep,"/PossibilityAnalysis_Evt-",EventName,"_Nrun_",N_runs,"_InputDistributions.png"), width = 22, height = 24
         ,units="cm"
         ,res=350
         )
@@ -588,12 +538,120 @@ while(PerformAnotherSimulation=="yes")
                            , lubridate::today(),"| Number of runs N =",N_runs)
             ,title = paste("Uncertainty analysis of peak discharge downstream all structures (event:",EventName,")"))
     #Save figure
-    ggsave(paste0("2Outputs/ReleasedPeakDischarge_Evt-",EventName,"_Nrun_",N_runs,"_NboulderUncertain.png")
+    ggsave(paste0("ReleasedPeakDischarge_Evt-",EventName,"_Nrun_",N_runs,"_NboulderUncertain.png")
            , width = 16.5, height = 7,units="cm")
     
     #Save results
-    save(Rslt_Uncertain.Boulder.Number,file=paste0("2Outputs/ReleasedPeakDischarge_Evt-",EventName,"_Nrun_",N_runs,"_NboulderUncertain.RData"))
+    save(Rslt_Uncertain.Boulder.Number,file=paste0("ReleasedPeakDischarge_Evt-",EventName,"_Nrun_",N_runs,"_NboulderUncertain.RData"))
   }#end of the uncertainty propagation condition
+  
+  #Rename file names
+  ListFile1<-list.files(pattern="computedOn")#Figure
+  ListFile2<-list.files(pattern="ComputedOn")#Rdata
+  if(OnlyNormalRun)
+  {
+    if(N_runs<=10)
+    {
+      file.rename(ListFile1,paste0("Figure",substr(ListFile1,1,nchar(ListFile1)-34),"_run",rep((1:Run_Ind),max(Structures$Rank)),".png"))  
+    }
+    file.rename(ListFile2,paste0("Rdata",substr(ListFile2,1,nchar(ListFile2)-36),"_run",rep((1:Run_Ind),max(Structures$Rank)),".Rdata"))
+  }else{
+    file.rename(ListFile2,paste0("Rdata",substr(ListFile2,1,nchar(ListFile2)-36),"_run",rep(rep((1:Run_Ind),max(Structures$Rank)),2),".Rdata"))
+  }
+  rm(ListFile1,ListFile2)
+  
+  
+  #Aggregate every run results in a single data frame per structure
+  # Find the event in the table
+  Event_Ind<-which(Events$Name==EventName)
+  
+  for(Structure_Ind in 1:length(Structures$Name))
+  {
+    StructureName<-Structures$Name[[which(Structures$Rank==Structure_Ind)]]
+    ListFileStructure<-list.files(pattern = paste0("Structure_@-",StructureName))#Rdata
+    for(File_Ind in (1:length(ListFileStructure)))
+    {
+      #load results of the structure
+      load(ListFileStructure[File_Ind])
+      Qo$Run<-File_Ind
+      Result$Run<-File_Ind
+      if(File_Ind == 1)
+      {
+        Qo_all <-Qo 
+        Result_all<-Result
+        
+      }else{
+        Qo_all <-rbind(Qo_all,Qo) 
+        Result_all<-rbind(Result_all,Result)
+      }
+    }
+    #Save the file that aggregate all the results
+    save(Qo_all,Result_all,file=paste0("RdataResult_Evt-",EventName,"_Structure_@-",StructureName,".RData"))
+    # Remove files for each singular run
+    file.remove(ListFileStructure)
+    
+    #plots of scatter plot and histograms----
+    #If more than 10 runs, plot histograms and a scatter plot of Qmax and V
+    if(N_runs>=10)
+    {
+      # Plot a synthesis figure on Vout
+      ggplot(Result_all)+
+        theme_bw(base_size = 9)+
+        geom_histogram(aes(Vout/10^3))+
+        geom_boxplot(aes(x=Vout/10^3,y=-1))+
+        geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3)+
+        annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Event_Ind]/10^3
+                 ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
+        coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3))+
+        labs(x="Released volume [*1000 m3]",y="count"
+             ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
+             ,title = paste("Distribution of released volume for event\n Event:",EventName," & Structure:",StructureName))
+      #Save figure
+      ggsave(paste0("ReleasedVolume_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
+             , width = 11, height = 7,units="cm")
+      
+      # Plot a synthesis figure on Qpeak out
+      ggplot(Result_all)+
+        theme_bw(base_size = 9)+
+        geom_histogram(aes(Qp_out))+
+        geom_boxplot(aes(x=Qp_out,y=-1))+
+        geom_vline(xintercept = Events$PeakDischarge_BestEstimate[Event_Ind])+
+        annotate(geom = "text", y = 0, adj=c(0,0), x = Events$PeakDischarge_BestEstimate[Event_Ind]
+                 ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
+        coord_cartesian(xlim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind]))+
+        labs(x="Peak discharge [m3/s]",y="count"
+             ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
+             ,title = paste("Distribution of released peak dischage \n Event:",EventName," & Structure:",StructureName))
+      
+      #Save figure
+      ggsave(paste0("ReleasedQpeak_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
+             , width = 11, height = 7,units="cm")
+      
+      # Plot a synthesis figure of Qpeak out VS Vout
+      ggplot(Result_all)+
+        theme_bw(base_size = 9)+
+        geom_bin2d(aes(x=Vout/10^3,y=Qp_out))+
+        scale_fill_continuous("# of Run")+
+        geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Event_Ind])+
+        geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3)+
+        annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Event_Ind]/10^3
+                 ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
+        annotate(geom = "text", x = 0, adj=c(0,0), y = Events$PeakDischarge_BestEstimate[Event_Ind]
+                 ,vjust=(1.2), label = "Supply (Best. Est.)")+
+        coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])
+                        ,xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3))+
+        labs(x="Released volume [*1000 m3]",y="Peak discharge [m3/s]"
+             ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"\n Number of runs N =",N_runs)
+             ,title = paste("Released volume and released peak dischage \n Event:",EventName," & Structure:",StructureName))
+      
+      #Save figure
+      ggsave(paste0("ReleasedVolume-VS-Qpeak_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
+             , width = 10, height = 7,units="cm") 
+    }# en of the >10 run loop
+    
+  }# end of the structure loop
+  
+  
   
   
   ## Define if another run is to be launched
