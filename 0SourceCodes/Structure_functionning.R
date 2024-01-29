@@ -51,7 +51,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   storageElevationCurve<-data.frame(s=0,h=StorageElevation$Z)
   
   # Check that deposition slope is within the range of data
-  if(min(as.numeric(substr(names(StorageElevation[,-1]),2,6)))>SlopeDep/100)
+  if(min(as.numeric(substr(names(StorageElevation[,-1]),2,6)))>SlopeDep)#/100)
   {
     print("Deposition slope selected below the minimum values of the elevation - storage capacity!
             Used the minimum value of the table but consider adding the relevant data to the table!")
@@ -61,7 +61,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   {
     storageElevationCurve$s[i]<-approx(x=as.numeric(substr(names(StorageElevation[,-1]),2,6))
                                        ,y=StorageElevation[i,-1]
-                                       ,xout = SlopeDep/100
+                                       ,xout = SlopeDep#/100
                                        ,yleft=min(StorageElevation[i,-1])
                                        ,yright=max(StorageElevation[i,-1])
     )$y/10^3
@@ -82,7 +82,19 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   if(sum(Opening$Comment=="Spillway")>0){
     SpillwayLevel<-Opening$BaseLevel[which(Opening$Comment=="Spillway")]
   }
-  CrestLevel<-Opening$BaseLevel[N_opening]
+  
+  if(N_opening>1){
+    CrestLevel<-Opening$BaseLevel[N_opening]
+    ModelLevelAccuracy <- 0.01*(CrestLevel-OpeningMinBaseLevel)
+  }else{
+    if(Opening$Type == "slot"){
+      CrestLevel<-Opening$Param[N_opening]
+      ModelLevelAccuracy <- 0.01*(CrestLevel-OpeningMinBaseLevel)
+    }else{
+      CrestLevel <- Opening$Width+9999 #Case for weir and slit being the only opening, arbitrary value
+      ModelLevelAccuracy <- 0.01*Opening$Width
+    }
+  }
   
   #Count number of boulders 
   for(i in (1:dim(Boulders)[1]))
@@ -94,17 +106,19 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   #Elementary volume of each boulder class
   Boulders$V<-pi/6*Boulders$Diameter^3
   #Clogging level and width by boulders
-  BoulderClogging_level<-data.frame(matrix(Opening$VerticalClogging, N_TimeSteps, N_opening,byrow=TRUE),stringsAsFactors=F)
+  # BoulderClogging_level<-data.frame(matrix(Opening$VerticalClogging, N_TimeSteps, N_opening,byrow=TRUE),stringsAsFactors=F) #Former version where we kept track of values
+  # BoulderClogging_width<-data.frame(matrix(Opening$LateralClogging, N_TimeSteps, N_opening,byrow=TRUE),stringsAsFactors=F)#Former version where we kept track of values
+  BoulderClogging_width<-BoulderClogging_level<-data.frame(matrix(0, N_TimeSteps, N_opening,byrow=TRUE),stringsAsFactors=F)
   names(BoulderClogging_level)<-paste0("Z",(1:N_opening))
+  names(BoulderClogging_width)<-paste0("W",(1:N_opening))
   #For initial clogging we take the maximum between the pre-existing clogging height and the base jam height arriving at the surge front
   BoulderClogging_level[,1]<-max(BoulderClogging_level[,1],BaseJamHeight)
   
-  BoulderClogging_width<-data.frame(matrix(Opening$LateralClogging, N_TimeSteps, N_opening,byrow=TRUE),stringsAsFactors=F)
-  names(BoulderClogging_width)<-paste0("W",(1:N_opening))
+  
   
   
   #Discharge elevation curves
-  h<-seq(from=OpeningMinBaseLevel, to=max(storageElevationCurve$h)+5,by=0.1) #Extend 5 meter above the crest
+  h<-seq(from=OpeningMinBaseLevel, to=max(storageElevationCurve$h)+5,by=5*ModelLevelAccuracy) #Extend 5 meter above the crest
   
   ###Plot V vs h
   if(PrintDataPlot){
@@ -163,7 +177,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
                         ,Qi=Qin$Q
                         ,Qo=0 #Qoutlet
                         ,V=NA#/10^3 #stored volume
-                        ,Z=DepositDepthInitial #level at barrier 
+                        ,Z=OpeningMinBaseLevel+DepositDepthInitial #level at barrier 
                         ,Qoutlet=0 #Discharge passing by openings only
                         ,Qspillway=0) #Discharge passing by spillway only
   
@@ -175,7 +189,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
                          ,yleft=min(storageElevationCurve$s)
                          ,yright=max(storageElevationCurve$s))$y
   #For initial level we take the maximum between the pre-existing deposit height and the base jam height arriving at the surge front
-  Reservoir$Z[i]<-OpeningMinBaseLevel+max(DepositDepthInitial,BaseJamHeight)+0.001 #+0.001 to avoid 0 values and null discharge
+  Reservoir$Z[i]<-OpeningMinBaseLevel+max(DepositDepthInitial,BaseJamHeight)+0.0001 #+0.0001 to avoid 0 values and null discharge
   #Sum the discharge of all orifices 
   Reservoir$Qo[i]<-sum(Q_CompoundBarrier(Opening = Opening
                                          ,BaseClogging = BoulderClogging_level[i,]
@@ -198,7 +212,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
     dZ<-10^6
     Ninter<-0
     #Look for the values of reservoir level and outlet discharge that align volume conservation
-    while(abs(dZ)>0.01*(CrestLevel-OpeningMinBaseLevel) && Ninter<1000) 
+    while(abs(dZ)>ModelLevelAccuracy && Ninter<1000) 
       #targeted reservoir level accuracy, 1% of the difference in elevation between the outlet and the spillway
     {   #Previous reservoir level recording
       Z<-Reservoir$Z[i]
@@ -220,7 +234,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
     }
     if(Ninter>=1000) #If more than 1000 iteration does not enable to converge, we kill the run
     {
-      print("One simulation killed (no convergence after 1000 iteration)")
+      print(paste("One simulation killed (no convergence after 1000 iteration) at time step number",i))
       i<-N_TimeSteps
     }
     
@@ -623,7 +637,7 @@ Cascade_of_structure_functionning<-function(input)
     # Save a data frame with the main results of all runs as a .Rdata file
     File.Name<-paste0("Result_Evt-",EventName,"-_Structure_@-",Structures$Name[[which(Structures$Rank==Structure_Ind)]],"-ComputedOn",lubridate::now(),".Rdata")
     File.Name<-str_replace_all(File.Name,":","-")
-    File.Name<-str_replace_all(File.Name," ","_")
+    # File.Name<-str_replace_all(File.Name," ","_")
     save(Result,Qo,file=File.Name)
     
   } #end of the for loop on structures

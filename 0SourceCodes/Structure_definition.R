@@ -74,7 +74,11 @@ define_bridgeStorageElevation<-function(Opening,width,slope)
   #### convert bridge data into storage / elevation curve ####
   # get min / max elevation values from bridge data
   BaseLevel_max<-max(Opening$BaseLevel)
-  DeckLevel_max<-max(subset(Opening,Opening$Type=="slot")$Param)
+  if(is.null(subset(Opening,Opening$Type=="slot")$Param))
+  { DeckLevel_max <- BaseLevel_max+99
+  }else{
+    DeckLevel_max <- max(subset(Opening,Opening$Type=="slot")$Param)
+  }
   
   # interpolate the deposition slope on 10 values of slopes
   seq_slope<-seq(0,slope*0.95,length.out=10)

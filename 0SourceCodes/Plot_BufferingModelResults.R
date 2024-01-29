@@ -141,7 +141,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     # Arranger les graphiques
     if(is.null(WidthClogging))
     {
-      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," for event:",EventName,"\n"
+      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName,", for event: ",EventName,"\n"
                                     ,"Model version: ",ModelVersion,"\n"
                                     ,"Boulder generation mode: ",BoulderGenerationMode))+ 
               theme(plot.title = element_text(size=8.5))
@@ -150,7 +150,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
       print(Zplot, vp = define_region(11:16,1))
       print(Vplot, vp = define_region(17:22,1))
     }else{
-      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName," for event: ",EventName,"\n"
+      print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName,", for event: ",EventName,"\n"
                                     ,"Model version: ",ModelVersion,"\n"
                                     ,"Boulder generation mode: ",BoulderGenerationMode))
             , vp = define_region(1:5,1))
