@@ -48,7 +48,7 @@ library(sets) #Plots
 library(dplyr) #for data manipulation
 
 #Model version
-ModelVersion <- "CheekyeDebrisFlowBarrier V3.0"
+ModelVersion <- "ACB³ V1.0"
 
 if(!HEADLESS)
 {
@@ -195,12 +195,12 @@ while(PerformAnotherSimulation == "yes")
   
   if(OnlyNormalRun)
   {
-    if(!HEADLESS){
+    if(N_runs <= 10){ PrintFinalPlot <- TRUE }else{ PrintFinalPlot <- FALSE} #no plot if more than 10 runs
+    # if(!HEADLESS){
       #Saving synthesis figure for each run?
       # PrintFinalPlot<-dlg_message(message="Do you want to print a synthesis plot for each run (hydrographs, flow level, volume stored) in a .png file?", type = c("yesno"))$res
       # if(PrintFinalPlot=="yes"){ PrintFinalPlot<-TRUE}else{ PrintFinalPlot<-FALSE}
-      if(N_runs <= 10){ PrintFinalPlot <- TRUE }else{ PrintFinalPlot <- FALSE} #no plot if more than 10 runs
-    }
+    # }
   }else{PrintFinalPlot<-FALSE} #no plot for each run if error propagation by possibility analysis
   
   #Disabled options in this version
@@ -550,13 +550,14 @@ while(PerformAnotherSimulation == "yes")
   ListFile2<-list.files(pattern="ComputedOn")#Rdata
   if(OnlyNormalRun)
   {
-    if(N_runs<=10)
+    if(length(ListFile1)>0)
     {
       file.rename(ListFile1,paste0("Figure",substr(ListFile1,1,nchar(ListFile1)-34),"_run",rep((1:Run_Ind),max(Structures$Rank)),".png"))  
     }
-    file.rename(ListFile2,paste0("Rdata",substr(ListFile2,1,nchar(ListFile2)-36),"_run",rep((1:Run_Ind),max(Structures$Rank)),".Rdata"))
-  }else{
-    file.rename(ListFile2,paste0("Rdata",substr(ListFile2,1,nchar(ListFile2)-36),"_run",rep(rep((1:Run_Ind),max(Structures$Rank)),2),".Rdata"))
+    if(length(ListFile2)>0)
+    {
+      file.rename(ListFile2,paste0("Rdata",substr(ListFile2,1,nchar(ListFile2)-36),"_run",rep((1:Run_Ind),max(Structures$Rank)),".Rdata"))
+    }
   }
   rm(ListFile1,ListFile2)
   
@@ -590,69 +591,174 @@ while(PerformAnotherSimulation == "yes")
     # Remove files for each singular run
     file.remove(ListFileStructure)
     
-    #plots of scatter plot and histograms----
-    #If more than 10 runs, plot histograms and a scatter plot of Qmax and V
-    if(N_runs>=10)
+    #plots of synthesis multi run figures----
+    if(PrintFinalPlot==FALSE)
     {
+      ### Four panel graph
+      # Plot a synthesis figure on Vin
+      TopTopLeftPanel<-ggplot(Result_all)+
+        theme_classic(base_size = 9)+
+        geom_histogram(aes(Vevent/10^3))+
+        geom_boxplot(aes(x=Vevent/10^3,y=-1))+
+        geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3,col="grey")+
+        annotate(geom = "text", y = 0, adj=0, x = Events$Volume_BestEstimate[Event_Ind]/10^3
+                 ,vjust=(1.2), label = "Total event \n (Best. Est.)",srt=90,col="grey",size=3.5)+
+        coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.2))+
+        labs(x="Supplied volume [*1000 m3]",y="# of Run"
+             ,title = paste0("Debris flow volume and peak discharge \n","(Event: ",EventName,") \n","(Structure: ",StructureName,")"))
+      
       # Plot a synthesis figure on Vout
-      ggplot(Result_all)+
-        theme_bw(base_size = 9)+
+      TopLeftPanel<-ggplot(Result_all)+
+        theme_classic(base_size = 9)+
         geom_histogram(aes(Vout/10^3))+
         geom_boxplot(aes(x=Vout/10^3,y=-1))+
-        geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3)+
-        annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Event_Ind]/10^3
-                 ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-        coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3))+
-        labs(x="Released volume [*1000 m3]",y="count"
-             ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
-             ,title = paste("Distribution of released volume for event\n Event:",EventName," & Structure:",StructureName))
-      #Save figure
-      ggsave(paste0("ReleasedVolume_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
-             , width = 11, height = 7,units="cm")
+        coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.25))+
+        labs(x="Released volume [*1000 m3]",y="# of Run")
+      
+      # Plot a synthesis figure of Qpeak out VS Vout, top right panel
+      TopightPanel<-ggplot(Result_all)+
+        theme_bw(base_size = 9)+
+        geom_bin2d(aes(x=(Vevent-Vout)/Vevent,y=(Qp_in-Qp_out)/Qp_in),col=1,#bins=20)+
+                   binwidth=c(0.1,0.1))+
+        scale_fill_gradient2("# of Run",low="palegreen1", high = "palegreen4")+ 
+        geom_hline(yintercept = 1,col="grey")+
+        geom_vline(xintercept = 1,col="grey")+
+        annotate(geom = "text", y = 0.5, adj=0.5, x = 0,vjust=(-1), label = "No effect on volume",srt=90,col="grey",size=3.5)+
+        annotate(geom = "text", x = 0.5, adj=0.5, y = 0,vjust=(1.5), label ="No effect on peak discharge" ,col="grey",size=3.5)+
+        geom_hline(yintercept = 0,col="grey")+
+        geom_vline(xintercept = 0,col="grey")+
+        annotate(geom = "text", y = 0.5, adj=0.5, x = 1*1.08,vjust=(0), label = "Total trapping",srt=90,col="grey",size=3.5)+
+        annotate(geom = "text", x = 0.5, adj=0.5, y = 1*1.1,vjust=(1), label = "Total attenuation",col="grey",size=3.5)+
+        coord_cartesian(ylim=c(-0.1,1.1),xlim=c(-0.1,1.1))+
+        labs(x="Volume trapping [%]",y="Peak discharge attenuation [%]" )+
+        theme(legend.direction = "horizontal",legend.position = "top",legend.key.height = unit(0.3, 'cm'))+
+        scale_y_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))+
+        scale_x_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))
+      
+      # Plot a synthesis figure of Qpeak out VS Vout, top right panel
+      BottomLeftPanel<-ggplot(Result_all)+
+        theme_bw(base_size = 9)+
+        geom_bin2d(aes(x=Vout/10^3,y=Qp_out),col=1,#bins=20)+
+                   binwidth=c(Events$Volume_BestEstimate[Event_Ind]/10^3/10,Events$PeakDischarge_BestEstimate[Event_Ind]/10))+
+        scale_fill_gradient2("# of Run",low="dodgerblue1", high = "dodgerblue4")+ 
+        coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind]*1.25)
+                        ,xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.25))+
+        labs(x="Released volume [*1000 m3]",y="Released Peak discharge [m3/s]")+
+        theme(legend.direction = "horizontal",legend.position = "bottom",legend.key.height = unit(0.3, 'cm'))
       
       # Plot a synthesis figure on Qpeak out
-      ggplot(Result_all)+
-        theme_bw(base_size = 9)+
-        geom_histogram(aes(Qp_out))+
-        geom_boxplot(aes(x=Qp_out,y=-1))+
-        geom_vline(xintercept = Events$PeakDischarge_BestEstimate[Event_Ind])+
-        annotate(geom = "text", y = 0, adj=c(0,0), x = Events$PeakDischarge_BestEstimate[Event_Ind]
-                 ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-        coord_cartesian(xlim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind]))+
-        labs(x="Peak discharge [m3/s]",y="count"
-             ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"| Number of runs N =",N_runs)
-             ,title = paste("Distribution of released peak dischage \n Event:",EventName," & Structure:",StructureName))
+      BottomRightPanel<-ggplot(Result_all)+
+        theme_classic(base_size = 9)+
+        geom_histogram(aes(y=Qp_out))+
+        geom_boxplot(aes(y=Qp_out,x=-1))+
+        coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)+
+        labs(y="Released Peak discharge [m3/s]",x="# of Run")
+      
+      # Plot a synthesis figure on Qpeak out
+      BottomRightRightPanel<-ggplot(Result_all)+
+        theme_classic(base_size = 9)+
+        geom_histogram(aes(y=Qp_in))+
+        geom_boxplot(aes(y=Qp_in,x=-1))+
+        geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Event_Ind],col="grey")+
+        annotate(geom = "text", x = 0, adj=0, y = Events$PeakDischarge_BestEstimate[Event_Ind]
+                 ,vjust=(-0.2), label = "Total Event \n (Best. Est.)",srt=0,col="grey",size=3.5)+
+        coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)+
+        labs(y="Supplied Peak discharge [m3/s]",x="# of Run"
+             ,caption=paste("Code version:",ModelVersion,#"\n Simulation performed on", lubridate::today(),
+                            "\n Number of runs =",N_runs))
+     
       
       #Save figure
-      ggsave(paste0("ReleasedQpeak_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
-             , width = 11, height = 7,units="cm")
+      png(paste0("FourPanelGraphReleasedVolume_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png"), width = 17, height = 15,units="cm",res=350)
+      {
+        pushViewport(viewport(layout = grid.layout(10,12)))
+        # Define region in the plot
+        define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
+        # Arrange panels
+        print(TopightPanel, vp = define_region(1:5,7:12))
+        print(TopTopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
+              , vp = define_region(1:3,1:6))
+        print(TopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
+              , vp = define_region(4:5,1:6))
+        print(BottomLeftPanel
+              , vp = define_region(6:10,1:6))
+        print(BottomRightPanel+theme(plot.margin = margin(t=0.1,r=0.5,b=1.5,l=0.1, "cm"))
+              , vp = define_region(6:10,7:9))
+        print(BottomRightRightPanel+theme(plot.margin = margin(t=0.1,r=0.5,b=0.8,l=0.1, "cm"))
+              , vp = define_region(6:10,10:12))
+      }
+      dev.off()
       
-      # Plot a synthesis figure of Qpeak out VS Vout
-      ggplot(Result_all)+
-        theme_bw(base_size = 9)+
-        geom_bin2d(aes(x=Vout/10^3,y=Qp_out))+
-        scale_fill_continuous("# of Run")+
-        geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Event_Ind])+
-        geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3)+
-        annotate(geom = "text", y = 0, adj=c(0,0), x = Events$Volume_BestEstimate[Event_Ind]/10^3
-                 ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-        annotate(geom = "text", x = 0, adj=c(0,0), y = Events$PeakDischarge_BestEstimate[Event_Ind]
-                 ,vjust=(1.2), label = "Supply (Best. Est.)")+
-        coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])
-                        ,xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3))+
-        labs(x="Released volume [*1000 m3]",y="Peak discharge [m3/s]"
-             ,caption=paste("Code of",ModelVersion," used on", lubridate::today(),"\n Number of runs N =",N_runs)
-             ,title = paste("Released volume and released peak dischage \n Event:",EventName," & Structure:",StructureName))
       
-      #Save figure
-      ggsave(paste0("ReleasedVolume-VS-Qpeak_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png")
-             , width = 10, height = 7,units="cm") 
+      
+      #Multi-run time series
+      {
+                #    SYNTHESIS PLOT----
+        QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
+          geom_line(aes(y=Qi,group =Run),color="black",alpha=0.3)+
+          theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
+          labs(y = "Supplied Discharge\n [m3/s]")+
+          theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
+        
+        QplotOut<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
+          geom_line(aes(y=Qo,group =Run),alpha=0.3)+
+          theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
+          labs(y = "Outlet Discharge\n [m3/s]")+
+          theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
+        
+        
+        
+        Zplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
+          geom_line(aes(x=Time/3600,y=Z,lty="4",group=Run),alpha=0.3)+
+          geom_line(aes(x=Time/3600,y=BaseLevelJam,lty="5",group=Run),alpha=0.3)+
+          # scale_colour_grey(name="Level",label=c("Flow","Basal boulder jam"))+
+          scale_linetype_manual(name="Level",label=c("Flow","Basal boulder jam"),values=c(1,4))+
+          theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
+          theme(legend.position = c(0.82,0.83),legend.direction = "horizontal"
+              ,legend.background = element_rect(colour =1),legend.box.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))+
+          labs( x = "Time [h]",y = "Flow level\n [m]")
+          
+        Vplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
+          geom_line(aes(x=Time/3600,y=V,group=Run),col="black",alpha=0.3)+
+          labs( x = "Time [h]",y = "Volume\n [*1000m3]")
+        
+        png(paste0("SyntheticTimeSerie_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
+        {
+          # grid.arrange(Qplot1,Wplot1,Zplot,Vplot,nrow = 4)
+          pushViewport(viewport(layout = grid.layout(22,1) ) )
+          # Une fonction pour definir une region dans la mise en page
+          define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
+          # Arrange graphs
+            print(QplotIn+labs(title=paste0("Modelling of structure: ",StructureName,", for event: ",EventName,"\n"
+                                          ,"Model version: ",ModelVersion,", used on a number of runs = ",N_runs,"\n"
+                                          ,"Boulder generation mode: ",BoulderGenerationMode))+ 
+                    theme(plot.title = element_text(size=8.5))
+                  , vp = define_region(1:6,1))
+            print(QplotOut, vp = define_region(7:11,1))
+            print(Zplot, vp = define_region(12:16,1))
+            print(Vplot, vp = define_region(17:22,1))
+          
+        }
+        dev.off()
+      }
+      
+      #Boulder inventory plot
+      
+      # ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
+      #   # geom_col(aes(y=-Class3.unjammed))+
+      #   geom_col(aes(y=Class1.unjammed),alpha=0.1)+
+      #   geom_col(aes(y=Class2.unjammed),alpha=0.3)+
+      #   geom_col(aes(y=Class3.unjammed),alpha=0.5)+
+      #   geom_col(aes(y=Class4.unjammed))
+      # 
+      # 
+      # 
+      # Test<-Qo_all %>% select(c(11:22,24)) %>% 
+      #   # group_by(Run) %>% 
+      #   summarise(across(everything(), ~ sum(., na.rm = TRUE)))
+      
     }# en of the >10 run loop
-    
   }# end of the structure loop
-  
-  
-  
   
   ## Define if another run is to be launched
   if(HEADLESS){
