@@ -53,8 +53,8 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   # Check that deposition slope is within the range of data
   if(min(as.numeric(substr(names(StorageElevation[,-1]),2,6)))>SlopeDep)#/100)
   {
-    print("Deposition slope selected below the minimum values of the elevation - storage capacity!
-            Used the minimum value of the table but consider adding the relevant data to the table!")
+    print(paste0("Deposition slope selected below the minimum values of the elevation - storage capacity! \n",
+                 "Used the minimum value of the table but consider adding the relevant data to the table!"))
   }
   #Interpolation for the slope of deposition selected
   for (i in (1:length(StorageElevation[,1])))
@@ -70,7 +70,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   
   #Definition of openings
   #reorder Opening by increasing base level to have the spillway as last opening
-  Opening<-Opening[rank(Opening$BaseLevel),]
+  Opening<-Opening[order(Opening$BaseLevel),]
   
   #Number of opening
   N_opening<-length(Opening$Number)
@@ -83,6 +83,8 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
     SpillwayLevel<-Opening$BaseLevel[which(Opening$Comment=="Spillway")]
   }
   
+  #Define model level accuracy for convergence, taken as 0.01*elevation difference between crest and base level
+  #or 1% of opening width if no crest level available (single weir or slit)
   if(N_opening>1){
     CrestLevel<-Opening$BaseLevel[N_opening]
     ModelLevelAccuracy <- 0.01*(CrestLevel-OpeningMinBaseLevel)
@@ -95,6 +97,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
       ModelLevelAccuracy <- 0.01*Opening$Width
     }
   }
+  # print(paste0("The computation at structure: ",StructureName," is done with a level accuracy of ",ModelLevelAccuracy," m"))
   
   #Count number of boulders 
   for(i in (1:dim(Boulders)[1]))
@@ -200,7 +203,6 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   i<-2
   #Actual computation step by step
   while(i<N_TimeSteps)
-  # while(i<50)
   { 
     #Initialize outlet discharge at step i
     Reservoir$Qo[i]<-sum(Q_CompoundBarrier(Opening = Opening
@@ -350,6 +352,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
             {
               BoulderClogging_width[i:N_TimeSteps,Opening_Ind]<-Opening$Width[Opening_Ind]
             }
+            
             if(Opening$Height[Opening_Ind] - BoulderClogging_level[i,Opening_Ind] < min(Boulders$Diameter_min))
             {
               BoulderClogging_level[i:N_TimeSteps,Opening_Ind]<-Opening$Height[Opening_Ind]
@@ -366,7 +369,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   if(max(Reservoir$Z)==max(storageElevationCurve$h))
   {
     print(paste0("Level reached the maximum storage elevation level of structure:"
-                 ,StructureName,".Consider providing storage volume at higher level if it is a barrier, otherwise it means that the highest bridge deck level was overtopped by more than 5 m, the buffering and discharge computed by the model are thus most probably wrong!"))
+                 ,StructureName,".\n"," Consider providing storage volume at higher level if it is a barrier, otherwise it means that the highest bridge deck level was overtopped by more than 5 m, the buffering and discharge computed by the model are thus most probably wrong!"))
   }
   
   
@@ -385,8 +388,8 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   {
     Reservoir$X<-Reservoir$Y<-0
 
-    Boulder_N_jammed<-table(Boulder_list_all[(Boulder_list_all$Class == i && Boulder_list_all$Jammed != "a) Unjammed"),1])
-    Boulder_N_unjammed<-table(Boulder_list_all[(Boulder_list_all$Class == i && Boulder_list_all$Jammed == "a) Unjammed"),1])
+    Boulder_N_jammed<-table(Boulder_list_all[(Boulder_list_all$Class == i & Boulder_list_all$Jammed != "a) Unjammed"),1])
+    Boulder_N_unjammed<-table(Boulder_list_all[(Boulder_list_all$Class == i & Boulder_list_all$Jammed == "a) Unjammed"),1])
 
     Reservoir$X[match(names(Boulder_N_jammed),Reservoir$Time)]<-Boulder_N_jammed
     Reservoir$Y[match(names(Boulder_N_unjammed),Reservoir$Time)]<-Boulder_N_unjammed
@@ -513,49 +516,49 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
 }
 
 
-Synthetic_Structure_results<-function(Reservoir, Opening)
+Synthetic_Structure_results<-function(Qo, Opening)
 {  #Number of opening
   N_opening<-length(Opening$Number)
-  N_TimeSteps<-length(Reservoir$Time)
+  N_TimeSteps<-length(Qo$Time)
   
   #Extract the maximum level of the result data set.
-  Zmax<-max(Reservoir$Z,na.rm = T)
-  Zfinal<-Reservoir$Z[N_TimeSteps-1]
+  Zmax<-max(Qo$Z,na.rm = T)
+  Zfinal<-Qo$Z[N_TimeSteps-1]
   
   #Extract the maximum Storage of the result data set.
-  Vmax<-max(Reservoir$V,na.rm = T)
-  Vfinal<-Reservoir$V[N_TimeSteps-1]
+  Vmax<-max(Qo$V,na.rm = T)
+  Vfinal<-Qo$V[N_TimeSteps-1]
   
   
   #Record peak discharge and volume at inlet
-  Qp_in<-max(Reservoir$Qi,na.rm=T)
-  Vevent<-round(sum(Reservoir$Qi)*TimeStep/10^3,3)
+  Qp_in<-max(Qo$Qi,na.rm=T)
+  Vevent<-round(sum(Qo$Qi)*TimeStep/10^3,3)
   
   #Extract maximum outlet discharge
-  Qp_out<-max(Reservoir$Qo,na.rm=T)
+  Qp_out<-max(Qo$Qo,na.rm=T)
   
   #Look for time step of level passing over and below the crest
-  # Nmin<-min(which(Reservoir$Z>Opening$BaseLevel[N_opening]))
-  # Nmax<-max(which(Reservoir$Z>Opening$BaseLevel[N_opening]))
+  # Nmin<-min(which(Qo$Z>Opening$BaseLevel[N_opening]))
+  # Nmax<-max(which(Qo$Z>Opening$BaseLevel[N_opening]))
   
   #Look for time step of level passing over and below the spillway
-  # Nmin.s<-min(which(Reservoir$Z>Opening$BaseLevel[max(N_opening-1,1)]))
-  # Nmax.s<-max(which(Reservoir$Z>Opening$BaseLevel[max(N_opening-1,1)]))
+  # Nmin.s<-min(which(Qo$Z>Opening$BaseLevel[max(N_opening-1,1)]))
+  # Nmax.s<-max(which(Qo$Z>Opening$BaseLevel[max(N_opening-1,1)]))
   
   #OVertopping duration
   # Tover<-TimeStep*(Nmax-Nmin)
   # Tover.s<-TimeStep*(Nmax.s-Nmin.s)
   
   #Released volume = sum of released discharge * timestep in Mm3
-  Vout<-round(sum(Reservoir$Qo)*TimeStep/10^3,3)
+  Vout<-round(sum(Qo$Qo)*TimeStep/10^3,3)
   #Part passing by the slit
-  VoutSlit<-round(sum(Reservoir$Qoutlet)*TimeStep/10^3,3)
+  VoutSlit<-round(sum(Qo$Qoutlet)*TimeStep/10^3,3)
   #Part passing over the spillway
-  VoutSpillway<-sum(Reservoir$Qspillway)*TimeStep/10^3
+  VoutSpillway<-sum(Qo$Qspillway)*TimeStep/10^3
   #Remaning part passing over the Crest
   VoutCrest<-Vout-VoutSlit-VoutSpillway
   
-  if(is.na(Reservoir$Time[1]))
+  if(is.na(Qo$Time[1]))
   {return(NA)}else
   {
     RESULTS<-data.frame("Qp_in"=Qp_in
@@ -570,9 +573,11 @@ Synthetic_Structure_results<-function(Reservoir, Opening)
                         ,BoulderGenerationMode=BoulderGenerationMode
     )
     RESULTS<-cbind(RESULTS
-                   ,Reservoir[dim(Reservoir)[1],(7+1:max(N_opening-1,1))]                    #only until N_opening -1 because
-                   ,Reservoir[dim(Reservoir)[1],(7+max(N_opening-1,1)+1:max(N_opening-1,1))]      #the top opening is the crest
+                   ,Qo[dim(Qo)[1],(7+1:max(N_opening-1,1))]                    #only until N_opening -1 because
+                   ,Qo[dim(Qo)[1],(7+max(N_opening-1,1)+1:max(N_opening-1,1))]      #the top opening is the crest
     )
+    names(RESULTS)[(12+1:max(N_opening-1,1))]<-names(Qo)[(7+1:max(N_opening-1,1))]
+    names(RESULTS)[(12+max(N_opening-1,1))+1:max(N_opening-1,1)]<-names(Qo)[(7+max(N_opening-1,1)+1:max(N_opening-1,1))]
     return(RESULTS)
   }
 }

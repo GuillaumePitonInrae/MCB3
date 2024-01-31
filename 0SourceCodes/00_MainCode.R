@@ -388,13 +388,18 @@ while(PerformAnotherSimulation == "yes")
       )
     }
     
-    ##Initial deposit level and initial clogging level
+    ##Initial deposit level and initial clogging level, set to 0 if missing
     for(Structure_Ind in (1:length(Structures$Name)))
     {
       DepositHeight_BestEstimate<-Structures$InitialConditions$DepositHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
-      DepositHeight_max<-
-        Structures$InitialConditions$DepositHeight_max[which(Structures$Rank==Structure_Ind)]
+      if(is.na(DepositHeight_BestEstimate)){DepositHeight_BestEstimate<-0}
+      
+      DepositHeight_max<-Structures$InitialConditions$DepositHeight_max[which(Structures$Rank==Structure_Ind)]
+      if(is.na(DepositHeight_max)){DepositHeight_max<-0}
+      
       DepositHeight_min<-Structures$InitialConditions$DepositHeight_min[which(Structures$Rank==Structure_Ind)]
+      if(is.na(DepositHeight_min)){DepositHeight_min<-0}
+      
       
       #If min = best estimate = max, set the paramter as "fixed"
       if((DepositHeight_BestEstimate  == DepositHeight_max)  
@@ -422,12 +427,16 @@ while(PerformAnotherSimulation == "yes")
         )
       }
       
-      # Height of the initial jamming in the barrier (Large wood and / or boulders)
+      # Height of the initial jamming in the barrier (Large wood and / or boulders), set to 0 if missing
       #If min = best estimate = max, set the paramter as "fixed"
-      JammingHeight_BestEstimate<-Structures$InitialConditions$JammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
-      JammingHeight_max<-
-        Structures$InitialConditions$JammingHeight_max[which(Structures$Rank==Structure_Ind)]
-      JammingHeight_min<-Structures$InitialConditions$JammingHeight_min[which(Structures$Rank==Structure_Ind)]
+      JammingHeight_BestEstimate <- Structures$InitialConditions$JammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
+      if(is.na(JammingHeight_BestEstimate)){JammingHeight_BestEstimate<-0}
+      
+      JammingHeight_max <- Structures$InitialConditions$JammingHeight_max[which(Structures$Rank==Structure_Ind)]
+      if(is.na(JammingHeight_max)){JammingHeight_max<-0}
+      
+      JammingHeight_min <- Structures$InitialConditions$JammingHeight_min[which(Structures$Rank==Structure_Ind)]
+      if(is.na(JammingHeight_min)){JammingHeight_min<-0}
       
       # Structures$InitialConditions$JammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)])#Jam at the slit base by large wood 
       
@@ -663,13 +672,21 @@ while(PerformAnotherSimulation == "yes")
         annotate(geom = "text", x = 0, adj=0, y = Events$PeakDischarge_BestEstimate[Event_Ind]
                  ,vjust=(-0.2), label = "Total Event \n (Best. Est.)",srt=0,col="grey",size=3.5)+
         coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)+
-        labs(y="Supplied Peak discharge [m3/s]",x="# of Run"
-             ,caption=paste("Code version:",ModelVersion,#"\n Simulation performed on", lubridate::today(),
-                            "\n Number of runs =",N_runs))
-     
+        labs(y="Supplied Peak discharge [m3/s]",x="# of Run")
+      
+      if(OnlyNormalRun)
+      {
+        Caption_text <-  paste("Code version:",ModelVersion,"\n",
+                               "Parameters:"," Best Estimate values","\n"
+                               ,"Number of runs =",N_runs)
+      }else{
+        Caption_text <-  paste("Code version:",ModelVersion,"\n",
+                               "Parameter:"," uncertain values","\n"
+                               ,"Number of runs =",N_runs)
+      }
       
       #Save figure
-      png(paste0("FourPanelGraphReleasedVolume_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,"_ParametersAsBestEstimates.png"), width = 17, height = 15,units="cm",res=350)
+      png( paste0("FourPanelGraphReleasedVolume_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
       {
         pushViewport(viewport(layout = grid.layout(10,12)))
         # Define region in the plot
@@ -682,19 +699,17 @@ while(PerformAnotherSimulation == "yes")
               , vp = define_region(4:5,1:6))
         print(BottomLeftPanel
               , vp = define_region(6:10,1:6))
-        print(BottomRightPanel+theme(plot.margin = margin(t=0.1,r=0.5,b=1.5,l=0.1, "cm"))
+        print(BottomRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=1.5,l=0.1, "cm"))
               , vp = define_region(6:10,7:9))
-        print(BottomRightRightPanel+theme(plot.margin = margin(t=0.1,r=0.5,b=0.8,l=0.1, "cm"))
+        print(BottomRightRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=0.4,l=0.1, "cm"))+
+                labs(caption=Caption_text)+   theme(plot.caption =  element_text(size=8.5))        
               , vp = define_region(6:10,10:12))
       }
       dev.off()
       
-      
-      
       #Multi-run time series
       {
-                #    SYNTHESIS PLOT----
-        QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
+       QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
           geom_line(aes(y=Qi,group =Run),color="black",alpha=0.3)+
           theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
           labs(y = "Supplied Discharge\n [m3/s]")+
@@ -722,39 +737,38 @@ while(PerformAnotherSimulation == "yes")
           geom_line(aes(x=Time/3600,y=V,group=Run),col="black",alpha=0.3)+
           labs( x = "Time [h]",y = "Volume\n [*1000m3]")
         
-        png(paste0("SyntheticTimeSerie_Evt-",EventName,"_Nrun_",N_runs,"_Structure_",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
+        png(paste0("FourPanelGraphReleasedVolume_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
         {
           # grid.arrange(Qplot1,Wplot1,Zplot,Vplot,nrow = 4)
           pushViewport(viewport(layout = grid.layout(22,1) ) )
           # Une fonction pour definir une region dans la mise en page
           define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
           # Arrange graphs
-            print(QplotIn+labs(title=paste0("Modelling of structure: ",StructureName,", for event: ",EventName,"\n"
-                                          ,"Model version: ",ModelVersion,", used on a number of runs = ",N_runs,"\n"
-                                          ,"Boulder generation mode: ",BoulderGenerationMode))+ 
-                    theme(plot.title = element_text(size=8.5))
-                  , vp = define_region(1:6,1))
-            print(QplotOut, vp = define_region(7:11,1))
-            print(Zplot, vp = define_region(12:16,1))
-            print(Vplot, vp = define_region(17:22,1))
+            print(QplotIn      , vp = define_region(1:5,1))
+            print(QplotOut     , vp = define_region(6:11,1))
+            print(Zplot        , vp = define_region(11:15,1))
+            print(Vplot  +  labs(caption=Caption_text)+   theme(plot.caption =  element_text(size=8.5))        
+                  , vp = define_region(16:22,1))
           
         }
         dev.off()
       }
       
       #Boulder inventory plot
-      
+      # 
       # ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
       #   # geom_col(aes(y=-Class3.unjammed))+
-      #   geom_col(aes(y=Class1.unjammed),alpha=0.1)+
+      #   geom_col(aes(y=Class1.unjammed),alpha=1)+
       #   geom_col(aes(y=Class2.unjammed),alpha=0.3)+
-      #   geom_col(aes(y=Class3.unjammed),alpha=0.5)+
-      #   geom_col(aes(y=Class4.unjammed))
-      # 
-      # 
-      # 
-      # Test<-Qo_all %>% select(c(11:22,24)) %>% 
-      #   # group_by(Run) %>% 
+      #   geom_col(aes(y=-Class1.jammed),alpha=1)+
+      #   geom_col(aes(y=-Class2.jammed),alpha=0.3)#+
+      #   # geom_col(aes(y=Class3.unjammed),alpha=0.5)+
+        # geom_col(aes(y=Class4.unjammed))
+      # # 
+      # # 
+      # # 
+      # Test<-Qo_all %>% select(c(11:22,24)) %>%
+      #   # group_by(Run) %>%
       #   summarise(across(everything(), ~ sum(., na.rm = TRUE)))
       
     }# end of the synthesis plot loop
