@@ -11,10 +11,10 @@ if(HEADLESS) {
 }
 
 # For Guillaume P. only, to emulate the headless mode under RStudio:
-HEADLESS = TRUE
-rootDir<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
-args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
-setwd(paste0(rootDir,"/0SourceCodes"))
+# HEADLESS = TRUE
+# rootDir<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
+# args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
+# setwd(paste0(rootDir,"/0SourceCodes"))
 
 if(HEADLESS) {
   print('Running in HEADLESS mode')
@@ -757,7 +757,7 @@ while(PerformAnotherSimulation == "yes")
       #   # group_by(Run) %>% 
       #   summarise(across(everything(), ~ sum(., na.rm = TRUE)))
       
-    }# en of the >10 run loop
+    }# end of the synthesis plot loop
   }# end of the structure loop
   
   ## Define if another run is to be launched
