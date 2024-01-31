@@ -712,7 +712,8 @@ while(PerformAnotherSimulation == "yes")
        QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
           geom_line(aes(y=Qi,group =Run),color="black",alpha=0.3)+
           theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
-          labs(y = "Supplied Discharge\n [m3/s]")+
+          labs(y = "Supplied Discharge\n [m3/s]",
+               title = paste0("Time series of every runs (Event: ",EventName," & Structure: ",StructureName,")"))+
           theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
         
         QplotOut<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
@@ -737,16 +738,16 @@ while(PerformAnotherSimulation == "yes")
           geom_line(aes(x=Time/3600,y=V,group=Run),col="black",alpha=0.3)+
           labs( x = "Time [h]",y = "Volume\n [*1000m3]")
         
-        png(paste0("FourPanelGraphReleasedVolume_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
+        png(paste0("SyntheticTimeSerie_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
         {
           # grid.arrange(Qplot1,Wplot1,Zplot,Vplot,nrow = 4)
           pushViewport(viewport(layout = grid.layout(22,1) ) )
           # Une fonction pour definir une region dans la mise en page
           define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
           # Arrange graphs
-            print(QplotIn      , vp = define_region(1:5,1))
-            print(QplotOut     , vp = define_region(6:11,1))
-            print(Zplot        , vp = define_region(11:15,1))
+            print(QplotIn      , vp = define_region(1:6,1))
+            print(QplotOut     , vp = define_region(7:11,1))
+            print(Zplot        , vp = define_region(12:15,1))
             print(Vplot  +  labs(caption=Caption_text)+   theme(plot.caption =  element_text(size=8.5))        
                   , vp = define_region(16:22,1))
           
