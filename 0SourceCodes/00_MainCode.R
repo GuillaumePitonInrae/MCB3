@@ -2,7 +2,7 @@
 
 #Clean environment
 rm(list=ls())
-library(jsonlite)
+suppressPackageStartupMessages(library(jsonlite))
 
 # Setup HEADLESS variables
 HEADLESS <- !base::interactive()
@@ -36,17 +36,18 @@ if(HEADLESS) {
 
 
 # Load package
-library(lubridate) #To add date on plot
-library(stringr) #To replace string
-library(HYRISK)#Package uncertainty propagation
-library(svDialogs) #Package for popup dialog windows
-library(ggplot2) #Plots
-library(gridBase) #Plots
-library(gridExtra) #Plots
-library(grid) #Plots
-library(sets) #Plots
-library(dplyr) #for data manipulation
-
+suppressPackageStartupMessages({
+  library(lubridate) #To add date on plot
+  library(stringr) #To replace string
+  library(HYRISK)#Package uncertainty propagation
+  library(svDialogs) #Package for popup dialog windows
+  library(ggplot2) #Plots
+  library(gridBase) #Plots
+  library(gridExtra) #Plots
+  library(grid) #Plots
+  library(sets) #Plots
+  library(dplyr) #for data manipulation
+})
 #Model version
 ModelVersion <- "ACB³ V1.0"
 
@@ -258,7 +259,8 @@ while(PerformAnotherSimulation == "yes")
 
     #Create input data according to the EventName and adjustement option
     input<-Create_inlet_input(EventName,AdjustEventManually,Structures,Boulders)
-    
+    Run_Ind<-0
+    save(Run_Ind,N_runs,file = "RunInd.Rdata")
     ## Computation of isolated runs ----
     for(Run_Ind in (1:N_runs))
     {
@@ -269,7 +271,7 @@ while(PerformAnotherSimulation == "yes")
       
       #print message
       # print(paste0("Run #",Run_Ind," finished at ",now()," for the whole cascade of structure, still ",N_runs-Run_Ind," run to perform"))
-      print(paste0("PROGRESS[",Run_Ind,"/",N_runs,"]"))
+      # print(paste0("PROGRESS[",Run_Ind,"/",N_runs,"]"))
       
     }
 
@@ -504,7 +506,7 @@ while(PerformAnotherSimulation == "yes")
     input=CREATE_DISTR(input)
     
     ####VISU INPUT
-    png(paste0(MainRep,"/PossibilityAnalysis_Evt-",EventName,"_Nrun_",N_runs,"_InputDistributions.png"), width = 22, height = 24
+    png(paste0(MainRep,"/DistributionsInputParametersPossibilityAnalysis_Evt-",EventName,".png"), width = 22, height = 24
         ,units="cm"
         ,res=350
         )
@@ -516,10 +518,14 @@ while(PerformAnotherSimulation == "yes")
     param_opt=NULL
 
     #Hybrid uncertainty propagation on released volume----
+    #Initialize run number
+    Run_Ind<-0
+    save(Run_Ind,N_runs,file = "RunInd.Rdata")
     ###HYBRID UNCERTAINTY PROPAGATION
     Rslt_Uncertain.Boulder.Number<-PROPAG(N=N_runs,input
                                           ,Cascade_of_structure_functionning
                                           ,choice_opt,param_opt,mode="IRS")
+    # Arrange results in a table
     Rslt_Uncertain.Boulder.Number<-data.frame(P=seq(0,1,length.out = N_runs)
                                               ,Min=sort(Rslt_Uncertain.Boulder.Number[1,])
                                               ,Max=sort(Rslt_Uncertain.Boulder.Number[2,]))
@@ -543,15 +549,16 @@ while(PerformAnotherSimulation == "yes")
       coord_flip()+ #To have Probability as Y
       theme(legend.position = "top")+
       labs( y = "Peak discharge [m3/s]",x = "Cumulative distribution function"
-            ,caption=paste("Model:",ModelVersion," used on"
-                           , lubridate::today(),"| Number of runs N =",N_runs)
-            ,title = paste("Uncertainty analysis of peak discharge downstream all structures (event:",EventName,")"))
+            ,paste("Code version:",ModelVersion,"|",
+                   "Parameters:"," uncertain values","|"
+                   ,"Number of runs =",N_runs)
+            ,title = paste0("Uncertainty analysis of peak discharge downstream all structures\n","(event: ",EventName,")"))
     #Save figure
-    ggsave(paste0("ReleasedPeakDischarge_Evt-",EventName,"_Nrun_",N_runs,"_NboulderUncertain.png")
+    ggsave(paste0("ReleasedPeakDischarge_Evt-",EventName,"_NboulderUncertain.png")
            , width = 16.5, height = 7,units="cm")
-    
+
     #Save results
-    save(Rslt_Uncertain.Boulder.Number,file=paste0("ReleasedPeakDischarge_Evt-",EventName,"_Nrun_",N_runs,"_NboulderUncertain.RData"))
+    # save(Rslt_Uncertain.Boulder.Number,file=paste0("PboxDownstreamReleasedPeakDischarge_Evt-",EventName,".RData"))
   }#end of the uncertainty propagation condition
   
   #Rename file names
@@ -599,6 +606,7 @@ while(PerformAnotherSimulation == "yes")
     save(Qo_all,Result_all,file=paste0("RdataResult_Evt-",EventName,"_Structure_@-",StructureName,".RData"))
     # Remove files for each singular run
     file.remove(ListFileStructure)
+    file.remove(list.files(pattern="RunInd.Rdata"))
     
     #plots of synthesis multi run figures----
     if(PrintFinalPlot==FALSE)
@@ -607,7 +615,8 @@ while(PerformAnotherSimulation == "yes")
       # Plot a synthesis figure on Vin
       TopTopLeftPanel<-ggplot(Result_all)+
         theme_classic(base_size = 9)+
-        geom_histogram(aes(Vevent/10^3))+
+        geom_histogram(aes(Vevent/10^3)
+                       ,binwidth=Events$Volume_BestEstimate[Event_Ind]/10^3/10)+
         geom_boxplot(aes(x=Vevent/10^3,y=-1))+
         geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3,col="grey")+
         annotate(geom = "text", y = 0, adj=0, x = Events$Volume_BestEstimate[Event_Ind]/10^3
@@ -619,7 +628,7 @@ while(PerformAnotherSimulation == "yes")
       # Plot a synthesis figure on Vout
       TopLeftPanel<-ggplot(Result_all)+
         theme_classic(base_size = 9)+
-        geom_histogram(aes(Vout/10^3))+
+        geom_histogram(aes(Vout/10^3),binwidth=Events$Volume_BestEstimate[Event_Ind]/10^3/10)+
         geom_boxplot(aes(x=Vout/10^3,y=-1))+
         coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.25))+
         labs(x="Released volume [*1000 m3]",y="# of Run")
@@ -646,42 +655,53 @@ while(PerformAnotherSimulation == "yes")
       
       # Plot a synthesis figure of Qpeak out VS Vout, top right panel
       BottomLeftPanel<-ggplot(Result_all)+
-        theme_bw(base_size = 9)+
-        geom_bin2d(aes(x=Vout/10^3,y=Qp_out),col=1,#bins=20)+
-                   binwidth=c(Events$Volume_BestEstimate[Event_Ind]/10^3/10,Events$PeakDischarge_BestEstimate[Event_Ind]/10))+
-        scale_fill_gradient2("# of Run",low="dodgerblue1", high = "dodgerblue4")+ 
+        theme_bw(base_size = 9)
+      
+      if((max(Result_all$Vout) == min(Result_all$Vout))  | (max(Result_all$Qp_out) == min(Result_all$Qp_out)) )
+      {
+        BottomLeftPanel<-BottomLeftPanel+
+          geom_point(aes(x=Vout/10^3,y=Qp_out),col=1,pch=22,fill=1,alpha=0.1)+
+          theme(plot.margin = margin(t=0.1,r=0.1,b=1.5,l=0.4, "cm"))
+      }else{
+        BottomLeftPanel<-BottomLeftPanel+
+          geom_bin2d(aes(x=Vout/10^3,y=Qp_out),col=1,#bins=20)+
+                     binwidth=c(Events$Volume_BestEstimate[Event_Ind]/10^3/10,Events$PeakDischarge_BestEstimate[Event_Ind]/10))+
+          scale_fill_gradient2("# of Run",low="dodgerblue1", high = "dodgerblue4")+ 
+          theme(legend.direction = "horizontal",legend.position = "bottom",legend.key.height = unit(0.3, 'cm'))
+      }
+        
+      BottomLeftPanel<-BottomLeftPanel+ 
         coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind]*1.25)
                         ,xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.25))+
-        labs(x="Released volume [*1000 m3]",y="Released Peak discharge [m3/s]")+
-        theme(legend.direction = "horizontal",legend.position = "bottom",legend.key.height = unit(0.3, 'cm'))
+        labs(x="Released volume [*1000 m3]",y="Released Peak discharge [m3/s]")
       
       # Plot a synthesis figure on Qpeak out
       BottomRightPanel<-ggplot(Result_all)+
         theme_classic(base_size = 9)+
-        geom_histogram(aes(y=Qp_out))+
+        geom_histogram(aes(y=Qp_out),binwidth=Events$PeakDischarge_BestEstimate[Event_Ind]/10)+
         geom_boxplot(aes(y=Qp_out,x=-1))+
         coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)+
-        labs(y="Released Peak discharge [m3/s]",x="# of Run")
+        labs(y="Released peak discharge [m3/s]",x="# of Run")
       
       # Plot a synthesis figure on Qpeak out
       BottomRightRightPanel<-ggplot(Result_all)+
         theme_classic(base_size = 9)+
-        geom_histogram(aes(y=Qp_in))+
+        geom_histogram(aes(y=Qp_in),binwidth=Events$PeakDischarge_BestEstimate[Event_Ind]/10)+
         geom_boxplot(aes(y=Qp_in,x=-1))+
         geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Event_Ind],col="grey")+
         annotate(geom = "text", x = 0, adj=0, y = Events$PeakDischarge_BestEstimate[Event_Ind]
                  ,vjust=(-0.2), label = "Total Event \n (Best. Est.)",srt=0,col="grey",size=3.5)+
         coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)+
-        labs(y="Supplied Peak discharge [m3/s]",x="# of Run")
+        labs(y="Supplied peak discharge [m3/s]",x="# of Run")
       
       if(OnlyNormalRun)
       {
         Caption_text <-  paste("Code version:",ModelVersion,"\n",
-                               "Parameters:"," Best Estimate values","\n"
+                               "Parameters:"," best estimate values","\n"
                                ,"Number of runs =",N_runs)
       }else{
         Caption_text <-  paste("Code version:",ModelVersion,"\n",
-                               "Parameter:"," uncertain values","\n"
+                               "Parameters:"," uncertain values","\n"
                                ,"Number of runs =",N_runs)
       }
       
@@ -736,14 +756,13 @@ while(PerformAnotherSimulation == "yes")
           
         Vplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
           geom_line(aes(x=Time/3600,y=V,group=Run),col="black",alpha=0.3)+
-          labs( x = "Time [h]",y = "Volume\n [*1000m3]")
+          labs( x = "Time [h]",y = "Stored volume\n [*1000m3]")
         
         png(paste0("SyntheticTimeSerie_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
         {
           # grid.arrange(Qplot1,Wplot1,Zplot,Vplot,nrow = 4)
           pushViewport(viewport(layout = grid.layout(22,1) ) )
-          # Une fonction pour definir une region dans la mise en page
-          define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
+          
           # Arrange graphs
             print(QplotIn      , vp = define_region(1:6,1))
             print(QplotOut     , vp = define_region(7:11,1))

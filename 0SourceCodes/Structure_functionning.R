@@ -369,7 +369,8 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   if(max(Reservoir$Z)==max(storageElevationCurve$h))
   {
     print(paste0("Level reached the maximum storage elevation level of structure:"
-                 ,StructureName,".\n"," Consider providing storage volume at higher level if it is a barrier, otherwise it means that the highest bridge deck level was overtopped by more than 5 m, the buffering and discharge computed by the model are thus most probably wrong!"))
+                 ,StructureName))
+          print(". Consider providing storage volume at higher level if it is a barrier, otherwise it means that the highest bridge deck level was overtopped by more than 5 m, the buffering and discharge computed by the model are thus most probably wrong!")
   }
   
   
@@ -647,6 +648,12 @@ Cascade_of_structure_functionning<-function(input)
     
   } #end of the for loop on structures
   
+  #print message
+  load(file = "RunInd.Rdata")
+  if(OnlyNormalRun){Run_Ind<-Run_Ind+1}else{Run_Ind<-Run_Ind+0.5}
+  save(Run_Ind,N_runs,file = "RunInd.Rdata")
+  print(paste0("PROGRESS[",Run_Ind,"/",N_runs,"]"))
+  # if(!OnlyNormalRun){print(paste0("PROGRESS[one run computed]"))}
   #Return max outlet discharge at last structure
   return(max(Qo$Qo))
 }
