@@ -1,5 +1,5 @@
 g<-9.81
-# #Basic hydraulic fonctions
+# #Basic hydraulic functions
 # 
 Q_GOrifice<-function(h,a,b,mu=0.7) #Upstream water depth, orifice height, orifice width, weir coefficient
 { 
@@ -40,27 +40,47 @@ Q_GOrifice<-function(h,a,b,mu=0.7) #Upstream water depth, orifice height, orific
       {
         if(Opening$Type[i]=="slot")
         {
-          if((Opening$Param[i]>BaseClogging[i]+Opening$BaseLevel[i] & Opening$Width[i]>WidthClogging[i] )){
-            Q.Ind[i]<-Q_GOrifice(h=(h[Ind]-Opening$BaseLevel[i]-BaseClogging[i])
-                                 ,a=Opening$Param[i]
-                                 ,b=Opening$Width[i]-WidthClogging[i]
+          if((Opening$TopLevel[i]>BaseClogging[i]+Opening$BaseLevel[i] & Opening$Width[i]>WidthClogging[i] )){
+            Q.Ind[i]<-Q_GOrifice(h=(h[Ind]-Opening$BaseLevel[i] - BaseClogging[i])
+                                 ,a=Opening$TopLevel[i]-Opening$BaseLevel[i] - BaseClogging[i]
+                                 ,b=Opening$Width[i] - WidthClogging[i]
                                  ,mu=0.65)
             }else{Q.Ind[i]<-0}
           
         }
         if(Opening$Type[i]=="slit")
         {
-          Q.Ind[i]<-Q_GOrifice(h=(h[Ind]-Opening$BaseLevel[i]-BaseClogging[i])
+          Q.Ind[i]<-Q_GOrifice(h=(h[Ind] - Opening$BaseLevel[i] - BaseClogging[i])
                                ,a=(Opening$BaseLevel[i]+10^4) #+10^4 because slits are just slots infinitely high
                                ,b=(Opening$Width[i]-WidthClogging[i])
                                ,mu=0.65) 
         } 
         if(Opening$Type[i]=="weir")
         {
-          Q.Ind[i]<-Q_Weir(h=(h[Ind]-Opening$BaseLevel[i]-BaseClogging[i])
-                           ,b_spillway=(Opening$Width[i]-WidthClogging[i]+2/tan(Opening$Param[i]/180*pi)*BaseClogging[i])
-                           ,mu = 0.65
-                           ,Phi=Opening$Param[i])
+          if(BaseClogging[i] > Opening$TopLevel[i] - Opening$BaseLevel[i])
+          {# case when the trapezoid part is fully clogged
+            Q.Ind[i]<-Q_Weir(h=(h[Ind]-Opening$BaseLevel[i]-BaseClogging[i])
+                             ,b_spillway=(Opening$Width[i]-WidthClogging[i]+2/tan(Opening$SideAngle[i]/180*pi)*BaseClogging[i])
+                             ,mu = 0.65
+                             ,Phi=90)
+          }else{
+            if(h[Ind] > Opening$TopLevel[i])
+            {# case with trapezoid base shape and then vertical walls above top level, computed as a full trapezoid shape minus discharge
+              # of a triangle weir starting at top level
+              Q.Ind[i]<-Q_Weir(h=(h[Ind]-Opening$BaseLevel[i]-BaseClogging[i])
+                               ,b_spillway=(Opening$Width[i]-WidthClogging[i]+2/tan(Opening$SideAngle[i]/180*pi)*BaseClogging[i])
+                               ,mu = 0.65
+                               ,Phi=Opening$SideAngle[i]) - Q.Ind[i] - Q_Weir(h=(h[Ind]-Opening$TopLevel[i])
+                                                                             ,b_spillway=0
+                                                                             ,mu = 0.65
+                                                                             ,Phi=Opening$SideAngle[i])
+            }else{
+              Q.Ind[i]<-Q_Weir(h=(h[Ind]-Opening$BaseLevel[i]-BaseClogging[i])
+                               ,b_spillway=(Opening$Width[i]-WidthClogging[i]+2/tan(Opening$SideAngle[i]/180*pi)*BaseClogging[i])
+                               ,mu = 0.65
+                               ,Phi=Opening$SideAngle[i])
+            }
+          }
         }
       }
     Q[Ind,]<-Q.Ind
@@ -68,5 +88,6 @@ Q_GOrifice<-function(h,a,b,mu=0.7) #Upstream water depth, orifice height, orific
   return(Q)  
   }
   
-  # Q_CompoundBarrier(Opening,c(3,0,0),c(2,0,0),696)
+  # Q_CompoundBarrier(Opening,rep(1,length(Opening$Number)),rep(0,length(Opening$Number)),738)
+  
   
