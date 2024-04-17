@@ -1,4 +1,4 @@
-### Compute the functionning of a structure, extract synthetic results and compute the whole cascade of structure
+### Compute the functionning of a structure, extract synthetic results 
 #V0 July 2023 - G. Piton & C. Misset
 
 #Originally inspired by BarrierBuffering_V0.3.R
@@ -42,10 +42,8 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   if(is.na(BaseJamHeight)){BaseJamHeight<-0}
   
   #Extract the height of the openings
-  Opening$Height<-Opening$Param
-  Opening$Height[Opening$Type != "slot"]<-max(Opening$BaseLevel) # Consider slit and weir height to the be the crest level
-  
-  
+  Opening$Height<-Opening$TopLevel-Opening$BaseLevel
+ 
   #Interpolation of storage - elevation curve
   # StorageElevation<-read.csv("./1Data/ElevationStorageCurves.txt",sep="\t")
   storageElevationCurve<-data.frame(s=0,h=StorageElevation$Z)
@@ -87,14 +85,17 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   #or 1% of opening width if no crest level available (single weir or slit)
   if(N_opening>1){
     CrestLevel<-Opening$BaseLevel[N_opening]
-    ModelLevelAccuracy <- 0.01*(CrestLevel-OpeningMinBaseLevel)
+    ModelLevelAccuracy <- 0.01*(CrestLevel-min(Opening$BaseLevel))
   }else{
     if(Opening$Type == "slot"){
-      CrestLevel<-Opening$Param[N_opening]
-      ModelLevelAccuracy <- 0.01*(CrestLevel-OpeningMinBaseLevel)
+      ModelLevelAccuracy <- 0.01*(Opening$TopLevel[1]-Opening$BaseLevel)
     }else{
-      CrestLevel <- Opening$Width+9999 #Case for weir and slit being the only opening, arbitrary value
-      ModelLevelAccuracy <- 0.01*Opening$Width
+      if(Opening$Width > 0)
+      {
+        ModelLevelAccuracy <- 0.01*Opening$Width  
+      }else{
+        ModelLevelAccuracy <- 0.01 #1 cm accuracy, arbitrary
+      }
     }
   }
   # print(paste0("The computation at structure: ",StructureName," is done with a level accuracy of ",ModelLevelAccuracy," m"))
@@ -316,13 +317,14 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
           # data.frame(Time=NULL,D=NULL,Opening=NULL,Jammed=NULL)
           # if(!is.na(Boulder_list)){print(Boulder_list$D)}
           
-          #Full width clogging 
+          #Full width clogging, named horizontal clogging in the original paper 
           #Sum the two biggest diameters
           JamWidth<-sum(Boulder_list$D[1:2],na.rm = TRUE)
+          #compute the re;aining opening width
           if(Opening$Type[Opening_Ind]=="weir")
           {
             #Account for trappezoidal shape if weir
-            OpeningRemainingWidth <- 2 / tan(Opening$Param[Opening_Ind] / 180 * pi) * BoulderClogging_level[i,Opening_Ind] + Opening$Width[Opening_Ind] - BoulderClogging_width[i,Opening_Ind]
+            OpeningRemainingWidth <- 2 / tan(Opening$SideAngle[Opening_Ind] / 180 * pi) * BoulderClogging_level[i,Opening_Ind] + Opening$Width[Opening_Ind] - BoulderClogging_width[i,Opening_Ind]
           }else{
             #Otherwise, use opening width minus clogging
             OpeningRemainingWidth <- Opening$Width[Opening_Ind] - BoulderClogging_width[i,Opening_Ind]
@@ -330,29 +332,30 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
           
           #If the jam width is larger than the opening (eventually yet partially clogged), 
           # it is jammed and the jam is as high as the biggest boulder passing
-          if(max(JamWidth,0,na.rm = T)> OpeningRemainingWidth)
+          if(max(JamWidth,0,na.rm = T) > OpeningRemainingWidth & (Opening$BaseLevel[Opening_Ind] + BoulderClogging_level[i,Opening_Ind]) < Opening$TopLevel[Opening_Ind] )
           {
-            BoulderClogging_level[i:N_TimeSteps,Opening_Ind]<-BoulderClogging_level[i,Opening_Ind]+max(Boulder_list$D,na.rm = TRUE)
+            BoulderClogging_level[i:N_TimeSteps,Opening_Ind] <- BoulderClogging_level[i,Opening_Ind] + max(Boulder_list$D,na.rm = TRUE)
             # Record the boulders
             if(length(Boulder_list$Jammed)>1){Boulder_list$Jammed[1:2]<-"b) Laterally jammed"}else{Boulder_list$Jammed[1]<-"b) Laterally jammed"}
           }
           
-          #Partial width clogging
+          #Partial width clogging, named vertical clogging in the original paper
           if(Opening$Type[Opening_Ind]=="slot")
           {
             #Record that the opening width clogging increase by the diameters of boulders that are bigger than slot height
             BoulderClogging_width[i:N_TimeSteps,Opening_Ind]<-min(Opening$Width[Opening_Ind]
-                                                                  ,BoulderClogging_width[i-1,Opening_Ind] + sum(Boulder_list$D[which(Boulder_list$D > (Opening$Height[Opening_Ind] - Opening$BaseLevel[Opening_Ind]))]))
+                                                                  ,BoulderClogging_width[i-1,Opening_Ind] + sum(Boulder_list$D[which(Boulder_list$D > (Opening$Height[Opening_Ind]))]))
             
             # Record the boulders
-            Boulder_list$Jammed[which(Boulder_list$Jammed!="b) Laterally jammed" & Boulder_list$D>(Opening$Height[Opening_Ind]-Opening$BaseLevel[Opening_Ind]))]<-"c) Vertically jammed"  
+            Boulder_list$Jammed[which(Boulder_list$Jammed!="b) Laterally jammed" & Boulder_list$D>(Opening$Height[Opening_Ind]))]<-"c) Vertically jammed"  
             
             #Clog the eventual residual small holes smaller than minimum boulder size (thus not clogged later)
             if(Opening$Width[Opening_Ind] - BoulderClogging_width[i,Opening_Ind] < min(Boulders$Diameter_min))
             {
               BoulderClogging_width[i:N_TimeSteps,Opening_Ind]<-Opening$Width[Opening_Ind]
             }
-            
+            # if remaining space is smaller than the smallest boulder size, we will never compute its clogging because such small boulders
+            # are not randomly generated. We thus immediately clogg it assuming many such small boulders are present in the debris flow
             if(Opening$Height[Opening_Ind] - BoulderClogging_level[i,Opening_Ind] < min(Boulders$Diameter_min))
             {
               BoulderClogging_level[i:N_TimeSteps,Opening_Ind]<-Opening$Height[Opening_Ind]
@@ -431,7 +434,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   {
     if(i==1){ #Initialize
       VerticalClogging<-data.frame(Time=Reservoir$Time,Opening="#1"
-                                   ,CloggingRate=BoulderClogging_level[,i]/(Opening$Height[i]-Opening$BaseLevel[i]))
+                                   ,CloggingRate=BoulderClogging_level[,i]/Opening$Height[i])
       if(N_slot[i])
       {
         WidthClogging<-data.frame(Time=Reservoir$Time,Opening="#1"
@@ -440,7 +443,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
     }
     #Append
     VerticalClogging<-rbind(VerticalClogging,data.frame(Time=Reservoir$Time,Opening=paste0("#",i)
-                                                        ,CloggingRate=BoulderClogging_level[,i]/(Opening$Height[i]-Opening$BaseLevel[i])))
+                                                        ,CloggingRate=BoulderClogging_level[,i]/Opening$Height[i]))
     
     if((N_slot[i] && is.null(WidthClogging)))
     {#Initialize
@@ -583,77 +586,3 @@ Synthetic_Structure_results<-function(Qo, Opening)
   }
 }
 
-Cascade_of_structure_functionning<-function(input)
-{
-  #Create input timesseries accordingly
-  Qin<-Create_inlet_timeseries(input,Boulders)
-  
-  #Computation at each structure
-  for(Structure_Ind in 1:sum(!is.na(Structures$Rank)))
-  {
-    #If not the first structure, then compute first the transferred inlet discharge and boulder
-    if(Structure_Ind > 1)
-    { 
-      #record input 
-      Qo_all_upstream<-Qo#_all
-      #Check type of transfert condition
-      TransferType <- Structures$TransferDownstream[[which(Structures$Rank==Structure_Ind-1)]]
-      if(substr(TransferType,1,6) != "Mixing")
-      {
-        Vmixing<-1#Default value to define a value but which is unused.
-      }else{
-        Vmixing <- as.numeric(substr(TransferType
-                                     ,8
-                                     ,nchar(TransferType)))
-      }
-      #update the input accordingly
-      Qo_all_upstream<-Qo_all_upstream[Qo_all_upstream$StructureRank == (Structure_Ind-1),]
-      Qin<-Transfer_Between_Structure(Qo = Qo_all_upstream 
-                                      ,TransferType = TransferType
-                                      ,Vmixing = Vmixing)
-    }
-    
-    #Compute the actual structure functionning
-    Qo<-Structure_functionning(ModelVersion=ModelVersion
-                               ,StructureName=Structures$Name[[which(Structures$Rank==Structure_Ind)]]
-                               ,input=input,Qin=Qin
-                               ,Opening=as.data.frame(Structures$Openings[[which(Structures$Rank==Structure_Ind)]])
-                               ,StorageElevation=as.data.frame(Structures$StorageElevation[[which(Structures$Rank==Structure_Ind)]])
-                               )
-    
-    Result<-Synthetic_Structure_results(Qo, Structures$Openings[[which(Structures$Rank==Structure_Ind)]])
-    Result$StructureRank<-Structure_Ind
-    
-    #record the run ID (general variable) and structure name
-    # Qo$Run<-paste0("Run #",Run_Ind)
-    Qo$StructureRank<-Structure_Ind
-    
-    #Record the run results
-    # if(Run_Ind == 1){
-    #   Result_all<-Result
-    #   Qo_all<-Qo
-    # }else{
-    #   load(paste0("Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData")
-    #        ,envir=globalenv())
-    #   Result_all<-rbind(Result_all,Result)
-    #   Qo_all<-rbind(Qo_all,Qo)
-    # }
-    # save(Result,Qo,file=paste0("Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
-    
-    # Save a data frame with the main results of all runs as a .Rdata file
-    File.Name<-paste0("Result_Evt-",EventName,"-_Structure_@-",Structures$Name[[which(Structures$Rank==Structure_Ind)]],"-ComputedOn",lubridate::now(),".Rdata")
-    File.Name<-str_replace_all(File.Name,":","-")
-    # File.Name<-str_replace_all(File.Name," ","_")
-    save(Result,Qo,file=File.Name)
-    
-  } #end of the for loop on structures
-  
-  #print message
-  load(file = "RunInd.Rdata")
-  if(OnlyNormalRun){Run_Ind<-Run_Ind+1}else{Run_Ind<-Run_Ind+0.5}
-  save(Run_Ind,N_runs,file = "RunInd.Rdata")
-  print(paste0("PROGRESS[",Run_Ind,"/",N_runs,"]"))
-  # if(!OnlyNormalRun){print(paste0("PROGRESS[one run computed]"))}
-  #Return max outlet discharge at last structure
-  return(max(Qo$Qo))
-}
