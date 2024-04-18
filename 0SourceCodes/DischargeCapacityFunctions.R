@@ -1,3 +1,21 @@
+#' ---
+#' title: "Discharge Capacity Functions"
+#' output: html_document
+#' date: "2024-03-22"
+#' Author: G. Piton, C. Misset, H. Shirra
+#' ---
+#' This is an annotated version of the DischargeCapacityFunctions.R script, originally developed by G. Piton and C. Misset as part of a larger script to stochastically simulate jamming through a series of constrictions in a debris flow event. This script defines the hydraulic discharge equations (including the orifice, weir and compound barrier equations) which calculate the passing of water through a constriction. The results are fed into 00_MainCode.R.
+#' 
+#' ### Summary of Script
+#' Discharge is calculated using either the orifice equation, the weir equation, or the compound barrier equation. The equation is selected based on the type of opening, as defined by the user. The basis of these hydraulic equations is well-documents and is freely available online and in textbooks. Variable definitions are available in the Msc Thesis of H. Shirra. 
+#' 
+#' ### Script
+## ----comment= "#", echo=FALSE-------------------------------------------------
+#Transfer the .Rmd file to R automatically when it is knit. 
+#knitr::purl(input = "DischargeCapacityFunctions.Rmd", documentation = 2) #Comment this line prior to running generated R script.
+
+#' Discharge through an orifice is calculated as follows:
+## -----------------------------------------------------------------------------
 g<-9.81
 # #Basic hydraulic functions
 # 
@@ -12,6 +30,8 @@ Q_GOrifice<-function(h,a,b,mu=0.7) #Upstream water depth, orifice height, orific
   #test
 # Q_GOrifice(0.1,0.02,0.15,0.65)
 
+#' Discharge through a check dam is calculated as follows:
+## -----------------------------------------------------------------------------
 #check dam discharge
 #Equation after Deymier et al. 1995 Conception et calcul de barrages de correction torrentielle, Edition PEGR
   Q_Weir<-function(h,b_spillway,mu=0.7,Phi=90)#Upstream water depth, spillway width,weir coefficient,  Phi side angle of the spillway,
@@ -27,7 +47,11 @@ Q_GOrifice<-function(h,a,b,mu=0.7) #Upstream water depth, orifice height, orific
   # Q_Weir(1,6,0.7,45)
 
 ###
-  Q_CompoundBarrier<-function(Opening,BaseClogging,WidthClogging,h)
+
+#' 
+#' Discharge through a compound barrier (i.e. some combination of slots, slits, and weirs) is calculated as follows:
+## -----------------------------------------------------------------------------
+ Q_CompoundBarrier<-function(Opening,BaseClogging,WidthClogging,h)
   {
     BaseClogging<-as.numeric(BaseClogging)
     WidthClogging<-as.numeric(WidthClogging)
@@ -91,3 +115,4 @@ Q_GOrifice<-function(h,a,b,mu=0.7) #Upstream water depth, orifice height, orific
   # Q_CompoundBarrier(Opening,rep(1,length(Opening$Number)),rep(0,length(Opening$Number)),738)
   
   
+

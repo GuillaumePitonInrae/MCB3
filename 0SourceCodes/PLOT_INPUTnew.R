@@ -1,3 +1,18 @@
+#' ---
+#' title: " Plot Input"
+#' output: html_document
+#' date: "2024-03-22"
+#' Author: G. Piton, C. Misset, H. Shirra
+#' ---
+#' This is an annotated version of the PLOT_INPUTnew.R script, originally developed by G. Piton and C. Misset as part of a larger script to stochastically simulate jamming through a series of constrictions during a debris flow event. This code plots input parameters, allowing the user to view the simulation parameters with ease.
+#' 
+#' ### Script
+## ----comment= "#", echo=FALSE-------------------------------------------------
+#Transfer the .Rmd file to R automatically when it is knit. 
+#knitr::purl(input = "PLOT_INPUTnew.Rmd", documentation = 2) #Comment this line prior to running generated R script.
+
+#' 
+## -----------------------------------------------------------------------------
 #Adaptation of PLOT_INPUT from package HYRISK to plot directly in a png file
 library("sets")
 
@@ -117,3 +132,4 @@ PLOT_INPUTnew<-function (input, N = 1000, mode = "IND")
     }
   }
 }
+

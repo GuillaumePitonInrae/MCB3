@@ -1,3 +1,18 @@
+#' ---
+#' title: " Plot Buffering Model Results"
+#' output: html_document
+#' date: "2024-03-22"
+#' Author: G. Piton, C. Misset, H. Shirra
+#' ---
+#' This is an annotated version of the Plot_BufferingModelResults.R script, originally developed by G. Piton and C. Misset as part of a larger script to stochastically simulate jamming through a series of constrictions during a debris flow event. This code plots the model results, allowing the user to view the simulation outcomes with ease.
+#' 
+#' ### Script
+## ----comment= "#", echo=FALSE-------------------------------------------------
+#Transfer the .Rmd file to R automatically when it is knit. 
+#knitr::purl(input = "Plot_BufferingModelResults.Rmd", documentation = 2) #Comment this line prior to running generated R script.
+
+#' 
+## -----------------------------------------------------------------------------
 # Plot results of a simulation with the buffering model
 # G. PITON, May 2021
 
@@ -168,3 +183,4 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
 #                     ,N_TimeSteps,Duration
 #                     ,OpeningMinBaseLevel,SpillwayLevel,CrestLevel
 #                     ,BoulderGenerationMode)
+

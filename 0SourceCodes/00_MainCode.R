@@ -1,3 +1,33 @@
+#' ---
+#' title: "Main Code"
+#' output: html_document
+#' date: "2024-03-22"
+#' Author: G. Piton, C. Misset, H. Shirra
+#' ---
+#' This is an annotated version of the 00_MainCode.R  script prepared by H. Shirra, originally developed by G. Piton and C. Misset to stochastically simulate jamming through a series of constrictions in a debris flow event. It is adapted from Piton et. al's (2022) paper " *Debris Flows, Boulders and Constrictions: A Simple Framework for Modeling Jamming, and Its Consequences on Outflow*" for which an R Script was developed to stochastically simulate jamming through a single constriction. This code was developed in R, and is accessible either through RStudio, or through an interface on the online platform PlatRisk (https://platrisk.ige.inrae.fr). This script calls upon various sub-routines, which simulate different aspects of jamming. 
+#' 
+#' ### Summary of Script
+#' In this script, the workspace is first is set up by setting the working directory, and loading the subroutines and all input data. Next, the simulation is performed with user input, by calling on the various subroutines. The simulation can be summarized as follows: 
+#' 
+#' 1. The geometry of the structures is defined.
+#' 2. The hydraulic parameters of the event (volume, peak flow, time to peak, deposition slope) are defined. 
+#' 3. The passage of the event through the series of structures is computed, for each time step for the duration of the hydrograph:
+#'     a. The passage of debris flow is computed using hydraulic equations (weir and orifice equations), the remaining debris material is assumed stored in the basin (mass conservation).
+#'     b. The number of boulders is stochastically simulated.
+#'     c. Their passage/ jamming is computed by comparing their size with the opening width and height.
+#' 4. At the end of the simulation, the results are saved and plotted.
+#'   
+#' Further details on the simulation process are contained in the annotated versions of the sub-routine scripts. 
+#' 
+#' # Script
+#' ### Set-up
+## ----comment= "#", echo=FALSE-------------------------------------------------
+#Transfer the .Rmd file to R automatically when it is knit. 
+# knitr::purl(input = "00_MainCode.Rmd", documentation = 2) #comment this line prior to running generated R script.
+
+#' 
+#' Definition of an automatic online run (HEADLESS = TRUE) or local, user-driven run (HEADLESS = FALSE), loading of the packages
+## ----echo=FALSE---------------------------------------------------------------
 ### Main code calling the sub-routines depending on the user choice
 
 #Clean environment
@@ -13,6 +43,12 @@ if(HEADLESS) {
 # For Guillaume P. only, to emulate the headless mode under RStudio:
 # HEADLESS = TRUE
 # rootDir<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
+# args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
+# setwd(paste0(rootDir,"/0SourceCodes"))
+
+# For Hilary S. only, to emulate the headless mode under RStudio:
+# HEADLESS = FALSE
+# rootDir<-"C:/Users/shirrah/Documents/MSc_Thesis/GitHub/DFbuffering"
 # args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
 # setwd(paste0(rootDir,"/0SourceCodes"))
 
@@ -49,8 +85,11 @@ suppressPackageStartupMessages({
   library(dplyr) #for data manipulation
 })
 #Model version
-ModelVersion <- "ACB³ V1.0"
+ModelVersion <- "MCB³ V1.0"
 
+#' 
+#' If HEADLESS = TRUE, the user is here asked to show the path where source codes are saved. Then, the sub-routines are loaded
+## ----echo=FALSE---------------------------------------------------------------
 if(!HEADLESS)
 {
   #Selecting the source codes repository ----
@@ -72,8 +111,12 @@ source("Create_inlet_input.R")#define the input data of runs
 source("Create_inlet_timeseries.R")#define the times series of the inlet of the most upstream structure
 source("Structure_definition.R")#define structure
 source("Structure_functionning.R")#Actual buffering model
+source("Cascade_of_structure_functionning.R")#Application of the buffering model to series of structures
 source("BoulderTransfer.R")#Compute the transformation of the time series from one structure to another
 
+#' 
+#' If HEADLESS = TRUE, the user is here asked to show the path where data (i.e. text files defining the structures and events) are saved. Then, the event features (e.g. volume, peak discharge, boulder size and numbers), as well as the geometry of the structures (opening and basin shape) and their initial conditions, are loaded and computed. A repository named '\out' is created and the results will be stored in it.
+## ----echo=FALSE---------------------------------------------------------------
 ## Upload the input data----
 if(!HEADLESS){
   #Selecting the repository where the source codes are stored
@@ -121,9 +164,32 @@ for(Structure_Ind in (1:length(Structures$Name)))
                                                                                 ,Structures$width[[Structure_Ind]]
                                                                                 ,Structures$slope[[Structure_Ind]])
   }
+  
+  #Inform the user about the accuracy of the level computation
+  #Define model level accuracy for convergence, taken as 0.01*elevation difference between crest and base level
+  #or 1% of opening width if no crest level available (single weir or slit)
+  Opening<-as.data.frame(Structures$Openings[[which(Structures$Rank==Structure_Ind)]])
+  N_opening<-length(Opening$Number)
+  if(N_opening>1){
+    CrestLevel<-Opening$BaseLevel[N_opening]
+    ModelLevelAccuracy <- 0.01*(CrestLevel-min(Opening$BaseLevel))
+  }else{
+    if(Opening$Type == "slot"){
+      ModelLevelAccuracy <- 0.01*(Opening$TopLevel[1]-Opening$BaseLevel)
+    }else{
+      if(Opening$Width > 0)
+      {
+        ModelLevelAccuracy <- 0.01*Opening$Width  
+      }else{
+        ModelLevelAccuracy <- 0.01 #1 cm accuracy, arbitrary
+      }
+    }
+  }
+  print(paste0("The computation at structure: ",Structures$Name[[which(Structures$Rank==Structure_Ind)]]," is done with a level accuracy of ",ModelLevelAccuracy," m, i.e. about one percent of the structure height."))
+  
 }
 
-#Selecting the repository where one want to record the results
+#Define the repository where one want to record the results
 if(HEADLESS) {
   MainRep <- args[2]
   #Set this repository as working repository
@@ -147,6 +213,27 @@ if(HEADLESS) {
   setwd(paste0(MainRep,"/out"))
 }
 
+
+#' 
+#' ## Computation
+#' ### Initial steps
+#' The next code block is the actual computation. It is organized in several sub-blocks:
+#' 1. The user defines if normal runs will be performed (i.e. accounting for fixed values of the input parameters but exploring the stochasticity of the boulder blockages) or if a error propagation analysis will be performed (i.e. accounting for the ranges of parameter values, in addition to the stochasticity of the boulder generation).
+#' 2. The user defines the number of simulations.
+#' 3. The user defines the event that will be simulated, either pre-defined or manually adjusted.
+#' 4. Then the computation is actually launched with two different frameworks for normal runs versus error propagation.
+#' 5. Synthetic plots aggregating the results of multiple runs are eventually automatically generated.
+#' 
+#' ### Normal runs
+#' A simple double loop of computation is done: for each run that is launched, the debris flow is routed in each structure from upstream to downstream.
+#' 
+#' ### Error propagation
+#' The ranges of uncertainty in each parameter is loaded, checked and prepared to fuel a possibilistic analysis (i.e. for each parameter, the user is asked to provide a lower bound value, a best estimate which is supposed by the user to be the most probable value, and a upper bound value). Then, the same double loop routing debris flow through the structures is applied.
+#' 
+#' ### Synthetic plots
+#' If only a few runs are launched, one plot for each run is prepared (time series of discharge, clogging, flow level and volume). If many runs are launched, a few plots gather the main results in a synthetic way.
+#' 
+## -----------------------------------------------------------------------------
 #Main loop within which each set of run is performed
 PerformAnotherSimulation <- "yes"
 while(PerformAnotherSimulation == "yes")
@@ -802,4 +889,5 @@ while(PerformAnotherSimulation == "yes")
     PerformAnotherSimulation<-dlg_message(message="The computation is finished! \n Do you want to perform another set?", type = c("yesno"))$res
   }
 }
+
 

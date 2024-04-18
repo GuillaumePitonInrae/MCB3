@@ -1,23 +1,33 @@
-### Compute the functionning of a structure, extract synthetic results 
-#V0 July 2023 - G. Piton & C. Misset
+#' ---
+#' title: "Structure Functioning"
+#' output: html_document
+#' date: "2024-03-22"
+#' Author: G. Piton, C. Misset, H. Shirra
+#' ---
+#' This is an annotated version of the Structure_functionning.R script prepared by H. Shirra, originally developed by G. Piton and C. Misset (V0 July 2023) as part of a larger script to stochastically simulate jamming through a series of constrictions in a debris flow event. This code computes the passage of a debris flow through a structure using hydraulics and mass conservation equations, as well as jamming through openings. The results are fed into, Cascade_of_structure_functioning.R, and 00_MainCode.R. 
+#' 
+#' The script was originally inspired by BarrierBuffering_V0.3.R (https://github.com/GuillaumePitonInrae/CheekyeDebrisFlowBarrier/tree/main/0SourceCodes). The whole code and framework of analysis is described in Piton G, Goodwin SR, Mark E, Strouth A. 2022 (https://doi.org/10.1029/2021JF006447). Within this script, flow discharge through openings is defined according to Piton G, Recking A. 2016 (https://doi.org/10.1061/(ASCE)HY.1943-7900.0001048). Jamming of boulders is defined according to Piton G, Charvet G, Kuss D, Carladous S. 2020 (available from https://hal.archives-ouvertes.fr/hal-02701076).
+#' 
+#' ### Summary of Script
+#' This sub-routine is the actual core function of the model where for a single structure, the hydraulic laws and mass conservation equations are resolved and the sub-routine randomly generating the boulders and computing the clogging are called at each time step.
+#' 
+#' Within the script, the initial deposit depth, and the height of any jamming at the base of the structures is imported from user-defined input. As well, the height of all openings within the structure is imported, and parsed based on the opening type. Storage-elevation curves are imported and interpolated. The initial deposition slope is imported and compared to the inputted storage-elevation data. If the user-defined slope is below the minimum possible slope defined by the storage-elevation curve, then the minimum slope from the storage-elevation curve is selected. The simulation progresses, but a warning message is displayed, prompting the user to update their input data.
+#' 
+#' For each structure within the cascade, the order of the openings is defined starting at the lowest elevation, increasing to the spillway, and then finally the crest (except in the case of dams, where the spillway is also the crest).The accuracy of the model regarding the flow level is typically 1% of the dam height (see details in code for structures with only one opening and no spillway). 
+#' 
+#' The number of boulders within an event is counted, and the average boulder diameter and volume is calculated for each class. The initial level of clogging is defined for each structure, using the pre-existing clogging data, and the base jam height. The data frame to track clogging as the simulation progresses is initialized. With all variables inputted and defined, computation is initiated.
+#' 
+#' The volume of the reservoir upstream of each structure is calculated at each time step by interpolating the storage capacity at the current flow level from the volume-elevation curve. Discharge and jamming is computed for each time step. At the end of each time step, clogging is recorded in the Reservoir data frame. The number of jammed and un-jammed boulders is recorded for each class. The results are plotted, and used to calculate the inflow hydrograph for the structure immediately downstream. The number of boulders within the event is updated based on the number of transferred boulders and upstream jamming. This process is repeated for the entire event volume.
+#' 
+#' Note: within the following code, an orifice is referred to as a "slot", and a weir with vertical side walls is referred to as a "slit". Before it is fully submerged, an orifice-like opening behaves as a weir, and is therefore considered a "slit".
+#' 
+#' ### Script
+## ----comment= "#", echo=FALSE-------------------------------------------------
+#Transfer the .Rmd file to R automatically when it is knit. 
+#knitr::purl(input = "Structure_functionning.Rmd", documentation = 2) #Comment this line prior to running generated R script.
 
-#Originally inspired by BarrierBuffering_V0.3.R
-# see--> https://github.com/GuillaumePitonInrae/CheekyeDebrisFlowBarrier/tree/main/0SourceCodes
-
-#Whole code and framework of analysis described in : # Piton G, Goodwin SR, Mark E, Strouth A. 2022. 
-# Debris flows, boulders and constrictions: a simple framework for modeling jamming, and its consequences on outflow. 
-# Journal of Geophysical Research: Earth Surface DOI: 10.1029/2021JF006447 
-# [online] Available from: https://onlinelibrary.wiley.com/doi/10.1029/2021JF006447 (Accessed 24 April 2022)
-
-#Flow discharge through opening defined according to Piton G, Recking A. 2016. 
-# Design of sediment traps with open check dams. I: hydraulic and deposition processes. 
-# Journal of Hydraulic Engineering 142 : 1–23. DOI: 10.1061/(ASCE)HY.1943-7900.0001048
-
-#Jamming of boulders: conditions defined according to : 
-# Piton G, Charvet G, Kuss D, Carladous S. 2020. 
-# Putting a Grill (or Not) in Slit Dams Aiming at Trapping Debris Flows? Lessons Learnt From France. 
-# AGHP Technical Notes : 1–5. [online] Available from: https://hal.archives-ouvertes.fr/hal-02701076
-
+#' 
+## -----------------------------------------------------------------------------
 Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,StorageElevation)
 {
   ################################
@@ -115,11 +125,12 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   BoulderClogging_width<-BoulderClogging_level<-data.frame(matrix(0, N_TimeSteps, N_opening,byrow=TRUE),stringsAsFactors=F)
   names(BoulderClogging_level)<-paste0("Z",(1:N_opening))
   names(BoulderClogging_width)<-paste0("W",(1:N_opening))
-  #For initial clogging we take the maximum between the pre-existing clogging height and the base jam height arriving at the surge front
-  BoulderClogging_level[,1]<-max(BoulderClogging_level[,1],BaseJamHeight)
   
-  
-  
+  #For initial clogging we take the maximum between the pre-existing clogging height and the base jam height arriving at the surge front, which is computed as compared to the base level of the whole structure
+  for(Opening_Ind in (1:N_opening))
+  {
+    BoulderClogging_level[,Opening_Ind] <- max(0,max(BoulderClogging_level[,Opening_Ind],BaseJamHeight) + OpeningMinBaseLevel - Opening$BaseLevel[Opening_Ind])
+  } 
   
   #Discharge elevation curves
   h<-seq(from=OpeningMinBaseLevel, to=max(storageElevationCurve$h)+5,by=5*ModelLevelAccuracy) #Extend 5 meter above the crest
@@ -131,6 +142,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
       labs( x = "Storage capacity [*1000 m3]",y = "Flow level at barrier [m.a.s.l.]"
             ,title = paste("Stage - volume capacity"))+
       geom_hline(aes(yintercept = OpeningMinBaseLevel,lty="1"))+
+      
       geom_hline(aes(yintercept = SpillwayLevel,lty="2"))+
       scale_linetype_manual("",labels=c("Opening base level","Spillway level"),values=c(2,3))+
       theme(legend.position = "top")
@@ -291,6 +303,37 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
       # time step, unused because considered too conservative if the time step is long.
       # TimeStep*as.numeric(Q_CompoundBarrier(Opening = Opening,BaseClogging = BoulderClogging_level[i,],h=Reservoir$Z[i]))
       
+      #If instantaneous transfer, record the number of boulders arriving at the structure
+      if(is.na(Qin$p1[i]))  #if probability is NA, then we must directly transfer the upstream number of boulders
+      {
+        #Count the number of boulders arriving
+        Boulder_list_wholeStructure <-BoulderSizing(Qin[i,(1:dim(Boulders)[1])+2+dim(Boulders)[1]])
+        
+        if(!is.na( Boulder_list_wholeStructure$D[1]))
+        {
+          # if(sum(Volume.Surge == 0))
+          # {
+          #   Boulder_list<-data.frame(Time=rep(Reservoir$Time[i],length(Boulder_list$D))
+          #                            ,D=sort(Boulder_list_wholeStructure$D,na.last=TRUE,decreasing =TRUE)
+          #                            ,Class=sort(Boulder_list_wholeStructure$Class,na.last=TRUE,decreasing =TRUE)
+          #                            ,Opening=rep(NA,length(Boulder_list$D))
+          #                            ,Jammed=rep("d) jammed behind other boulders",length(Boulder_list$D)))
+          # }
+          # Compute the relative discharge passing in each Opening
+          Volume.Surge.loc<-Volume.Surge
+          Volume.Surge.loc[Volume.Surge.loc<sum(Volume.Surge.loc)/10^4] <- sum(Volume.Surge.loc)/10^4
+          #Assign a opening number using a random computation with the probability of each opening being proportional
+          # to the discharge passing through the said opening
+          if(sum(Volume.Surge.loc)>0)
+          {
+            Boulder_list_wholeStructure$Opening<-floor(approx(c(0,cumsum(Volume.Surge.loc)/sum(Volume.Surge.loc)),
+                                                              c(1:N_opening,N_opening),
+                                                              runif(dim(Boulder_list_wholeStructure)[1]))$y)
+          }
+          rm(Volume.Surge.loc)
+        }
+      }
+      
       #Initialize the list of boulder passing through each opening
       for(Opening_Ind in (1:N_opening))
       { 
@@ -298,13 +341,16 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
         #Check whether the transfer from upstream is instantaneous or mixing
         if(is.na(Qin$p1[i]))  #if probability is NA, then we must directly transfer the upstream number of boulders
         {
-          Boulder_list <-BoulderSizing(Qin[i,(1:dim(Boulders)[1])+2+dim(Boulders)[1]])
+          if(sum(Boulder_list_wholeStructure$Opening==Opening_Ind)>0 & VolumeSurge_inst > 0)#(!is.na( Boulder_list_wholeStructure$D[1]))#(length(Boulder_list_wholeStructure$D)>0)
+          {
+            Boulder_list <-Boulder_list_wholeStructure[Boulder_list_wholeStructure$Opening==Opening_Ind,]
+            }else{Boulder_list<-data.frame(D=NA,Class=NA)}
+          
         }else{
           #of the probability was not NA, then we randomly sample the boulder size
           Boulder_list<-BoulderPassing(VolumeSurge_inst
                                        ,Boulders$Diameter_min,Boulders$Diameter_max
                                        ,Boulder.probabilities=as.numeric(Qin[i,(1:dim(Boulders)[1])+2]))
-          
         }
         
         if(!is.na(Boulder_list$D)[1])
@@ -585,4 +631,5 @@ Synthetic_Structure_results<-function(Qo, Opening)
     return(RESULTS)
   }
 }
+
 
