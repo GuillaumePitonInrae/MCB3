@@ -241,16 +241,16 @@ while(PerformAnotherSimulation == "yes")
   
   if(!HEADLESS){
     #Select the type of approach----
-    OnlyNormalRun<-dlg_message(message="Press \"Yes\" to perform normal runs (using best estimates of the input data) \n Or press \"No\" to run a full uncertainty propagation analysis "
+    Perform_error_propagation <-dlg_message(message="Press \"Yes\" to perform a full uncertainty propagation analysis \n Or press \"No\" to run normal runs (using best estimates of the input data)"
                                , type = c("yesno"))$res
     
-    # OnlyNormalRun<-"yes"
-    if(OnlyNormalRun=="yes"){ OnlyNormalRun<-TRUE}else{ OnlyNormalRun<-FALSE}
+    # Perform_error_propagation <-"yes"
+    if(Perform_error_propagation =="yes"){ Perform_error_propagation <-TRUE}else{ Perform_error_propagation <-FALSE}
     #Define the number of simulations to run----
     N.unvalidated<-TRUE
     while(N.unvalidated)
     {
-      if(OnlyNormalRun)
+      if(Perform_error_propagation == FALSE)
       {N_runs<-as.numeric(dlg_input(message = "How many simulations to you want to run (n<10 000)"
                                     , default = "5")$res)
       }else
@@ -274,14 +274,14 @@ while(PerformAnotherSimulation == "yes")
   
   
   # Choices of plot and save option----
-  if(OnlyNormalRun)
+  if(Perform_error_propagation)
   {
-    ComputeWithBestEstimateNumber<-TRUE
-  }else{
     ComputeWithBestEstimateNumber<-FALSE
+  }else{
+    ComputeWithBestEstimateNumber<-TRUE
   }
   
-  if(OnlyNormalRun)
+  if(Perform_error_propagation == FALSE)
   {
     if(N_runs <= 10){ PrintFinalPlot <- TRUE }else{ PrintFinalPlot <- FALSE} #no plot if more than 10 runs
     # if(!HEADLESS){
@@ -307,7 +307,7 @@ while(PerformAnotherSimulation == "yes")
     EventUndefined<-TRUE
     while(EventUndefined)
     {
-      if(OnlyNormalRun){ # Possible to reuse predefined values or to define the event manually
+      if(Perform_error_propagation == FALSE){ # Possible to reuse predefined values or to define the event manually
         EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
                                          ,Events$Name
                                          ,"If you want to define the event manually, write \"0\" ")
@@ -338,7 +338,7 @@ while(PerformAnotherSimulation == "yes")
   
   
   # Create input data to launch runs----
-  if(OnlyNormalRun)
+  if(Perform_error_propagation == FALSE)
   {
     #If only normal runs, we only use the best estimates
     BoulderGenerationMode<-"Best estimate numbers"
@@ -651,7 +651,7 @@ while(PerformAnotherSimulation == "yes")
   #Rename file names
   ListFile1<-list.files(pattern="computedOn")#Figure
   ListFile2<-list.files(pattern="ComputedOn")#Rdata
-  if(OnlyNormalRun)
+  if(Perform_error_propagation == FALSE)
   {
     if(length(ListFile1)>0)
     {
@@ -781,7 +781,7 @@ while(PerformAnotherSimulation == "yes")
         coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)+
         labs(y="Supplied peak discharge [m3/s]",x="# of Run")
       
-      if(OnlyNormalRun)
+      if(Perform_error_propagation == FALSE)
       {
         Caption_text <-  paste("Code version:",ModelVersion,"\n",
                                "Parameters:"," best estimate values","\n"

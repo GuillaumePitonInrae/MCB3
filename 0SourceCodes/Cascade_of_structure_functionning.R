@@ -67,7 +67,7 @@ Cascade_of_structure_functionning<-function(input)
   
   #print message
   load(file = "RunInd.Rdata")
-  if(OnlyNormalRun){Run_Ind<-Run_Ind+1}else{Run_Ind<-Run_Ind+0.5}
+  if(Perform_error_propagation){Run_Ind<-Run_Ind+0.5}else{Run_Ind<-Run_Ind+1}
   save(Run_Ind,N_runs,file = "RunInd.Rdata")
   print(paste0("PROGRESS[",Run_Ind,"/",N_runs,"]"))
   # if(!OnlyNormalRun){print(paste0("PROGRESS[one run computed]"))}
