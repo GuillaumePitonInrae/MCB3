@@ -1,0 +1,11 @@
+Variable	Value
+Structure	pdd 1
+InitialCondition	Empty
+TransferDownstream	Mixing 15000
+Structure	pdd 2
+InitialCondition	Empty
+TransferDownstream	Mixing 15000
+Structure	pont 1
+InitialCondition	Empty
+
+

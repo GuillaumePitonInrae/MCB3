@@ -1,0 +1,6 @@
+Variable	Value
+Structure	pdd 1
+InitialCondition	1.5 m jam no deposit
+
+
+

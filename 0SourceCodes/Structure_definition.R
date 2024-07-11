@@ -129,7 +129,7 @@ define_bridgeStorageElevation<-function(Opening,width,slope)
   # Compute the storage - elevation curve
   for (i in 1:nrow(elev_storage)){
     for (j in 2:(ncol(elev_storage))){
-      elev_storage[i,j]<-width*0.5*(elev_storage$Z[i]-min(Opening$BaseLevel))^2/(tan(slope)-tan(seq_slope[j-1]))
+      elev_storage[i,j]<-width*0.5*(elev_storage$Z[i]-min(Opening$BaseLevel))^2/(slope-seq_slope[j-1])
     }
   }
   return(elev_storage)

@@ -1,0 +1,9 @@
+Variable	Value
+Structure	pdd 1
+InitialCondition	Empty
+TransferDownstream	Instantaneous
+Structure	pdd 2
+InitialCondition	2 m jam and deposit
+TransferDownstream	Mixing 10000
+Structure	pont 1
+InitialCondition	Empty

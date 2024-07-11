@@ -64,6 +64,12 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
     print(paste0("Deposition slope selected below the minimum values of the elevation - storage capacity! \n",
                  "Used the minimum value of the table but consider adding the relevant data to the table!"))
   }
+  # 
+  if(max(as.numeric(substr(names(StorageElevation[,-1]),2,6)))<SlopeDep)#/100)
+  {
+    print(paste0("Deposition slope selected above the maximum values of the elevation - storage capacity! \n",
+                 "Used the maximum value of the table but consider adding the relevant data to the table!"))
+  }
   #Interpolation for the slope of deposition selected
   for (i in (1:length(StorageElevation[,1])))
   {
@@ -75,6 +81,43 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
     )$y/10^3
   }
   # rm(StorageElevation)
+  
+  #check that bottom of the reservoir is not higher than outlet bottom level
+  if(min(storageElevationCurve$h) > min(Opening$BaseLevel) )
+  {
+    storageElevationCurve <- rbind(c(0,min(Opening$BaseLevel)),storageElevationCurve)
+    print(paste0("The volume-elevation curves minimum level is higher than the outlet, added null storage at bottom outlet, but consider revising volume-elevation data."))
+  }
+  
+  #Check that there is no duplicated volume values
+  for(i in (length(storageElevationCurve$s)-1):2)  {
+    if(storageElevationCurve$h[i] == storageElevationCurve$h[i-1]){
+      storageElevationCurve$h[i]<-NA#(storageElevationCurve$h[i]*1.01+0.01*storageElevationCurve$h[i+1])
+      print(paste0("Repeating elevation values detected in volume-elevation curves. Repeating value deleted, consider revising volume-elevation data."))
+    }
+  }
+  # Remove duplicated lines
+  storageElevationCurve<-storageElevationCurve[!is.na(storageElevationCurve$h),]
+  
+  for(i in (length(storageElevationCurve$s)-1):2)  {
+    if(storageElevationCurve$s[i]== storageElevationCurve$s[i-1])
+      {
+      storageElevationCurve$s[i]<-(storageElevationCurve$s[i]*1.01+0.01*storageElevationCurve$s[i+1])
+      if(i>2)
+      {print(paste0("Repeating volume values detected in volume-elevation curves. Repeating value increased by 1% of the above data, but consider revising volume-elevation data."))}
+    }
+  }
+    
+  for(i in (length(storageElevationCurve$s)):2){
+        if(storageElevationCurve$s[i]<storageElevationCurve$s[i-1])
+        {
+          storageElevationCurve$s[i]<-NA
+          print(paste0("Volume values are not increasing with increasing deposit depth, which is physically impossible! Decreased value removed. Revise volume-elevation data."))
+        }
+    }
+
+  storageElevationCurve<-storageElevationCurve[!is.na(storageElevationCurve$s),]
+  
   
   #Definition of openings
   #reorder Opening by increasing base level to have the spillway as last opening
@@ -115,7 +158,7 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
   {
     Boulders$Number[i]<-input[(4+length(Structures$Name)*2)+i]
   }
-  #Mean boulder size of each class used to compute the typucal volume of a boulder
+  #Mean boulder size of each class used to compute the typical volume of a boulder
   Boulders$Diameter<-0.5*(Boulders$Diameter_min+Boulders$Diameter_max)
   #Elementary volume of each boulder class
   Boulders$V<-pi/6*Boulders$Diameter^3
@@ -550,7 +593,10 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
     # dir.create(paste0("",EventName,"_ComputedOn",lubridate::today())
     # ,showWarnings = FALSE,recursive = TRUE)
     
-    Plot_BufferingModel(ModelVersion,StructureName,Reservoir,WidthClogging,VerticalClogging
+    Plot_BufferingModel(ModelVersion,StructureName
+                        ,Reservoir
+                        ,WidthClogging,VerticalClogging
+                        ,Boulder_list_all
                         ,N_opening,storageElevationCurve,input[1]*1000
                         ,N_TimeSteps,Duration
                         ,OpeningMinBaseLevel,SpillwayLevel,CrestLevel

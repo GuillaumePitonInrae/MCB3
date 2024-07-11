@@ -1,0 +1,4 @@
+Number,Type,Width,BaseLevel,TopLevel,SideAngle,Comment
+1,slot,12,722,725.9,90,section pont
+2,slit,50,726.9,730,90,section tablier
+3,weir,60,730,735,10,crete

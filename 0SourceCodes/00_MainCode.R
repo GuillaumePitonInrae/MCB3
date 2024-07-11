@@ -379,7 +379,7 @@ while(PerformAnotherSimulation == "yes")
         &&
         Events$Volume_BestEstimate[Event_Ind]==Events$Volume_max[Event_Ind]))
     {
-      input[[1]]=CREATE_INPUT(
+        input[[1]]=CREATE_INPUT(
         name="Volume \n [*1000m3]",
         type="fixed",
         param= Events$Volume_BestEstimate[Event_Ind]/10^3,  
@@ -397,6 +397,7 @@ while(PerformAnotherSimulation == "yes")
                                         "Volume")/10^3,
         monoton = "incr"
       )
+
     }
     
     #Peak discharge in m3/s
@@ -585,6 +586,13 @@ while(PerformAnotherSimulation == "yes")
           monoton = "decr")
       }
     }
+    
+    # #Change the monotony
+    # input_for_clogging<-input
+    # input_for_clogging[[4]]$monoton<-"decr"
+    # input_for_clogging[[5]]$monoton<-"decr"
+    # input_for_clogging[[125]]$monoton<-"decr"
+    # input_for_clogging[[128]]$monoton<-"decr"
     
     
     #     COMPUTATION----
@@ -840,10 +848,12 @@ while(PerformAnotherSimulation == "yes")
           theme(legend.position = c(0.82,0.83),legend.direction = "horizontal"
               ,legend.background = element_rect(colour =1),legend.box.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))+
           labs( x = "Time [h]",y = "Flow level\n [m]")
+     
           
         Vplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
           geom_line(aes(x=Time/3600,y=V,group=Run),col="black",alpha=0.3)+
           labs( x = "Time [h]",y = "Stored volume\n [*1000m3]")
+        
         
         png(paste0("SyntheticTimeSerie_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
         {

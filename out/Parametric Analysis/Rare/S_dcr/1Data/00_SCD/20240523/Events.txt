@@ -1,0 +1,5 @@
+Name	Volume_min	Volume_BestEstimate	Volume_max	PeakDischarge_min	PeakDischarge_BestEstimate	PeakDischarge_max	TimeLag_min	TimeLag_BestEstimate	TimeLag_max	DepositionSlope_min	DepositionSlope_BestEstimate	DepositionSlope_max
+courant	5000	8000	15000	16	23	37	0.03	0.14	0.42	0.04	0.08	0.11
+frequent	20000	30000	60000	47	65	112	0.03	0.14	0.42	0.04	0.08	0.11
+rare	60000	80000	100000	112	140	168	0.03	0.14	0.42	0.04	0.08	0.11
+exeptionnel	80000	100000	150000	140	168	231	0.03	0.14	0.42	0.04	0.08	0.11

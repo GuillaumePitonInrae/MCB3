@@ -17,7 +17,7 @@
 #' 
 ## -----------------------------------------------------------------------------
 #Define transfer type
-TransferType <- "instantaneous"
+# TransferType <- "instantaneous"
 # TransferType <- "Mixing 5000"
 # Vmixing <- sum(Qo$Qo)/20
 
