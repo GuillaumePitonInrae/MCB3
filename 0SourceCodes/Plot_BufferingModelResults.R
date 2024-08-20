@@ -83,7 +83,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     geom_line(aes(x=Time/3600,y=BaseLevelJam,colour="5",lty="5"))+
     geom_ribbon(aes(x=Time/3600,ymax=BaseLevelJam,ymin=OpeningMinBaseLevel)
                 ,lwd=1,col="transparent",alpha=0.2)+
-    theme(legend.position = "top")+
+    theme(legend.position = "bottom")+
     scale_colour_grey(name="Level",label=c("Opening base","Spillway","Crest","Flow","Boulder jam at opening #1"))+
     scale_linetype_manual(name="Level",label=c("Opening base"
                                                ,"Spillway"
@@ -91,13 +91,23 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
                                                ,"Flow"
                                                ,"Boulder jam at opening #1")
                           ,values=c(2,2,3,1,4))+
+# <<<<<<< HEAD
     # annotate(geom = "text", x = 1*Duration/3600, y = max(storageElevationCurve$h,na.rm=TRUE)
     #          ,vjust=1,hjust=1
     #          , label = paste("Max level reached =",round(max(Reservoir$Z),1),"m.a.s.l.")
     # )+
     # theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
     # coord_cartesian(xlim = c(0,1*Duration/3600),ylim=c(OpeningMinBaseLevel,max(storageElevationCurve$h,na.rm=TRUE)))+
-    labs( x = " ",y = "Flow level [m]"
+    labs( x = " ",y = "Flow level [m]")+
+# =======
+    annotate(geom = "text", x = 1*Duration/3600, y = max(storageElevationCurve$h,na.rm=TRUE)
+             ,vjust=1,hjust=1
+             , label = paste("Max level reached =",round(max(Reservoir$Z),1),"m.a.s.l.")
+    )+
+    # theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
+    coord_cartesian(xlim = c(0,1*Duration/3600),ylim=c(OpeningMinBaseLevel,max(storageElevationCurve$h,na.rm=TRUE)))+
+    labs( x = "Time [h]",y = "Flow level [m]"
+# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
           # ,caption=paste("(d)")
           # ,subtitle = paste("Max level at barrier =",round(max(Reservoir$Z),1),"m.a.s.l.")
     )+
@@ -115,6 +125,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
                              ,"| Trapped:",round(Reservoir$V[(N_TimeSteps-1)],0)/1000,"Mm3"
                              ,"| Released:",round(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000,3),"Mm3"
                              ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000)/(Volume/10^6)*100,0),"%")
+# <<<<<<< HEAD
     )+ 
     labs( x = "",y = "Volume [*1000m3]" 
     )+
@@ -160,6 +171,20 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
   # Bplot 
   # plot(Bplot)
   ########################
+# =======
+#     )+
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
+    labs( x = "Time [h]",y = "Volume [*1000m3]"
+          #,caption=paste("(e)")
+          # ,subtitle = paste("Surge:",round(Volume/10^6,2),"Mm3"
+          #               ,"| Trapped:",round(Reservoir$V[(N_TimeSteps-1)],0)/1000,"Mm3"
+          #               ,"| Released:",round(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000,3),"Mm3"
+          #               ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000)/(Volume/10^6)*100,0),"%")
+          )+
+    theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm")
+          # ,plot.margin = unit(c(0.1,0.1,0.1,0.3), "cm")
+          )
+# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
   
   #Plot name definition with date and hour
   Plot.Name<-paste0("TimeSeriesOfEvent_",EventName
@@ -183,25 +208,36 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     {
       print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName,", for event: ",EventName,"\n"
                                     ,"Model version: ",ModelVersion,"\n"
-                                    ,"Boulder generation mode: ",BoulderGenerationMode))+ 
+                                    ,"Input parameters: ",BoulderGenerationMode))+ 
               theme(plot.title = element_text(size=8.5))
             , vp = define_region(1:6,1))
       print(VclogPlot, vp = define_region(7:10,1))
+# <<<<<<< HEAD
       print(Zplot, vp = define_region(11:16,1))
       print(Vplot, vp = define_region(17:22,1))
       print(Bplot, vp = define_region(23:28, 1))
       
+# =======
+
+      print(Vplot, vp = define_region(11:15,1))
+      print(Zplot, vp = define_region(16:22,1))
+# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
     }else{
       print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName,", for event: ",EventName,"\n"
                                     ,"Model version: ",ModelVersion,"\n"
-                                    ,"Boulder generation mode: ",BoulderGenerationMode))
+                                    ,"Input paramters: ",BoulderGenerationMode))
             , vp = define_region(1:5,1))
       print(VclogPlot, vp = define_region(6:9,1))
       print(WclogPlot, vp = define_region(10:13,1))
+# <<<<<<< HEAD
       print(Zplot, vp = define_region(14:17,1))
       print(Vplot, vp = define_region(18:22,1))
       print(Bplot, vp = define_region(23:28, 1))
       
+# =======
+      print(Vplot, vp = define_region(14:16,1))
+      print(Zplot, vp = define_region(17:22,1))
+# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
     }
   }
   dev.off()

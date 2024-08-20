@@ -7,8 +7,10 @@ authors:
 - family-names: "Misset"
   given-names: "Clément"
   orcid: "https://orcid.org/0000-0003-0748-467X"
-title: "DFbuffering"
+- family-names: "Shirra"
+  given-names: "Hilary"
+title: "MCB³"
 version: 1.0.0
 doi: XXX
 date-released: 2023-07-19
-url: "https://github.com/GuillaumePitonInrae/DFbuffering/"
+url: "https://github.com/GuillaumePitonInrae/MCB3"

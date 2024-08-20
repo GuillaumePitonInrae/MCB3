@@ -176,7 +176,9 @@ for(Structure_Ind in (1:length(Structures$Name)))
   }else{
     if(Opening$Type == "slot"){
       ModelLevelAccuracy <- 0.01*(Opening$TopLevel[1]-Opening$BaseLevel)
+      CrestLevel <- Opening$TopLevel[1]
     }else{
+      CrestLevel<-Opening$BaseLevel
       if(Opening$Width > 0)
       {
         ModelLevelAccuracy <- 0.01*Opening$Width  
@@ -241,16 +243,16 @@ while(PerformAnotherSimulation == "yes")
   
   if(!HEADLESS){
     #Select the type of approach----
-    OnlyNormalRun<-dlg_message(message="Press \"Yes\" to perform normal runs (using best estimates of the input data) \n Or press \"No\" to run a full uncertainty propagation analysis "
+    Perform_error_propagation <-dlg_message(message="Press \"Yes\" to perform a full uncertainty propagation analysis \n Or press \"No\" to run normal runs (using best estimates of the input data)"
                                , type = c("yesno"))$res
     
-    # OnlyNormalRun<-"yes"
-    if(OnlyNormalRun=="yes"){ OnlyNormalRun<-TRUE}else{ OnlyNormalRun<-FALSE}
+    # Perform_error_propagation <-"yes"
+    if(Perform_error_propagation =="yes"){ Perform_error_propagation <-TRUE}else{ Perform_error_propagation <-FALSE}
     #Define the number of simulations to run----
     N.unvalidated<-TRUE
     while(N.unvalidated)
     {
-      if(OnlyNormalRun)
+      if(Perform_error_propagation == FALSE)
       {N_runs<-as.numeric(dlg_input(message = "How many simulations to you want to run (n<10 000)"
                                     , default = "5")$res)
       }else
@@ -274,14 +276,14 @@ while(PerformAnotherSimulation == "yes")
   
   
   # Choices of plot and save option----
-  if(OnlyNormalRun)
+  if(Perform_error_propagation)
   {
-    ComputeWithBestEstimateNumber<-TRUE
-  }else{
     ComputeWithBestEstimateNumber<-FALSE
+  }else{
+    ComputeWithBestEstimateNumber<-TRUE
   }
   
-  if(OnlyNormalRun)
+  if(Perform_error_propagation == FALSE)
   {
     if(N_runs <= 10){ PrintFinalPlot <- TRUE }else{ PrintFinalPlot <- FALSE} #no plot if more than 10 runs
     # if(!HEADLESS){
@@ -307,7 +309,7 @@ while(PerformAnotherSimulation == "yes")
     EventUndefined<-TRUE
     while(EventUndefined)
     {
-      if(OnlyNormalRun){ # Possible to reuse predefined values or to define the event manually
+      if(Perform_error_propagation == FALSE){ # Possible to reuse predefined values or to define the event manually
         EventName<-dlg_input(message = c("Write the name of the event you want to model, the available names are :"
                                          ,Events$Name
                                          ,"If you want to define the event manually, write \"0\" ")
@@ -338,16 +340,16 @@ while(PerformAnotherSimulation == "yes")
   
   
   # Create input data to launch runs----
-  if(OnlyNormalRun)
+  if(Perform_error_propagation == FALSE)
   {
     #If only normal runs, we only use the best estimates
-    BoulderGenerationMode<-"Best estimate numbers"
+    BoulderGenerationMode<-"Best estimate values"
     
 
     #Create input data according to the EventName and adjustement option
     input<-Create_inlet_input(EventName,AdjustEventManually,Structures,Boulders)
     Run_Ind<-0
-    save(Run_Ind,N_runs,file = "RunInd.Rdata")
+    save(Run_Ind,N_runs,file = "RunInd.Rdata.tmp")
     ## Computation of isolated runs ----
     for(Run_Ind in (1:N_runs))
     {
@@ -364,7 +366,7 @@ while(PerformAnotherSimulation == "yes")
 
   }else{# end of the normal run condition
     
-    BoulderGenerationMode<-"Uncertain boulder numbers"
+    BoulderGenerationMode<-"Error propagation"
     # Find the event in the table
     Event_Ind<-which(Events$Name==EventName)
     
@@ -601,7 +603,8 @@ while(PerformAnotherSimulation == "yes")
     input=CREATE_DISTR(input)
     
     ####VISU INPUT
-    png(paste0(MainRep,"/DistributionsInputParametersPossibilityAnalysis_Evt-",EventName,".png"), width = 22, height = 24
+    png(paste0("DistributionsInputParametersPossibilityAnalysis_Evt-",EventName,".png")
+        , width = 22, height = 24
         ,units="cm"
         ,res=350
         )
@@ -615,7 +618,7 @@ while(PerformAnotherSimulation == "yes")
     #Hybrid uncertainty propagation on released volume----
     #Initialize run number
     Run_Ind<-0
-    save(Run_Ind,N_runs,file = "RunInd.Rdata")
+    save(Run_Ind,N_runs,file = "RunInd.Rdata.tmp")
     ###HYBRID UNCERTAINTY PROPAGATION
     Rslt_Uncertain.Boulder.Number<-PROPAG(N=N_runs,input
                                           ,Cascade_of_structure_functionning
@@ -649,7 +652,7 @@ while(PerformAnotherSimulation == "yes")
                    ,"Number of runs =",N_runs)
             ,title = paste0("Uncertainty analysis of peak discharge downstream all structures\n","(event: ",EventName,")"))
     #Save figure
-    ggsave(paste0("ReleasedPeakDischarge_Evt-",EventName,"_NboulderUncertain.png")
+    ggsave(paste0("ReleasedPeakDischarge_Evt-",EventName,"_FromErrorPropagation.png")
            , width = 16.5, height = 7,units="cm")
 
     #Save results
@@ -659,7 +662,7 @@ while(PerformAnotherSimulation == "yes")
   #Rename file names
   ListFile1<-list.files(pattern="computedOn")#Figure
   ListFile2<-list.files(pattern="ComputedOn")#Rdata
-  if(OnlyNormalRun)
+  if(Perform_error_propagation == FALSE)
   {
     if(length(ListFile1)>0)
     {
@@ -667,10 +670,10 @@ while(PerformAnotherSimulation == "yes")
     }
     if(length(ListFile2)>0)
     {
-      file.rename(ListFile2,paste0("Rdata",substr(ListFile2,1,nchar(ListFile2)-36),"_run",rep((1:Run_Ind),max(Structures$Rank)),".Rdata"))
+      # file.rename(ListFile2,paste0("Rdata",substr(ListFile2,1,nchar(ListFile2)-36),"_run",rep((1:Run_Ind),max(Structures$Rank)),".Rdata"))
     }
   }
-  rm(ListFile1,ListFile2)
+  # rm(ListFile1,ListFile2)
   
   
   #Aggregate every run results in a single data frame per structure
@@ -686,22 +689,43 @@ while(PerformAnotherSimulation == "yes")
       #load results of the structure
       load(ListFileStructure[File_Ind])
       Qo$Run<-File_Ind
+      input$Run<-File_Ind
       Result$Run<-File_Ind
       if(File_Ind == 1)
       {
         Qo_all <-Qo 
+        input_all<-data.frame(input)
         Result_all<-Result
         
       }else{
         Qo_all <-rbind(Qo_all,Qo) 
+        input_all<-rbind(input_all,data.frame(input))
         Result_all<-rbind(Result_all,Result)
       }
     }
-    #Save the file that aggregate all the results
-    save(Qo_all,Result_all,file=paste0("RdataResult_Evt-",EventName,"_Structure_@-",StructureName,".RData"))
+    
+    #Identify best estimate and upper and lower bound simulations
+    input_all <- input_all %>% mutate(Branch = case_when(V == Events$Volume_BestEstimate[Events$Name==EventName]/1000 ~ "Best estimate"
+                                                         ,V > Events$Volume_BestEstimate[Events$Name==EventName]/1000 ~ "Upper bound"
+                                                         ,V < Events$Volume_BestEstimate[Events$Name==EventName]/1000 ~ "Lower bound"
+                                                         ,TRUE ~ "Unknown"))
+    
+    Result_all$Branch <- input_all$Branch[match(Result_all$Run,input_all$Run)] 
+    Qo_all$Branch <- input_all$Branch[match(Qo_all$Run,input_all$Run)] 
+    
+    ##### GP TO FIX XXXXXXX-------
+    # OpeningTotalSection<-sum(Structures$Openings[[Structure_Ind]]$Width[1:(N_opening-1)]*(Structures$Openings[[Structure_Ind]]$TopLevel[1:(N_opening-1)]-Structures$Openings[[Structure_Ind]]$BaseLevel[1:(N_opening-1)]))
+    # 
+    # Clogging <- Structures$Openings[[Structure_Ind]] %>%
+    #   select(Number,Width,BaseLevel,TopLevel,SideAngle) %>%
+    #   mutate(A = case)
+    # 
+     #Save the file that aggregate all the results
+    save(Qo_all,input_all,Result_all,file=paste0("RdataResult_Evt-",EventName,"_Structure_@-",StructureName,".RData"))
+    
     # Remove files for each singular run
     file.remove(ListFileStructure)
-    file.remove(list.files(pattern="RunInd.Rdata"))
+    file.remove(list.files(pattern="RunInd.Rdata.tmp"))
     
     #plots of synthesis multi run figures----
     if(PrintFinalPlot==FALSE)
@@ -789,18 +813,27 @@ while(PerformAnotherSimulation == "yes")
         coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)+
         labs(y="Supplied peak discharge [m3/s]",x="# of Run")
       
-      if(OnlyNormalRun)
+      if(Perform_error_propagation == FALSE)
       {
-        Caption_text <-  paste("Code version:",ModelVersion,"\n",
-                               "Parameters:"," best estimate values","\n"
-                               ,"Number of runs =",N_runs)
+        Caption_text <-  paste("Code version:",ModelVersion,
+                               # "\n",
+                               " | ",
+                               "Parameters:"," best estimate values",
+                               # "\n",
+                               " | ",
+                               "Number of runs =",N_runs)
       }else{
-        Caption_text <-  paste("Code version:",ModelVersion,"\n",
-                               "Parameters:"," uncertain values","\n"
-                               ,"Number of runs =",N_runs)
+        Caption_text <-  paste("Code version:",ModelVersion,
+                               # "\n",
+                               " | ",
+                               "Parameters:"," uncertain values",
+                               # "\n",
+                               " | ",
+                               "Number of runs =",N_runs)
       }
       
       #Save figure
+      
       png( paste0("FourPanelGraphReleasedVolume_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
       {
         pushViewport(viewport(layout = grid.layout(10,12)))
@@ -823,19 +856,30 @@ while(PerformAnotherSimulation == "yes")
       dev.off()
       
       #Multi-run time series
+      AlphaN_runs<-min(0.3,0.3*25/max(Qo_all$Run))
       {
        QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
-          geom_line(aes(y=Qi,group =Run),color="black",alpha=0.3)+
-          theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
-          labs(y = "Supplied Discharge\n [m3/s]",
+          geom_line(aes(y=Qi,group = Run
+                        ,lwd=Branch
+                        ),color="black"
+                    ,alpha=AlphaN_runs)+
+          scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
+          theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank()
+                ,legend.position = "top")+
+          labs(y = "Inlet Discharge\n [m3/s]",
                title = paste0("Time series of every runs (Event: ",EventName," & Structure: ",StructureName,")"))+
+          guides(linewidth="none")+
           theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
         
         QplotOut<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
-          geom_line(aes(y=Qo,group =Run),alpha=0.3)+
+          geom_line(aes(y=Qo,group =Run
+                        ,lwd=Branch),alpha=AlphaN_runs)+
+          scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
           theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
           labs(y = "Outlet Discharge\n [m3/s]")+
+          guides(linewidth="none")+
           theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
+# <<<<<<< HEAD
         
         
         
@@ -850,23 +894,54 @@ while(PerformAnotherSimulation == "yes")
           labs( x = "Time [h]",y = "Flow level\n [m]")
      
           
+# =======
+# 
+# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
         Vplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
-          geom_line(aes(x=Time/3600,y=V,group=Run),col="black",alpha=0.3)+
+          geom_line(aes(x=Time/3600,y=V,group=Run
+                        ,lwd=Branch),col="black"
+                    ,alpha=AlphaN_runs)+
+          scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
+          theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
+          guides(linewidth="none")+
           labs( x = "Time [h]",y = "Stored volume\n [*1000m3]")
         
+# <<<<<<< HEAD
         
         png(paste0("SyntheticTimeSerie_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
+# =======
+        Zplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
+          geom_line(aes(x=Time/3600,y=Z,lty="4",group=Run
+                        ,lwd=Branch),alpha=AlphaN_runs)+
+          geom_line(aes(x=Time/3600,y=BaseLevelJam,lty="5",group=Run
+                        ,lwd=Branch),alpha=AlphaN_runs)+
+          scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
+          # scale_colour_grey(name="Level",label=c("Flow","Basal boulder jam"))+
+          scale_linetype_manual(name="Level",label=c("Flow","Basal boulder jam"),values=c(1,4))+
+          theme(legend.direction = "horizontal"
+                ,legend.position = "bottom"
+                # ,legend.position = c(0.82,0.83),legend.background = element_rect(colour =1)
+                ,legend.box.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt")
+                )+
+          labs( x = "Time [h]",y = "Flow level\n [m]")
+        
+        png(paste0("SyntheticTimeSerie_Evt-"
+                   ,EventName
+                   ,"_Structure_n"
+                   ,Structure_Ind,"-"
+                   ,StructureName,".png")
+            , width = 16, height = 15,units="cm",res=350)
+# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
         {
-          # grid.arrange(Qplot1,Wplot1,Zplot,Vplot,nrow = 4)
-          pushViewport(viewport(layout = grid.layout(22,1) ) )
+          pushViewport(viewport(layout = grid.layout(24,1) ) )
           
           # Arrange graphs
             print(QplotIn      , vp = define_region(1:6,1))
             print(QplotOut     , vp = define_region(7:11,1))
-            print(Zplot        , vp = define_region(12:15,1))
-            print(Vplot  +  labs(caption=Caption_text)+   theme(plot.caption =  element_text(size=8.5))        
-                  , vp = define_region(16:22,1))
-          
+            print(Vplot        , vp = define_region(12:16,1))
+            print(Zplot  +  labs(caption=Caption_text)+ 
+                    theme(plot.caption =  element_text(size=8.5))        
+                  , vp = define_region(17:24,1))
         }
         dev.off()
       }
@@ -895,8 +970,16 @@ while(PerformAnotherSimulation == "yes")
   if(HEADLESS){
     PerformAnotherSimulation = "no"
   } else {
+    ListFile<-list.files()
+    #Define where to save the results
+    dlg_message(message="The simulation is finished! Show me where you want to store the results. Beware the it will overwrite existing files with same name! And do not choose the /out/ repository, it will trigger a conflict with the next simulation."
+                , type = c("ok")); SaveRep<-dlg_dir(title="Show me where you want to store the results. Beware the it will overwrite existing files with same name! And do not choose the /out/ repository, it will trigger a conflict with the next simulation.",default = getwd())$res
+    
+    file.copy(from=ListFile,to=SaveRep,overwrite = TRUE)                                                      
+    file.remove(ListFile)
+    
     #Want to perform another run
-    PerformAnotherSimulation<-dlg_message(message="The computation is finished! \n Do you want to perform another set?", type = c("yesno"))$res
+    PerformAnotherSimulation<-dlg_message(message="Ok, done. Do you want to perform another set?", type = c("yesno"))$res
   }
 }
 

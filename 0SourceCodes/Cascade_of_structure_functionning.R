@@ -58,17 +58,32 @@ Cascade_of_structure_functionning<-function(input)
     # save(Result,Qo,file=paste0("Result_Evt-",EventName,"_Structure_",Structures$Name[[which(Structures$Rank==Structure_Ind)]],".RData"))
     
     # Save a data frame with the main results of all runs as a .Rdata file
-    File.Name<-paste0("Result_Evt-",EventName,"-_Structure_@-",Structures$Name[[which(Structures$Rank==Structure_Ind)]],"-ComputedOn",lubridate::now(),".Rdata")
+    File.Name<-paste0("Result_Evt-",EventName,
+                      "-_Structure_@-",Structures$Name[[which(Structures$Rank==Structure_Ind)]],
+                      "-ComputedOn",lubridate::now(),".Rdata.tmp")
     File.Name<-str_replace_all(File.Name,":","-")
     # File.Name<-str_replace_all(File.Name," ","_")
-    save(Result,Qo,file=File.Name)
+    
+    names(input)<-c("V"
+                    ,"Qp_in"
+                    ,"PeakLag"
+                    ,"Sdep"
+                    ,paste0(c("InitialDepAtStructure"
+                              ,"InitialJamAtStructure")
+                            ,sort(rep(1:length(Structures$Name),2)))
+                    ,paste0("Nboulder"
+                            ,Boulders$Diameter_min,"_"
+                            ,Boulders$Diameter_max
+                            ,"m"))
+    
+    save(Result,Qo,input,file=File.Name)
     
   } #end of the for loop on structures
   
   #print message
-  load(file = "RunInd.Rdata")
-  if(OnlyNormalRun){Run_Ind<-Run_Ind+1}else{Run_Ind<-Run_Ind+0.5}
-  save(Run_Ind,N_runs,file = "RunInd.Rdata")
+  load(file = "RunInd.Rdata.tmp")
+  if(Perform_error_propagation){Run_Ind<-Run_Ind+0.5}else{Run_Ind<-Run_Ind+1}
+  save(Run_Ind,N_runs,file = "RunInd.Rdata.tmp")
   print(paste0("PROGRESS[",Run_Ind,"/",N_runs,"]"))
   # if(!OnlyNormalRun){print(paste0("PROGRESS[one run computed]"))}
   #Return max outlet discharge at last structure
