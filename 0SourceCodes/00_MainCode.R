@@ -703,15 +703,20 @@ while(PerformAnotherSimulation == "yes")
         Result_all<-rbind(Result_all,Result)
       }
     }
-    
+    ##### GP TO FIX XXXXXXX-------
     #Identify best estimate and upper and lower bound simulations
-    input_all <- input_all %>% mutate(Branch = case_when(V == Events$Volume_BestEstimate[Events$Name==EventName]/1000 ~ "Best estimate"
-                                                         ,V > Events$Volume_BestEstimate[Events$Name==EventName]/1000 ~ "Upper bound"
-                                                         ,V < Events$Volume_BestEstimate[Events$Name==EventName]/1000 ~ "Lower bound"
-                                                         ,TRUE ~ "Unknown"))
+    # input_all <- input_all %>% mutate(Branch = case_when(V > Events$Volume_BestEstimate[Events$Name==EventName]/1000 ~ "Upper bound"
+    #                                                      ,V < Events$Volume_BestEstimate[Events$Name==EventName]/1000 ~ "Lower bound"
+    #                                                      ,Qp_in > Events$PeakDischarge_BestEstimate[Events$Name==EventName] ~ "Upper bound"
+    #                                                      ,Qp_in < Events$PeakDischarge_BestEstimate[Events$Name==EventName] ~ "Lower bound"
+    #                                                      ,PeakLag > Events$PeakDischarge_BestEstimate[Events$Name==EventName] ~ "Upper bound"
+    #                                                      ,PeakLag < Events$PeakDischarge_BestEstimate[Events$Name==EventName] ~ "Lower bound"
+    #                                                      ,Sdep < Events$DepositionSlope_BestEstimate[Events$Name==EventName] ~ "Upper bound"
+    #                                                      ,Sdep > Events$DepositionSlope_BestEstimate[Events$Name==EventName] ~ "Lower bound"
+    #                                                      ,TRUE ~ "Unknown"))
     
-    Result_all$Branch <- input_all$Branch[match(Result_all$Run,input_all$Run)] 
-    Qo_all$Branch <- input_all$Branch[match(Qo_all$Run,input_all$Run)] 
+    # Result_all$Branch <- input_all$Branch[match(Result_all$Run,input_all$Run)] 
+    # Qo_all$Branch <- input_all$Branch[match(Qo_all$Run,input_all$Run)] 
     
     ##### GP TO FIX XXXXXXX-------
     # OpeningTotalSection<-sum(Structures$Openings[[Structure_Ind]]$Width[1:(N_opening-1)]*(Structures$Openings[[Structure_Ind]]$TopLevel[1:(N_opening-1)]-Structures$Openings[[Structure_Ind]]$BaseLevel[1:(N_opening-1)]))
@@ -860,7 +865,7 @@ while(PerformAnotherSimulation == "yes")
       {
        QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
           geom_line(aes(y=Qi,group = Run
-                        ,lwd=Branch
+                        # ,lwd=Branch
                         ),color="black"
                     ,alpha=AlphaN_runs)+
           scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
@@ -873,15 +878,14 @@ while(PerformAnotherSimulation == "yes")
         
         QplotOut<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
           geom_line(aes(y=Qo,group =Run
-                        ,lwd=Branch),alpha=AlphaN_runs)+
+                        # ,lwd=Branch
+                        ),alpha=AlphaN_runs)+
           scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
           theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
           labs(y = "Outlet Discharge\n [m3/s]")+
           guides(linewidth="none")+
           theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
-# <<<<<<< HEAD
-        
-        
+
         
         Zplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
           geom_line(aes(x=Time/3600,y=Z,lty="4",group=Run),alpha=0.3)+
@@ -892,29 +896,25 @@ while(PerformAnotherSimulation == "yes")
           theme(legend.position = c(0.82,0.83),legend.direction = "horizontal"
               ,legend.background = element_rect(colour =1),legend.box.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))+
           labs( x = "Time [h]",y = "Flow level\n [m]")
-     
-          
-# =======
-# 
-# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
+
         Vplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
           geom_line(aes(x=Time/3600,y=V,group=Run
-                        ,lwd=Branch),col="black"
+                        # ,lwd=Branch
+                        ),col="black"
                     ,alpha=AlphaN_runs)+
           scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
           theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
           guides(linewidth="none")+
           labs( x = "Time [h]",y = "Stored volume\n [*1000m3]")
         
-# <<<<<<< HEAD
-        
         png(paste0("SyntheticTimeSerie_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
-# =======
         Zplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
           geom_line(aes(x=Time/3600,y=Z,lty="4",group=Run
-                        ,lwd=Branch),alpha=AlphaN_runs)+
+                        # ,lwd=Branch
+                        ),alpha=AlphaN_runs)+
           geom_line(aes(x=Time/3600,y=BaseLevelJam,lty="5",group=Run
-                        ,lwd=Branch),alpha=AlphaN_runs)+
+                        # ,lwd=Branch
+                        ),alpha=AlphaN_runs)+
           scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
           # scale_colour_grey(name="Level",label=c("Flow","Basal boulder jam"))+
           scale_linetype_manual(name="Level",label=c("Flow","Basal boulder jam"),values=c(1,4))+
@@ -931,7 +931,6 @@ while(PerformAnotherSimulation == "yes")
                    ,Structure_Ind,"-"
                    ,StructureName,".png")
             , width = 16, height = 15,units="cm",res=350)
-# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
         {
           pushViewport(viewport(layout = grid.layout(24,1) ) )
           
@@ -972,14 +971,14 @@ while(PerformAnotherSimulation == "yes")
   } else {
     ListFile<-list.files()
     #Define where to save the results
-    dlg_message(message="The simulation is finished! Show me where you want to store the results. Beware the it will overwrite existing files with same name! And do not choose the /out/ repository, it will trigger a conflict with the next simulation."
-                , type = c("ok")); SaveRep<-dlg_dir(title="Show me where you want to store the results. Beware the it will overwrite existing files with same name! And do not choose the /out/ repository, it will trigger a conflict with the next simulation.",default = getwd())$res
+    dlg_message(message="The simulation is finished! Show me where you want to store the results. Beware the it will overwrite existing files with same name! If you choose the /out/ repository, it will erase the previous simulation."
+                , type = c("ok")); SaveRep<-dlg_dir(title="The simulation is finished! Show me where you want to store the results. Beware the it will overwrite existing files with same name! If you choose the /out/ repository, it will erase the previous simulation.",default = getwd())$res
     
     file.copy(from=ListFile,to=SaveRep,overwrite = TRUE)                                                      
     file.remove(ListFile)
     
     #Want to perform another run
-    PerformAnotherSimulation<-dlg_message(message="Ok, done. Do you want to perform another set?", type = c("yesno"))$res
+    PerformAnotherSimulation<-dlg_message(message="Ok, done. Do you want to perform another set of simulations?", type = c("yesno"))$res
   }
 }
 

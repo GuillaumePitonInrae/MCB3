@@ -1,6 +1,0 @@
-Variable	Value
-Structure	pdd 1
-InitialCondition	Empty
-
-
-

@@ -1,2 +1,0 @@
-width	slope
-13	0.1

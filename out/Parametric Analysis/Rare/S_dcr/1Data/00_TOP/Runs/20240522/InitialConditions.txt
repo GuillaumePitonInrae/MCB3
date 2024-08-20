@@ -1,4 +1,0 @@
-Name	DepositHeight_min	DepositHeight_BestEstimate	DepositHeight_max	JammingHeight_min	JammingHeight_BestEstimate	JammingHeight_max
-Empty	0	0.01	0.02	0	0.01	0.02
-2 m jam and deposit	2	2.01	2.02	2	2.01	2.02
-2 m jam, no deposit	0	0.01	0.02	2	2.01	2.02

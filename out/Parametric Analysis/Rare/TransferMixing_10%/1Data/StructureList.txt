@@ -1,8 +1,0 @@
-Variable	Value
-Structure	pdd 1
-InitialCondition	Empty
-TransferDownstream	Mixing 8000
-Structure	pdd 2
-InitialCondition	Empty
-
-

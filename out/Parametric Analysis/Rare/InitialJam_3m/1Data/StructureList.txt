@@ -1,6 +1,0 @@
-Variable	Value
-Structure	pdd 1
-InitialCondition	3 m jam no deposit
-
-
-

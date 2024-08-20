@@ -1,3 +1,0 @@
-Number,Type,Width,BaseLevel,TopLevel,SideAngle,Comment
-1,slot,13,722.5,726.4,90,section pont
-2,slit,100,727.5,727.5,90,Crest

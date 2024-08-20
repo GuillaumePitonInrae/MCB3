@@ -1,5 +1,0 @@
-Number,Type,Width,BaseLevel,TopLevel,SideAngle,Comment
-1,slit,5,804.5,814,90,fente
-2,slit,12,809.3,809.3,90,slit 2
-3,weir,0,814.9,816.5,10.3,Crest
-

@@ -1,9 +1,0 @@
-Variable	Value
-Structure	UDB
-InitialCondition	Empty
-TransferDownstream	Instantaneous
-Structure	LDB
-InitialCondition	Empty
-TransferDownstream	Instantaneous
-Structure	UpperBridge
-InitialCondition	Empty

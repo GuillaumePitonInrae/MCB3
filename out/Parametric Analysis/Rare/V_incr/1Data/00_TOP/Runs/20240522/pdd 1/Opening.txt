@@ -1,5 +1,0 @@
-Number,Type,Width,BaseLevel,TopLevel,SideAngle,VerticalClogging,LateralClogging,Comment
-1,slit,5,899,906.25,90,0,0,fente
-2,weir,5,906.25,908.25,10,0,0,déversoir 1
-3,weir,18,909,901,45,0,0,déversoir 2
-4,weir,50,910.45,911.45,90,0,0,Crête

@@ -1,8 +1,0 @@
-Variable	Value
-Structure	pdd 1
-InitialCondition	Empty
-TransferDownstream	Instantaneous
-Structure	pdd 2
-InitialCondition	Empty
-
-
