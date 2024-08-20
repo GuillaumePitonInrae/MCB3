@@ -1,6 +1,9 @@
 Variable	Value
 Structure	pdd 1
-InitialCondition	3 m jam no deposit
-
-
-
+InitialCondition	Empty
+TransferDownstream	Mixing 5600
+Structure	pdd 2
+InitialCondition	Empty
+TransferDownstream	Mixing 5000
+Structure	pont 1
+InitialCondition	Empty

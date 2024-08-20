@@ -75,7 +75,8 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
           # ,plot.margin = unit(c(0.1,0.1,0.1,0.5), "cm")
     )
   
-  Zplot<-ggplot(Reservoir)+theme_bw(base_size = 9)+
+  Zplot<-ggplot(Reservoir,aes(x=Time/3600))+
+    theme_bw(base_size = 9)+ 
     geom_hline(aes(yintercept = OpeningMinBaseLevel,colour="1",lty="1"))+
     geom_hline(aes(yintercept = SpillwayLevel,colour="2",lty="2"))+
     geom_hline(aes(yintercept = CrestLevel,colour="3",lty="3"))+
@@ -91,27 +92,18 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
                                                ,"Flow"
                                                ,"Boulder jam at opening #1")
                           ,values=c(2,2,3,1,4))+
-# <<<<<<< HEAD
-    # annotate(geom = "text", x = 1*Duration/3600, y = max(storageElevationCurve$h,na.rm=TRUE)
-    #          ,vjust=1,hjust=1
-    #          , label = paste("Max level reached =",round(max(Reservoir$Z),1),"m.a.s.l.")
-    # )+
-    # theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
-    # coord_cartesian(xlim = c(0,1*Duration/3600),ylim=c(OpeningMinBaseLevel,max(storageElevationCurve$h,na.rm=TRUE)))+
-    labs( x = " ",y = "Flow level [m]")+
-# =======
+    theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
+     labs( x = " ",y = "Flow level [m]")+
     annotate(geom = "text", x = 1*Duration/3600, y = max(storageElevationCurve$h,na.rm=TRUE)
              ,vjust=1,hjust=1
              , label = paste("Max level reached =",round(max(Reservoir$Z),1),"m.a.s.l.")
     )+
-    # theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
     coord_cartesian(xlim = c(0,1*Duration/3600),ylim=c(OpeningMinBaseLevel,max(storageElevationCurve$h,na.rm=TRUE)))+
     labs( x = "Time [h]",y = "Flow level [m]"
-# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
           # ,caption=paste("(d)")
           # ,subtitle = paste("Max level at barrier =",round(max(Reservoir$Z),1),"m.a.s.l.")
     )+
-    coord_cartesian(xlim = c(0, max(Reservoir$Time) / 3600), ylim = c(OpeningMinBaseLevel, max(storageElevationCurve$h, na.rm = TRUE))) +
+    # coord_cartesian(xlim = c(0, max(Reservoir$Time) / 3600), ylim = c(OpeningMinBaseLevel, max(storageElevationCurve$h, na.rm = TRUE))) +
     theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm")
           # ,plot.margin = unit(c(0.1,0.1,0.1,0.4), "cm")
     )
@@ -125,7 +117,6 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
                              ,"| Trapped:",round(Reservoir$V[(N_TimeSteps-1)],0)/1000,"Mm3"
                              ,"| Released:",round(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000,3),"Mm3"
                              ,"| Buffering:",round(100-(Volume/10^6-Reservoir$V[(N_TimeSteps-1)]/1000)/(Volume/10^6)*100,0),"%")
-# <<<<<<< HEAD
     )+ 
     labs( x = "",y = "Volume [*1000m3]" 
     )+
@@ -166,13 +157,12 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     scale_fill_viridis_d(direction=-1) +  # Use the colorblind-friendly viridis color palette
     labs(x = "Time [h]", y = "Number of Boulders Passing", fill="Boulder Class") +
     coord_cartesian(xlim = c(0,1*Duration/3600))+#TEST
-    theme(legend.position = ('top'))
+    theme(legend.position = "bottom")
   
   # Bplot 
   # plot(Bplot)
   ########################
-# =======
-#     )+
+    # )+
     theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
     labs( x = "Time [h]",y = "Volume [*1000m3]"
           #,caption=paste("(e)")
@@ -184,8 +174,7 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
     theme(legend.margin = unit(c(0.1,0.1,0.1,0.1), "cm")
           # ,plot.margin = unit(c(0.1,0.1,0.1,0.3), "cm")
           )
-# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
-  
+
   #Plot name definition with date and hour
   Plot.Name<-paste0("TimeSeriesOfEvent_",EventName
                     ,"_forStructure_",StructureName
@@ -212,16 +201,14 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
               theme(plot.title = element_text(size=8.5))
             , vp = define_region(1:6,1))
       print(VclogPlot, vp = define_region(7:10,1))
-# <<<<<<< HEAD
       print(Zplot, vp = define_region(11:16,1))
       print(Vplot, vp = define_region(17:22,1))
       print(Bplot, vp = define_region(23:28, 1))
       
-# =======
+
 
       print(Vplot, vp = define_region(11:15,1))
       print(Zplot, vp = define_region(16:22,1))
-# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
     }else{
       print(Qplot+labs(title=paste0("Modelling of structure: ",StructureName,", for event: ",EventName,"\n"
                                     ,"Model version: ",ModelVersion,"\n"
@@ -229,15 +216,14 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
             , vp = define_region(1:5,1))
       print(VclogPlot, vp = define_region(6:9,1))
       print(WclogPlot, vp = define_region(10:13,1))
-# <<<<<<< HEAD
       print(Zplot, vp = define_region(14:17,1))
       print(Vplot, vp = define_region(18:22,1))
       print(Bplot, vp = define_region(23:28, 1))
       
-# =======
+
       print(Vplot, vp = define_region(14:16,1))
       print(Zplot, vp = define_region(17:22,1))
-# >>>>>>> 15112464c41284570c66f47d5d3401cd4fea616d
+
     }
   }
   dev.off()
