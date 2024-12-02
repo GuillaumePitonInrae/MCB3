@@ -40,11 +40,11 @@ if(HEADLESS) {
   args<-commandArgs(trailingOnly = TRUE)
 }
 
-# For Guillaume P. only, to emulate the headless mode under RStudio:
-# HEADLESS = TRUE
-# rootDir<-"D:/Private/05_PROJETS/2023_DFbuffering/4Simu/DFbuffering"
-# args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
-# setwd(paste0(rootDir,"/0SourceCodes"))
+#For Guillaume P. only, to emulate the headless mode under RStudio:
+HEADLESS = TRUE
+rootDir<-"D:/MCB3/4Simu/DFbuffering"
+args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
+setwd(paste0(rootDir,"/0SourceCodes"))
 
 # For Hilary S. only, to emulate the headless mode under RStudio:
 # HEADLESS = FALSE
@@ -85,7 +85,7 @@ suppressPackageStartupMessages({
   library(dplyr) #for data manipulation
 })
 #Model version
-ModelVersion <- "MCB³ V1.0"
+ModelVersion <- "MCB³ (V1.1)"
 
 #' 
 #' If HEADLESS = TRUE, the user is here asked to show the path where source codes are saved. Then, the sub-routines are loaded
@@ -97,8 +97,8 @@ if(!HEADLESS)
               , type = c("ok")) ; SourceCodeRepository<-dlg_dir(title="Show me where are stored the source codes (Repository \"/0SourceCodes\")"
                                                                 ,default = getwd())$res
               
-  #Set this repository as working repository
-  setwd(SourceCodeRepository)
+              #Set this repository as working repository
+              setwd(SourceCodeRepository)
 }
 
 #Load the source codes
@@ -126,6 +126,7 @@ if(!HEADLESS){
               
               #Load boulder list
               Boulders<-read.csv(paste0(InputDataRepository,"/RangeOfBoulders.txt"),sep="\t")
+                
               #Load event features
               Events<-read.csv(paste0(InputDataRepository,"/Events.txt"),sep="\t")
               
@@ -150,7 +151,7 @@ if(!HEADLESS){
               Structures$InitialConditions<-InitialConditions[match(Structure_organisation$InitialCondition
                                                                     ,InitialConditions$Name),]
 }#else{
-  #SourceCodeRepository<-paste0(MainRep,"/0SourceCodes/")
+#SourceCodeRepository<-paste0(MainRep,"/0SourceCodes/")
 #}
 #Set this repository as working repository
 #setwd(SourceCodeRepository)
@@ -164,6 +165,11 @@ for(Structure_Ind in (1:length(Structures$Name)))
                                                                                 ,Structures$width[[Structure_Ind]]
                                                                                 ,Structures$slope[[Structure_Ind]])
   }
+  #Reorder the Storage Elevation such that they are in ascending order
+  Structures$StorageElevation[[Structure_Ind]]<-Structures$StorageElevation[[Structure_Ind]][order(Structures$StorageElevation[[Structure_Ind]]$Z),]
+  
+  #reorder Opening by increasing base level to have the spillway as last opening
+  Structures$Openings[[Structure_Ind]]<-Structures$Openings[[Structure_Ind]][order(Structures$Openings[[Structure_Ind]]$BaseLevel),]
   
   #Inform the user about the accuracy of the level computation
   #Define model level accuracy for convergence, taken as 0.01*elevation difference between crest and base level
@@ -190,6 +196,9 @@ for(Structure_Ind in (1:length(Structures$Name)))
   print(paste0("The computation at structure: ",Structures$Name[[which(Structures$Rank==Structure_Ind)]]," is done with a level accuracy of ",ModelLevelAccuracy," m, i.e. about one percent of the structure height."))
   
 }
+
+#Order the Boulder table from bigger sizes
+Boulders<-Boulders[match(sort(Boulders$Diameter_min,decreasing =TRUE), Boulders$Diameter_min),]
 
 #Define the repository where one want to record the results
 if(HEADLESS) {
@@ -235,8 +244,8 @@ if(HEADLESS) {
 #' ### Synthetic plots
 #' If only a few runs are launched, one plot for each run is prepared (time series of discharge, clogging, flow level and volume). If many runs are launched, a few plots gather the main results in a synthetic way.
 #' 
-## -----------------------------------------------------------------------------
-#Main loop within which each set of run is performed
+## 
+#Main loop within which each set of run is performed----
 PerformAnotherSimulation <- "yes"
 while(PerformAnotherSimulation == "yes")
 {
@@ -244,7 +253,7 @@ while(PerformAnotherSimulation == "yes")
   if(!HEADLESS){
     #Select the type of approach----
     Perform_error_propagation <-dlg_message(message="Press \"Yes\" to perform a full uncertainty propagation analysis \n Or press \"No\" to run normal runs (using best estimates of the input data)"
-                               , type = c("yesno"))$res
+                                            , type = c("yesno"))$res
     
     # Perform_error_propagation <-"yes"
     if(Perform_error_propagation =="yes"){ Perform_error_propagation <-TRUE}else{ Perform_error_propagation <-FALSE}
@@ -287,9 +296,9 @@ while(PerformAnotherSimulation == "yes")
   {
     if(N_runs <= 10){ PrintFinalPlot <- TRUE }else{ PrintFinalPlot <- FALSE} #no plot if more than 10 runs
     # if(!HEADLESS){
-      #Saving synthesis figure for each run?
-      # PrintFinalPlot<-dlg_message(message="Do you want to print a synthesis plot for each run (hydrographs, flow level, volume stored) in a .png file?", type = c("yesno"))$res
-      # if(PrintFinalPlot=="yes"){ PrintFinalPlot<-TRUE}else{ PrintFinalPlot<-FALSE}
+    #Saving synthesis figure for each run?
+    # PrintFinalPlot<-dlg_message(message="Do you want to print a synthesis plot for each run (hydrographs, flow level, volume stored) in a .png file?", type = c("yesno"))$res
+    # if(PrintFinalPlot=="yes"){ PrintFinalPlot<-TRUE}else{ PrintFinalPlot<-FALSE}
     # }
   }else{PrintFinalPlot<-FALSE} #no plot for each run if error propagation by possibility analysis
   
@@ -345,7 +354,7 @@ while(PerformAnotherSimulation == "yes")
     #If only normal runs, we only use the best estimates
     BoulderGenerationMode<-"Best estimate values"
     
-
+    
     #Create input data according to the EventName and adjustement option
     input<-Create_inlet_input(EventName,AdjustEventManually,Structures,Boulders)
     Run_Ind<-0
@@ -363,7 +372,7 @@ while(PerformAnotherSimulation == "yes")
       # print(paste0("PROGRESS[",Run_Ind,"/",N_runs,"]"))
       
     }
-
+    
   }else{# end of the normal run condition
     
     BoulderGenerationMode<-"Error propagation"
@@ -381,7 +390,7 @@ while(PerformAnotherSimulation == "yes")
         &&
         Events$Volume_BestEstimate[Event_Ind]==Events$Volume_max[Event_Ind]))
     {
-        input[[1]]=CREATE_INPUT(
+      input[[1]]=CREATE_INPUT(
         name="Volume \n [*1000m3]",
         type="fixed",
         param= Events$Volume_BestEstimate[Event_Ind]/10^3,  
@@ -399,7 +408,7 @@ while(PerformAnotherSimulation == "yes")
                                         "Volume")/10^3,
         monoton = "incr"
       )
-
+      
     }
     
     #Peak discharge in m3/s
@@ -495,7 +504,7 @@ while(PerformAnotherSimulation == "yes")
       
       #If min = best estimate = max, set the paramter as "fixed"
       if((DepositHeight_BestEstimate  == DepositHeight_max)  
-          &&
+         &&
          (DepositHeight_BestEstimate  == DepositHeight_min))
       {
         input[[5+(Structure_Ind-1)*2]]=CREATE_INPUT(
@@ -588,45 +597,58 @@ while(PerformAnotherSimulation == "yes")
           monoton = "decr")
       }
     }
+    #### Prepare input for the clogging analysis -----
+    input_for_clogging<-input
     
-    # #Change the monotony
-    # input_for_clogging<-input
-    # input_for_clogging[[4]]$monoton<-"decr"
-    # input_for_clogging[[5]]$monoton<-"decr"
-    # input_for_clogging[[125]]$monoton<-"decr"
-    # input_for_clogging[[128]]$monoton<-"decr"
+    #Change the monotony
+    ##Initial deposit level and initial clogging level, set to 0 if missing
+    for(Structure_Ind in (1:length(Structures$Name)))
+    {
+      #Initial jam
+      input_for_clogging[[5+(Structure_Ind-1)*2]]$monoton<-"incr"
+      input_for_clogging[[5+(Structure_Ind-1)*2+1]]$monoton<-"incr"
+    }
     
+    ###Boulders
+    for(i in (1:length(Boulders[,1])))
+    {
+      #Boulder class i
+      input_for_clogging[[(4+length(Structures$Name)*2+i)]]$monoton <- "incr"
+    }
     
     #     COMPUTATION----
     
     ####CREATION OF THE DISTRIBUTIONS ASSOCIATED TO THE PARAMETERS
     input=CREATE_DISTR(input)
+    input_for_clogging=CREATE_DISTR(input_for_clogging)
     
     ####VISU INPUT
     png(paste0("DistributionsInputParametersPossibilityAnalysis_Evt-",EventName,".png")
         , width = 22, height = 24
         ,units="cm"
         ,res=350
-        )
+    )
     {PLOT_INPUTnew(input)}
     dev.off()
-
+    
     # ### OPTIMZATION CHOICES
     choice_opt=NULL #no optimization needed because monotony known
     param_opt=NULL
-
-    #Hybrid uncertainty propagation on released volume----
+    
+    
+    ###HYBRID UNCERTAINTY PROPAGATION ON VOLUME AND RELEASE DISCHARGE----
     #Initialize run number
     Run_Ind<-0
     save(Run_Ind,N_runs,file = "RunInd.Rdata.tmp")
-    ###HYBRID UNCERTAINTY PROPAGATION
-    Rslt_Uncertain.Boulder.Number<-PROPAG(N=N_runs,input
-                                          ,Cascade_of_structure_functionning
-                                          ,choice_opt,param_opt,mode="IRS")
+    print("Launching first part of the uncertainty propagation focusing on released volume and discharge.")
+    Rslt_Propag_VandQpeak<-PROPAG(N=N_runs,input
+                                  ,Cascade_of_structure_functionning
+                                  ,choice_opt,param_opt,mode="IRS")
+    
     # Arrange results in a table
-    Rslt_Uncertain.Boulder.Number<-data.frame(P=seq(0,1,length.out = N_runs)
-                                              ,Min=sort(Rslt_Uncertain.Boulder.Number[1,])
-                                              ,Max=sort(Rslt_Uncertain.Boulder.Number[2,]))
+     Rslt_Propag_VandQpeak<-data.frame(P=seq(0,1,length.out = N_runs)
+                                              ,Min=sort( Rslt_Propag_VandQpeak[1,],na.last = TRUE)
+                                              ,Max=sort( Rslt_Propag_VandQpeak[2,],na.last = FALSE))
     #       
     ###################Plot Pbox----
     #       
@@ -638,9 +660,9 @@ while(PerformAnotherSimulation == "yes")
       geom_hline(aes(yintercept=Events$PeakDischarge_max[Event_Ind]),lty=2)+
       annotate(geom = "text", x = 0.5, y = Events$PeakDischarge_BestEstimate[Event_Ind]
                ,vjust=(-0.5), label = "Supply (Best. Est.)",srt=90)+
-      geom_ribbon(data=Rslt_Uncertain.Boulder.Number,aes(x =P,ymin=Min,ymax=Max),alpha=0.3,lwd=1)+
-      geom_line(data=Rslt_Uncertain.Boulder.Number,aes(y =Min ,x=P,colour="1"),lwd=1)+
-      geom_line(data=Rslt_Uncertain.Boulder.Number,aes(y =Max ,x=P,colour="2"),lwd=1)+
+      geom_ribbon(data= Rslt_Propag_VandQpeak,aes(x =P,ymin=Min,ymax=Max),alpha=0.3,lwd=1)+
+      geom_line(data= Rslt_Propag_VandQpeak,aes(y =Min ,x=P,colour="1"),lwd=1)+
+      geom_line(data= Rslt_Propag_VandQpeak,aes(y =Max ,x=P,colour="2"),lwd=1)+
       scale_colour_manual(name="Bounding Cumulated Distribution Functions (CDF)"
                           ,values=c("lightblue","darkblue")
                           ,labels=c("Lower bound","Upper bound"))+
@@ -654,10 +676,13 @@ while(PerformAnotherSimulation == "yes")
     #Save figure
     ggsave(paste0("ReleasedPeakDischarge_Evt-",EventName,"_FromErrorPropagation.png")
            , width = 16.5, height = 7,units="cm")
-
+    
     #Save results
-    # save(Rslt_Uncertain.Boulder.Number,file=paste0("PboxDownstreamReleasedPeakDischarge_Evt-",EventName,".RData"))
-  }#end of the uncertainty propagation condition
+    # save( Rslt_Propag_VandQpeak,file=paste0("PboxDownstreamReleasedPeakDischarge_Evt-",EventName,".RData"))
+  
+    
+    }#end of the uncertainty propagation condition on volume and peak discharge
+  
   
   #Rename file names
   ListFile1<-list.files(pattern="computedOn")#Figure
@@ -670,7 +695,7 @@ while(PerformAnotherSimulation == "yes")
     }
     if(length(ListFile2)>0)
     {
-      # file.rename(ListFile2,paste0("Rdata",substr(ListFile2,1,nchar(ListFile2)-36),"_run",rep((1:Run_Ind),max(Structures$Rank)),".Rdata"))
+      file.rename(ListFile2,paste0("Rdata",substr(ListFile2,1,nchar(ListFile2)-36),"_run",rep((1:Run_Ind),max(Structures$Rank)),".Rdata"))
     }
   }
   # rm(ListFile1,ListFile2)
@@ -688,9 +713,16 @@ while(PerformAnotherSimulation == "yes")
     {
       #load results of the structure
       load(ListFileStructure[File_Ind])
-      Qo$Run<-File_Ind
-      input$Run<-File_Ind
-      Result$Run<-File_Ind
+      #Hyrisk launch first lower bound and then upper bound simulations
+      Run_Ind<-unique(Qo$Run)
+      Branch<-  if(Perform_error_propagation == TRUE){if(round(File_Ind/2,0)==File_Ind/2){"Upper"}else{"Lower"}}else{"Intermediate"}
+      #record the indice and branch
+      # Qo$Run<-File_Ind
+      Qo$Branch<-Branch
+      input$Run<-Run_Ind
+      input$Branch<-Branch
+      Result$Run<-Run_Ind
+      Result$Branch<-Branch
       if(File_Ind == 1)
       {
         Qo_all <-Qo 
@@ -703,258 +735,618 @@ while(PerformAnotherSimulation == "yes")
         Result_all<-rbind(Result_all,Result)
       }
     }
-    ##### GP TO FIX XXXXXXX-------
-    #Identify best estimate and upper and lower bound simulations
-    # input_all <- input_all %>% mutate(Branch = case_when(V > Events$Volume_BestEstimate[Events$Name==EventName]/1000 ~ "Upper bound"
-    #                                                      ,V < Events$Volume_BestEstimate[Events$Name==EventName]/1000 ~ "Lower bound"
-    #                                                      ,Qp_in > Events$PeakDischarge_BestEstimate[Events$Name==EventName] ~ "Upper bound"
-    #                                                      ,Qp_in < Events$PeakDischarge_BestEstimate[Events$Name==EventName] ~ "Lower bound"
-    #                                                      ,PeakLag > Events$PeakDischarge_BestEstimate[Events$Name==EventName] ~ "Upper bound"
-    #                                                      ,PeakLag < Events$PeakDischarge_BestEstimate[Events$Name==EventName] ~ "Lower bound"
-    #                                                      ,Sdep < Events$DepositionSlope_BestEstimate[Events$Name==EventName] ~ "Upper bound"
-    #                                                      ,Sdep > Events$DepositionSlope_BestEstimate[Events$Name==EventName] ~ "Lower bound"
-    #                                                      ,TRUE ~ "Unknown"))
     
-    # Result_all$Branch <- input_all$Branch[match(Result_all$Run,input_all$Run)] 
-    # Qo_all$Branch <- input_all$Branch[match(Qo_all$Run,input_all$Run)] 
+    ##### Computation of the residual opening, i.e. 1-clogging ratio.----
+    # Clogging of slots is systematically computed,
+    # Clogging of weir is systematically  NOT   computed,
+    # Slits are included only in barriers, not in bridges.
     
-    ##### GP TO FIX XXXXXXX-------
-    # OpeningTotalSection<-sum(Structures$Openings[[Structure_Ind]]$Width[1:(N_opening-1)]*(Structures$Openings[[Structure_Ind]]$TopLevel[1:(N_opening-1)]-Structures$Openings[[Structure_Ind]]$BaseLevel[1:(N_opening-1)]))
-    # 
-    # Clogging <- Structures$Openings[[Structure_Ind]] %>%
-    #   select(Number,Width,BaseLevel,TopLevel,SideAngle) %>%
-    #   mutate(A = case)
-    # 
-     #Save the file that aggregate all the results
-    save(Qo_all,input_all,Result_all,file=paste0("RdataResult_Evt-",EventName,"_Structure_@-",StructureName,".RData"))
+    #initialisation
+    ResidualSection <- rep(0,length(Result_all$Run))
+    for(Opening_ind in (1:N_opening))
+    {
+      #For bridges we count only slots as opening, i.e. below the deck, slits and weirs are for the deck and other upper side flow sections
+      if(Structures$Openings[[Structure_Ind]]$Type[Opening_ind] == "slot")
+      {
+        #Compute residual width in the opening
+        ResidualSection_openingWidth <- rep(Structures$Openings[[Structure_Ind]]$Width[Opening_ind],length(ResidualSection)) - Result_all[,which(names(Result_all) == paste0("W",Opening_ind))]
+        #Compute residual height in the opening
+        ResidualSection_openingHeight <- rep(Structures$Openings[[Structure_Ind]]$TopLevel[Opening_ind],length(ResidualSection)) - Result_all[,which(names(Result_all) == paste0("Z",Opening_ind))] - rep(Structures$Openings[[Structure_Ind]]$BaseLevel[Opening_ind],length(ResidualSection))
+        #remove eventual negative value
+        ResidualSection_openingWidth[ResidualSection_openingWidth<0]<-0
+        ResidualSection_openingHeight[ResidualSection_openingHeight<0]<-0
+        #Add residual section of opening i
+        ResidualSection <- ResidualSection + ResidualSection_openingWidth * ResidualSection_openingHeight
+      }else{
+        #For barrier we also count the slits, but only those having a top level > base level
+        if(Structures$Openings[[Structure_Ind]]$Type[Opening_ind] == "slit" && Structures$Type[[Structure_Ind]]=="barrier")
+        {
+          #Compute residual width in the opening
+          ResidualSection_openingWidth <- Structures$Openings[[Structure_Ind]]$Width[Opening_ind]
+          #Compute residual height in the opening
+          ResidualSection_openingHeight <- rep(Structures$Openings[[Structure_Ind]]$TopLevel[Opening_ind],length(ResidualSection)) - Result_all[,which(names(Result_all) == paste0("Z",Opening_ind))] - rep(Structures$Openings[[Structure_Ind]]$BaseLevel[Opening_ind],length(ResidualSection))
+          #remove eventual negative value
+          ResidualSection_openingHeight[ResidualSection_openingHeight<0]<-0
+          #Add residual section of opening i
+          ResidualSection <- ResidualSection + ResidualSection_openingWidth * ResidualSection_openingHeight
+        }
+      }
+    }
+    
+    SlotsAndSlits <- Structures$Openings[[Structure_Ind]] %>% filter(Type == "slot" | Type == "slit")
+    OpeningTotalSection<-sum(SlotsAndSlits$Width*(SlotsAndSlits$TopLevel-SlotsAndSlits$BaseLevel))
+    # Record the residual fration of the opening
+    Result_all$ResidualOpening <- ResidualSection / OpeningTotalSection
+    
+    
+    #Save the file that aggregate all the results
+    save(Qo_all,input_all,Result_all,file=paste0("RdataResult_Evt-",EventName,"_Structure_",StructureName,".RData"))
     
     # Remove files for each singular run
     file.remove(ListFileStructure)
-    file.remove(list.files(pattern="RunInd.Rdata.tmp"))
+ }# end of the structure loop
+  
+  #### SECOND UNCERTAINTY PROPAGATION ON FLOW LEVEL AND CLOGGING RATE----
+  ###HYBRID UNCERTAINTY PROPAGATION 
+  if(Perform_error_propagation == TRUE)
+  {
+    print("Launching second part of the uncertainty propagation focusing on flow level and clogging rate.")
+    Rslt_Propag_ZandClogging<-PROPAG(N=N_runs,input_for_clogging
+                                     ,Cascade_of_structure_functionning
+                                     ,choice_opt,param_opt,mode="IRS")
     
-    #plots of synthesis multi run figures----
+    #Rename file names
+    ListFile1<-list.files(pattern="computedOn")#Figure
+    ListFile2<-list.files(pattern="ComputedOn")#Rdata
+    if(Perform_error_propagation == FALSE)
+    {
+      if(length(ListFile1)>0)
+      {
+        file.rename(ListFile1,paste0("Figure",substr(ListFile1,1,nchar(ListFile1)-34),"_run",rep((1:Run_Ind),max(Structures$Rank)),".png"))  
+      }
+      if(length(ListFile2)>0)
+      {
+        file.rename(ListFile2,paste0("Rdata",substr(ListFile2,1,nchar(ListFile2)-36),"_run",rep((1:Run_Ind),max(Structures$Rank)),".Rdata"))
+      }
+    }
+    # rm(ListFile1,ListFile2)
+    
+    for(Structure_Ind in 1:length(Structures$Name))
+    {
+      StructureName<-Structures$Name[[which(Structures$Rank==Structure_Ind)]]
+      ListFileStructure<-list.files(pattern = paste0("Structure_@-",StructureName))#Rdata
+      for(File_Ind in (1:length(ListFileStructure)))
+      {
+        #load results of the structure
+        load(ListFileStructure[File_Ind])
+        #Hyrisk launch first lower bound and then upper bound simulations
+        Branch<-  if(Perform_error_propagation == TRUE)
+        {if(round(File_Ind/2,0)==File_Ind/2){"Upper"}else{"Lower"}
+          }else{"Intermediate"}
+        #record the indice and branch
+        Qo$Run<-File_Ind
+        Qo$Branch<-Branch
+        input$Run<-File_Ind
+        input$Branch<-Branch
+        Result$Run<-File_Ind
+        Result$Branch<-Branch
+        if(File_Ind == 1)
+        {
+          Qo_all <-Qo 
+          input_all<-data.frame(input)
+          Result_all<-Result
+          
+        }else{
+          Qo_all <-rbind(Qo_all,Qo) 
+          input_all<-rbind(input_all,data.frame(input))
+          Result_all<-rbind(Result_all,Result)
+        }
+      }
+      
+      ##### Computation of the residual opening, i.e. 1-clogging ratio.----
+      # Clogging of slots is systematically computed,
+      # Clogging of weir is systematically  NOT   computed,
+      # Slits are included only in barriers, not in bridges.
+      
+      #initialisation
+      ResidualSection <- rep(0,length(Result_all$Run))
+      for(Opening_ind in (1:N_opening))
+      {
+        #For bridges we count only slots as opening, i.e. below the deck, slits and weirs are for the deck and other upper side flow sections
+        if(Structures$Openings[[Structure_Ind]]$Type[Opening_ind] == "slot")
+        {
+          #Compute residual width in the opening
+          ResidualSection_openingWidth <- rep(Structures$Openings[[Structure_Ind]]$Width[Opening_ind],length(ResidualSection)) - Result_all[,which(names(Result_all) == paste0("W",Opening_ind))]
+          #Compute residual height in the opening
+          ResidualSection_openingHeight <- rep(Structures$Openings[[Structure_Ind]]$TopLevel[Opening_ind],length(ResidualSection)) - Result_all[,which(names(Result_all) == paste0("Z",Opening_ind))] - rep(Structures$Openings[[Structure_Ind]]$BaseLevel[Opening_ind],length(ResidualSection))
+          #remove eventual negative value
+          ResidualSection_openingWidth[ResidualSection_openingWidth<0]<-0
+          ResidualSection_openingHeight[ResidualSection_openingHeight<0]<-0
+          #Add residual section of opening i
+          ResidualSection <- ResidualSection + ResidualSection_openingWidth * ResidualSection_openingHeight
+        }else{
+          #For barrier we also count the slits, but only those having a top level > base level
+          if(Structures$Openings[[Structure_Ind]]$Type[Opening_ind] == "slit" && Structures$Type[[Structure_Ind]]=="barrier")
+          {
+            #Compute residual width in the opening
+            ResidualSection_openingWidth <- Structures$Openings[[Structure_Ind]]$Width[Opening_ind]
+            #Compute residual height in the opening
+            ResidualSection_openingHeight <- rep(Structures$Openings[[Structure_Ind]]$TopLevel[Opening_ind],length(ResidualSection)) - Result_all[,which(names(Result_all) == paste0("Z",Opening_ind))] - rep(Structures$Openings[[Structure_Ind]]$BaseLevel[Opening_ind],length(ResidualSection))
+            #remove eventual negative value
+            ResidualSection_openingHeight[ResidualSection_openingHeight<0]<-0
+            #Add residual section of opening i
+            ResidualSection <- ResidualSection + ResidualSection_openingWidth * ResidualSection_openingHeight
+          }
+        }
+      }
+      
+      SlotsAndSlits <- Structures$Openings[[Structure_Ind]] %>% filter(Type == "slot" | Type == "slit")
+      OpeningTotalSection<-sum(SlotsAndSlits$Width*(SlotsAndSlits$TopLevel-SlotsAndSlits$BaseLevel))
+      # Record the residual fration of the opening
+      Result_all$ResidualOpening <- ResidualSection / OpeningTotalSection
+      
+      ### record them with different name
+      Qo_all_for_clogging<-Qo_all
+      Result_all_for_clogging<-Result_all
+      
+      #load the file that aggregates all the results
+      load(paste0("RdataResult_Evt-",EventName,"_Structure_",StructureName,".RData"))
+      #Save the file that aggregate all the results
+      save(Qo_all,Qo_all_for_clogging,
+           input_all,
+           Result_all,Result_all_for_clogging
+           ,file=paste0("RdataResult_Evt-",EventName,"_Structure_",StructureName,".RData"))
+      
+      # Remove files for each singular run
+      file.remove(ListFileStructure)
+      file.remove(list.files(pattern="RunInd.Rdata.tmp"))
+    }# end of the structure loop
+    
+    
+  }
+  
+  for(Structure_Ind in 1:length(Structures$Name))
+  {
+    StructureName<-Structures$Name[[which(Structures$Rank==Structure_Ind)]]
+    #load the file that aggregates all the results
+    load(paste0("RdataResult_Evt-",EventName,"_Structure_",StructureName,".RData"))
+    if(Perform_error_propagation == FALSE)
+      {
+      Result_all_for_clogging<-Result_all
+      FillLegendLabel<-"# of runs"
+    }else{
+      FillLegendLabel<-"# of bounding runs"
+      Result_all$Branch<-paste0(Result_all$Branch," bound")
+      Result_all_for_clogging$Branch<-paste0(Result_all_for_clogging$Branch," bound")
+      }
+    
+    #plots of synthesis multi run figures
     if(PrintFinalPlot==FALSE)
     {
-      ### Four panel graph
-      # Plot a synthesis figure on Vin
-      TopTopLeftPanel<-ggplot(Result_all)+
-        theme_classic(base_size = 9)+
-        geom_histogram(aes(Vevent/10^3)
-                       ,binwidth=Events$Volume_BestEstimate[Event_Ind]/10^3/10)+
-        geom_boxplot(aes(x=Vevent/10^3,y=-1))+
-        geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3,col="grey")+
-        annotate(geom = "text", y = 0, adj=0, x = Events$Volume_BestEstimate[Event_Ind]/10^3
-                 ,vjust=(1.2), label = "Total event \n (Best. Est.)",srt=90,col="grey",size=3.5)+
-        coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.2))+
-        labs(x="Supplied volume [*1000 m3]",y="# of Run"
-             ,title = paste0("Debris flow volume and peak discharge \n","(Event: ",EventName,") \n","(Structure: ",StructureName,")"))
-      
-      # Plot a synthesis figure on Vout
-      TopLeftPanel<-ggplot(Result_all)+
-        theme_classic(base_size = 9)+
-        geom_histogram(aes(Vout/10^3),binwidth=Events$Volume_BestEstimate[Event_Ind]/10^3/10)+
-        geom_boxplot(aes(x=Vout/10^3,y=-1))+
-        coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.25))+
-        labs(x="Released volume [*1000 m3]",y="# of Run")
-      
-      # Plot a synthesis figure of Qpeak out VS Vout, top right panel
-      TopightPanel<-ggplot(Result_all)+
-        theme_bw(base_size = 9)+
-        geom_bin2d(aes(x=(Vevent-Vout)/Vevent,y=(Qp_in-Qp_out)/Qp_in),col=1,#bins=20)+
-                   binwidth=c(0.1,0.1))+
-        scale_fill_gradient2("# of Run",low="palegreen1", high = "palegreen4")+ 
-        geom_hline(yintercept = 1,col="grey")+
-        geom_vline(xintercept = 1,col="grey")+
-        annotate(geom = "text", y = 0.5, adj=0.5, x = 0,vjust=(-1), label = "No effect on volume",srt=90,col="grey",size=3.5)+
-        annotate(geom = "text", x = 0.5, adj=0.5, y = 0,vjust=(1.5), label ="No effect on peak discharge" ,col="grey",size=3.5)+
-        geom_hline(yintercept = 0,col="grey")+
-        geom_vline(xintercept = 0,col="grey")+
-        annotate(geom = "text", y = 0.5, adj=0.5, x = 1*1.08,vjust=(0), label = "Total trapping",srt=90,col="grey",size=3.5)+
-        annotate(geom = "text", x = 0.5, adj=0.5, y = 1*1.1,vjust=(1), label = "Total attenuation",col="grey",size=3.5)+
-        coord_cartesian(ylim=c(-0.1,1.1),xlim=c(-0.1,1.1))+
-        labs(x="Volume trapping [%]",y="Peak discharge attenuation [%]" )+
-        theme(legend.direction = "horizontal",legend.position = "top",legend.key.height = unit(0.3, 'cm'))+
-        scale_y_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))+
-        scale_x_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))
-      
-      # Plot a synthesis figure of Qpeak out VS Vout, top right panel
-      BottomLeftPanel<-ggplot(Result_all)+
-        theme_bw(base_size = 9)
-      
-      if((max(Result_all$Vout) == min(Result_all$Vout))  | (max(Result_all$Qp_out) == min(Result_all$Qp_out)) )
+      AlphaN_runs<-min(0.3,0.3*25/max(Qo_all$Run)*4)
+      ### Four panel graph for V and Qout ------
       {
-        BottomLeftPanel<-BottomLeftPanel+
-          geom_point(aes(x=Vout/10^3,y=Qp_out),col=1,pch=22,fill=1,alpha=0.1)+
-          theme(plot.margin = margin(t=0.1,r=0.1,b=1.5,l=0.4, "cm"))
-      }else{
-        BottomLeftPanel<-BottomLeftPanel+
-          geom_bin2d(aes(x=Vout/10^3,y=Qp_out),col=1,#bins=20)+
-                     binwidth=c(Events$Volume_BestEstimate[Event_Ind]/10^3/10,Events$PeakDischarge_BestEstimate[Event_Ind]/10))+
-          scale_fill_gradient2("# of Run",low="dodgerblue1", high = "dodgerblue4")+ 
-          theme(legend.direction = "horizontal",legend.position = "bottom",legend.key.height = unit(0.3, 'cm'))
-      }
-        
-      BottomLeftPanel<-BottomLeftPanel+ 
-        coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind]*1.25)
-                        ,xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.25))+
-        labs(x="Released volume [*1000 m3]",y="Released Peak discharge [m3/s]")
-      
-      # Plot a synthesis figure on Qpeak out
-      BottomRightPanel<-ggplot(Result_all)+
-        theme_classic(base_size = 9)+
-        geom_histogram(aes(y=Qp_out),binwidth=Events$PeakDischarge_BestEstimate[Event_Ind]/10)+
-        geom_boxplot(aes(y=Qp_out,x=-1))+
-        coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)+
-        labs(y="Released peak discharge [m3/s]",x="# of Run")
-      
-      # Plot a synthesis figure on Qpeak out
-      BottomRightRightPanel<-ggplot(Result_all)+
-        theme_classic(base_size = 9)+
-        geom_histogram(aes(y=Qp_in),binwidth=Events$PeakDischarge_BestEstimate[Event_Ind]/10)+
-        geom_boxplot(aes(y=Qp_in,x=-1))+
-        geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Event_Ind],col="grey")+
-        annotate(geom = "text", x = 0, adj=0, y = Events$PeakDischarge_BestEstimate[Event_Ind]
-                 ,vjust=(-0.2), label = "Total Event \n (Best. Est.)",srt=0,col="grey",size=3.5)+
-        coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)+
-        labs(y="Supplied peak discharge [m3/s]",x="# of Run")
-      
-      if(Perform_error_propagation == FALSE)
-      {
-        Caption_text <-  paste("Code version:",ModelVersion,
-                               # "\n",
-                               " | ",
-                               "Parameters:"," best estimate values",
-                               # "\n",
-                               " | ",
-                               "Number of runs =",N_runs)
-      }else{
-        Caption_text <-  paste("Code version:",ModelVersion,
-                               # "\n",
-                               " | ",
-                               "Parameters:"," uncertain values",
-                               # "\n",
-                               " | ",
-                               "Number of runs =",N_runs)
-      }
-      
-      #Save figure
-      
-      png( paste0("FourPanelGraphReleasedVolume_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
-      {
-        pushViewport(viewport(layout = grid.layout(10,12)))
-        # Define region in the plot
-        define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
-        # Arrange panels
-        print(TopightPanel, vp = define_region(1:5,7:12))
-        print(TopTopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
-              , vp = define_region(1:3,1:6))
-        print(TopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
-              , vp = define_region(4:5,1:6))
-        print(BottomLeftPanel
-              , vp = define_region(6:10,1:6))
-        print(BottomRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=1.5,l=0.1, "cm"))
-              , vp = define_region(6:10,7:9))
-        print(BottomRightRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=0.4,l=0.1, "cm"))+
-                labs(caption=Caption_text)+   theme(plot.caption =  element_text(size=8.5))        
-              , vp = define_region(6:10,10:12))
-      }
-      dev.off()
-      
-      #Multi-run time series
-      AlphaN_runs<-min(0.3,0.3*25/max(Qo_all$Run))
-      {
-       QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
-          geom_line(aes(y=Qi,group = Run
-                        # ,lwd=Branch
-                        ),color="black"
-                    ,alpha=AlphaN_runs)+
-          scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
-          theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank()
-                ,legend.position = "top")+
-          labs(y = "Inlet Discharge\n [m3/s]",
-               title = paste0("Time series of every runs (Event: ",EventName," & Structure: ",StructureName,")"))+
-          guides(linewidth="none")+
-          theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
-        
-        QplotOut<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
-          geom_line(aes(y=Qo,group =Run
-                        # ,lwd=Branch
-                        ),alpha=AlphaN_runs)+
-          scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
-          theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
-          labs(y = "Outlet Discharge\n [m3/s]")+
-          guides(linewidth="none")+
-          theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
-
-        
-        Zplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
-          geom_line(aes(x=Time/3600,y=Z,lty="4",group=Run),alpha=0.3)+
-          geom_line(aes(x=Time/3600,y=BaseLevelJam,lty="5",group=Run),alpha=0.3)+
-          # scale_colour_grey(name="Level",label=c("Flow","Basal boulder jam"))+
-          scale_linetype_manual(name="Level",label=c("Flow","Basal boulder jam"),values=c(1,4))+
-          theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
-          theme(legend.position = c(0.82,0.83),legend.direction = "horizontal"
-              ,legend.background = element_rect(colour =1),legend.box.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))+
-          labs( x = "Time [h]",y = "Flow level\n [m]")
-
-        Vplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
-          geom_line(aes(x=Time/3600,y=V,group=Run
-                        # ,lwd=Branch
-                        ),col="black"
-                    ,alpha=AlphaN_runs)+
-          scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
-          theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
-          guides(linewidth="none")+
-          labs( x = "Time [h]",y = "Stored volume\n [*1000m3]")
-        
-        png(paste0("SyntheticTimeSerie_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png"), width = 17, height = 15,units="cm",res=350)
-        Zplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
-          geom_line(aes(x=Time/3600,y=Z,lty="4",group=Run
-                        # ,lwd=Branch
-                        ),alpha=AlphaN_runs)+
-          geom_line(aes(x=Time/3600,y=BaseLevelJam,lty="5",group=Run
-                        # ,lwd=Branch
-                        ),alpha=AlphaN_runs)+
-          scale_linewidth_manual("Input parameters",values=c(0.4,1.2))+
-          # scale_colour_grey(name="Level",label=c("Flow","Basal boulder jam"))+
-          scale_linetype_manual(name="Level",label=c("Flow","Basal boulder jam"),values=c(1,4))+
-          theme(legend.direction = "horizontal"
-                ,legend.position = "bottom"
-                # ,legend.position = c(0.82,0.83),legend.background = element_rect(colour =1)
-                ,legend.box.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt")
-                )+
-          labs( x = "Time [h]",y = "Flow level\n [m]")
-        
-        png(paste0("SyntheticTimeSerie_Evt-"
-                   ,EventName
-                   ,"_Structure_n"
-                   ,Structure_Ind,"-"
-                   ,StructureName,".png")
-            , width = 16, height = 15,units="cm",res=350)
+        # Plot a synthesis figure on Vin
+        TopTopLeftPanel<-ggplot(Result_all)+
+          theme_classic(base_size = 9)+
+          geom_histogram(aes(Vevent/10^3,fill=Branch)
+                         ,binwidth=Events$Volume_BestEstimate[Event_Ind]/10^3/10)
+        if(Perform_error_propagation == TRUE)
         {
-          pushViewport(viewport(layout = grid.layout(24,1) ) )
+          TopTopLeftPanel<-TopTopLeftPanel+
+          scale_fill_viridis_d("Bound",option="D",direction=-1)+
+            coord_cartesian(xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))
+        }else{ TopTopLeftPanel<-TopTopLeftPanel+
+          guides(fill="none")+
+          coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.25))
+        }
+        
+        TopTopLeftPanel<-TopTopLeftPanel+
+          geom_boxplot(aes(x=Vevent/10^3,y=-1))+
+          geom_vline(xintercept = Events$Volume_BestEstimate[Event_Ind]/10^3,col="grey")+
+          annotate(geom = "text", y = 0, adj=0, x = Events$Volume_BestEstimate[Event_Ind]/10^3
+                   ,vjust=(1.2), label = "Total event \n (Best. Est.)",srt=90,col="grey",size=3.5)+
+          labs(x="Supplied volume [*1000 m3]",y="# of Run"
+               ,title = paste0("Debris flow volume and peak discharge \n","|Event: " ,EventName," \n"
+                               ,"|Structure: ",StructureName,""))+
+          theme(legend.position = "top"#c(0.2,0.5)
+                ,legend.box.background = element_rect(colour = 1) )
+        
+        # Plot a synthesis figure on Vout
+        TopLeftPanel<-ggplot(Result_all)+
+          theme_classic(base_size = 9)+
+          geom_histogram(aes(Vout/10^3,fill=Branch)
+                         ,binwidth=Events$Volume_BestEstimate[Event_Ind]/10^3/10)
+        if(Perform_error_propagation == TRUE)
+        {
+          TopLeftPanel<-TopLeftPanel+
+            scale_fill_viridis_d("Bound",option="D",direction=-1)+
+            coord_cartesian(xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))
+        }else{
+          TopLeftPanel<-TopLeftPanel+
+          coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.25))
+        }
+        
+        TopLeftPanel<-TopLeftPanel+
+          geom_boxplot(aes(x=Vout/10^3,y=-1))+
+          labs(x="Released volume [*1000 m3]",y="# of Run")+
+          guides(fill="none")
+        
+        # Plot a synthesis figure of Qpeak out VS Vout, top right panel
+        TopightPanel<-ggplot(Result_all)+
+          theme_bw(base_size = 9)+
+          geom_bin2d(aes(x=(Vevent-Vout)/Vevent,y=(Qp_in-Qp_out)/Qp_in),col=1,#bins=20)+
+                     binwidth=c(0.1,0.1))+
+          scale_fill_gradient2("# of Run",low="palegreen1", high = "palegreen4")+ 
+          geom_hline(yintercept = 1,col="grey")+
+          geom_vline(xintercept = 1,col="grey")+
+          annotate(geom = "text", y = 0.5, adj=0.5, x = 0,vjust=(-1), label = "No effect on volume",srt=90,col="grey",size=3.5)+
+          annotate(geom = "text", x = 0.5, adj=0.5, y = 0,vjust=(1.5), label ="No effect on peak discharge" ,col="grey",size=3.5)+
+          geom_hline(yintercept = 0,col="grey")+
+          geom_vline(xintercept = 0,col="grey")+
+          annotate(geom = "text", y = 0.5, adj=0.5, x = 1*1.08,vjust=(0), label = "Total trapping",srt=90,col="grey",size=3.5)+
+          annotate(geom = "text", x = 0.5, adj=0.5, y = 1*1.1,vjust=(1), label = "Total attenuation",col="grey",size=3.5)+
+          coord_cartesian(ylim=c(-0.1,1.1),xlim=c(-0.1,1.1))+
+          labs(x="Volume trapping [%]",y="Peak discharge attenuation [%]" )+
+          theme(legend.direction = "horizontal",legend.position = "top",legend.key.height = unit(0.3, 'cm'))+
+          scale_y_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))+
+          scale_x_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))
+        
+        # Plot a synthesis figure of Qpeak out VS Vout, top right panel
+        BottomLeftPanel<-ggplot(Result_all)+
+          theme_bw(base_size = 9)
+        
+        if((max(Result_all$Vout,na.rm=TRUE) == min(Result_all$Vout,na.rm=TRUE))  | (max(Result_all$Qp_out,na.rm=TRUE) == min(Result_all$Qp_out,na.rm=TRUE)) )
+        {
+          BottomLeftPanel<-BottomLeftPanel+
+            geom_point(aes(x=Vout/10^3,y=Qp_out),col=1,pch=22,fill=1,alpha=0.1)+
+            theme(plot.margin = margin(t=0.1,r=0.1,b=1.5,l=0.4, "cm"))
+        }else{
+          BottomLeftPanel<-BottomLeftPanel+
+            geom_bin2d(aes(x=Vout/10^3,y=Qp_out),col=1,#bins=20)+
+                       binwidth=c(Events$Volume_BestEstimate[Event_Ind]/10^3/10,Events$PeakDischarge_BestEstimate[Event_Ind]/10))+
+            scale_fill_gradient2(FillLegendLabel,low="dodgerblue1", high = "dodgerblue4")+ 
+            theme(legend.direction = "horizontal",legend.position = "bottom",legend.key.height = unit(0.3, 'cm'))
+        }
+        
+        BottomLeftPanel<-BottomLeftPanel+ 
+          geom_point(aes(x=Vout/10^3,y=Qp_out,pch=Branch,col=Branch),alpha= AlphaN_runs)
+        
+        if(Perform_error_propagation == TRUE)
+        {
+          BottomLeftPanel<-BottomLeftPanel+ 
+            geom_point(data=Result_all_for_clogging,aes(x=Vout/10^3,y=Qp_out,pch="Intermediate")
+                                                       ,alpha= AlphaN_runs)+
+            scale_color_viridis_d(option = "D",direction = -1)+
+            scale_shape_manual("Runs",values=c(20,3,4)
+                               # ,labels=c("Upper","Intermediate","Lower")
+            )+
+            guides(shape = guide_legend(order = 1,nrow=3
+                                        ,override.aes=list(size=2,alpha=1
+                                                           ,color = c("grey","yellow","darkblue")))
+                   ,color ="none")+
+            coord_cartesian(ylim=c(0,Events$PeakDischarge_max[Event_Ind]*1.25)
+                            ,xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))
+            
+        }else{
+          BottomLeftPanel<-BottomLeftPanel+ 
+            guides(color ="none",shape="none")+
+            coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind]*1.25)
+                            ,xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.25))
+          }
+        BottomLeftPanel<-BottomLeftPanel+ 
+          labs(x="Released volume [*1000 m3]",y="Released Peak discharge [m3/s]")
+        
+        # Plot a synthesis figure on Qpeak out
+        BottomRightPanel<-ggplot(Result_all)+
+          theme_classic(base_size = 9)+
+          geom_histogram(aes(y=Qp_out,fill=Branch)
+                         ,binwidth=Events$PeakDischarge_BestEstimate[Event_Ind]/10)
+        if(Perform_error_propagation == TRUE)
+        {
+          BottomRightPanel<-BottomRightPanel+
+            scale_fill_viridis_d("Bound",option="D",direction=-1)+
+            coord_cartesian(ylim=c(0,Events$PeakDischarge_max[Event_Ind])*1.25)
+        }else{ BottomRightPanel<-BottomRightPanel+
+          guides(fill="none")+
+          coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)
+        }
+        
+        BottomRightPanel<-BottomRightPanel+
+          geom_boxplot(aes(y=Qp_out,x=-1))+
+          labs(y="Released peak discharge [m3/s]",x="# of Run")+
+          guides(fill="none")
+        
+        # Plot a synthesis figure on Qpeak out
+        BottomRightRightPanel<-ggplot(Result_all)+
+          theme_classic(base_size = 9)+
+          geom_histogram(aes(y=Qp_in,fill=Branch)
+                         ,binwidth=Events$PeakDischarge_BestEstimate[Event_Ind]/10)
+        if(Perform_error_propagation == TRUE)
+        {
+          BottomRightRightPanel<-BottomRightRightPanel+
+            scale_fill_viridis_d("Bound",option="D",direction=-1)+
+            coord_cartesian(ylim=c(0,Events$PeakDischarge_max[Event_Ind])*1.25)
+        }else{
+          BottomRightRightPanel<-BottomRightRightPanel+
+            coord_cartesian(ylim=c(0,Events$PeakDischarge_BestEstimate[Event_Ind])*1.25)
+        }
+        
+        BottomRightRightPanel<-BottomRightRightPanel+
+          geom_boxplot(aes(y=Qp_in,x=-1))+
+          geom_hline(yintercept = Events$PeakDischarge_BestEstimate[Event_Ind],col="grey")+
+          annotate(geom = "text", x = 0, adj=0, y = Events$PeakDischarge_BestEstimate[Event_Ind]
+                   ,vjust=(-0.2), label = "Total Event \n (Best. Est.)",srt=0,col="grey",size=3.5)+
+          labs(y="Supplied peak discharge [m3/s]",x="# of Run")+
+          guides(fill="none")
+
+        
+        if(Perform_error_propagation == FALSE)
+        {
+          Caption_text <-  paste("Code version:",ModelVersion,
+                                 "\n",
+                                 " | ",
+                                 "Parameters:"," best estimate values",
+                                 "\n",
+                                 " | ",
+                                 "Number of runs =",N_runs)
+        }else{
+          Caption_text <-  paste("Code version:",ModelVersion,
+                                 "\n",
+                                 " | ",
+                                 "Parameters:"," uncertain values",
+                                 "\n",
+                                 " | ",
+                                 "Number of runs =",N_runs)
+        }
+        
+        
+        FootNote<-ggplot(Result_all)+
+          theme_void(base_size = 7)+labs(title=Caption_text)
+        
+        
+        #Save figure
+        
+        png( paste0("FourPanelGraphReleasedVolume_Evt-",EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png")
+             , width = 17.5, height = 15,units="cm",res=350)
+        {
+          pushViewport(viewport(layout = grid.layout(11,12)))
+          # Define region in the plot
+          define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
+          # Arrange panels
+          print(TopightPanel, vp = define_region(1:6,7:12))
+          print(TopTopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
+                , vp = define_region(1:4,1:6))
+          print(TopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
+                , vp = define_region(5:6,1:6))
           
-          # Arrange graphs
+          print(BottomRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=1.5,l=0.1, "cm"))#+labs(caption="")
+                , vp = define_region(7:11,7:9))
+          print(BottomRightRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=1.4,l=0.1, "cm"))+
+                  # labs(caption=Caption_text)+
+                  theme(plot.caption =  element_text(size=8.5))
+                , vp = define_region(7:11,10:12))
+          print(FootNote,vp = define_region(11,9:12))
+          print(BottomLeftPanel#+labs(caption="")
+                , vp = define_region(7:11,1:6))
+        }
+        dev.off()
+      }
+      #Multi-run time series----
+      {
+          QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
+            geom_line(aes(y=Qi,group = Run,col=Branch),alpha=AlphaN_runs)
+            
+            if(Perform_error_propagation == TRUE)
+            {
+              QplotIn<-QplotIn+
+                scale_color_viridis_d(option="D",direction=-1)
+            }
+          
+          QplotIn<-QplotIn+
+            theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank()
+                  ,legend.position = "top")+
+            labs(y = "Inlet Discharge\n [m3/s]",
+                 title = paste0("Time series of every bounding runs (Event: ",EventName," & Structure: ",StructureName,")"))+
+            guides(linewidth="none")+
+            guides(color="none")+
+            theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
+          
+          QplotOut<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
+            geom_line(aes(y=Qo,group =Run,col=Branch),alpha=AlphaN_runs)
+          
+          if(Perform_error_propagation == TRUE)
+          {
+            QplotOut<-QplotOut+
+              scale_color_viridis_d(option="D",direction=-1)
+          }
+          
+          QplotOut<-QplotOut+
+            theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
+            labs(y = "Outlet Discharge\n [m3/s]")+
+            guides(linewidth="none")+
+            theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))+
+            guides(color="none")
+          
+          Vplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
+            geom_line(aes(x=Time/3600,y=V,group=Run,col=Branch),alpha=AlphaN_runs)
+          
+          if(Perform_error_propagation == TRUE)
+          {
+            Vplot<-Vplot+
+              scale_color_viridis_d(option="D",direction=-1)
+          }
+          
+          Vplot<-Vplot+
+            theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank())+
+            guides(linewidth="none")+
+            labs( x = "Time [h]",y = "Stored volume\n [*1000m3]")+
+            guides(color="none")
+          
+          Zplot<-ggplot(Qo_all)+theme_bw(base_size = 9)+
+            geom_line(aes(x=Time/3600,y=Z,lty="4",group=Run,col=Branch),alpha=AlphaN_runs)+
+            geom_line(aes(x=Time/3600,y=BaseLevelJam,lty="5",group=Run,col=Branch),alpha=AlphaN_runs)
+          
+          if(Perform_error_propagation == TRUE)
+          {
+            Zplot<-Zplot+
+              scale_color_viridis_d(option="D",direction=-1)
+          }else{Zplot<-Zplot+guides(color="none")}
+          
+          Zplot<-Zplot+
+            scale_linetype_manual(name="Level",label=c("Flow","Basal boulder jam"),values=c(1,4))+
+            theme(legend.position = "bottom"#c(0.82,0.83)
+                  ,legend.direction = "horizontal")+
+            labs( x = "Time [h]",y = "Flow level\n [m]")
+          
+         png(paste0("SyntheticTimeSerie_Evt-" ,EventName   ,"_Structure_n"   ,Structure_Ind,"-"       ,StructureName,".png")
+              , width = 16, height = 15,units="cm",res=350)
+          {
+            pushViewport(viewport(layout = grid.layout(24,1) ) )
+            
+            # Arrange graphs
             print(QplotIn      , vp = define_region(1:6,1))
             print(QplotOut     , vp = define_region(7:11,1))
             print(Vplot        , vp = define_region(12:16,1))
             print(Zplot  +  labs(caption=Caption_text)+ 
                     theme(plot.caption =  element_text(size=8.5))        
                   , vp = define_region(17:24,1))
-        }
-        dev.off()
+          }
+          dev.off() 
       }
       
-      #Boulder inventory plot
+      ### Four panel graph for Z_max and Clogging rate ------
+      {
+        #Histograms and the 2Dbin plot is plotted with accuracy of 1/10 of Zmax - bottom outlet base level
+        ZbinWidth<-(max(Result_all$Zmax,na.rm = TRUE)-min(Structures$Openings[[Structure_Ind]]$BaseLevel,na.rm = TRUE))/10
+        
+        TopLeftPanel<-ggplot(Result_all_for_clogging)+
+          theme_classic(base_size = 9)+
+          geom_histogram(aes(1-ResidualOpening,fill=Branch)
+                         ,binwidth=1/10)+
+          geom_boxplot(aes(x=1-ResidualOpening,y=-1))+
+          coord_cartesian(xlim=c(0,1))+
+          scale_x_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))+
+          # theme(axis.title.x=element_blank())+
+          labs(x="General clogging of the structure [-]",y="# of Run"
+               ,title = paste0("Maximum flow level and general clogging ratio of the structure\n",
+                               "|Event: ",EventName,"\n","|Structure: ",StructureName,""))+
+          theme(legend.position = "top",legend.box.background = element_rect(colour = 1) )
+        
+        
+        if(Perform_error_propagation == TRUE)
+        {
+          TopLeftPanel<-TopLeftPanel+
+            scale_fill_viridis_d("Bound",option="D",direction=-1)
+        }#else{ TopLeftPanel<-TopLeftPanel    }
+        
+
+        TopRightPanel<-ggplot(Result_all_for_clogging)+
+          theme_void(base_size = 7)+labs(title=paste0("Nota: The general clogging\n"
+                                                      ,"of the structure is computed\n"
+                                                      ,"only considering slot openings\n"
+                                                      ,"for bridges, and slot and slit\n"
+                                                      ,"openings for barriers, i.e. open-\n"
+                                                      ,"ings coded as weir are always \n"
+                                                      ,"ignored in its computation, as\n"
+                                                      ,"well as slits elements in bridges"))
+        
+        
+        BottomLeftPanel<-ggplot(Result_all_for_clogging)+
+          theme_bw(base_size = 9)
+        
+        if((max(Result_all_for_clogging$ResidualOpening,na.rm = TRUE) == min(Result_all_for_clogging$ResidualOpening,na.rm = TRUE))  | (max(Result_all_for_clogging$Zmax,na.rm = TRUE) == min(Result_all_for_clogging$Zmax,na.rm = TRUE)) )
+        {
+          BottomLeftPanel<-BottomLeftPanel+
+            geom_point(aes(x=1-ResidualOpening,y=Zmax),col=1,pch=22,fill=1,alpha=0.1)+
+            theme(plot.margin = margin(t=0.1,r=0.1,b=1.5,l=0.4, "cm"))
+        }else{
+          BottomLeftPanel<-BottomLeftPanel+
+            geom_bin2d(aes(x=1-ResidualOpening,y=Zmax),col=1,#bins=20)+
+                       binwidth=c(1/10,ZbinWidth))+
+            scale_fill_gradient2(FillLegendLabel,low="dodgerblue1", high = "dodgerblue4")+ 
+            theme(legend.direction = "horizontal",legend.position = "bottom",legend.key.height = unit(0.3, 'cm'))
+        }
+        
+        BottomLeftPanel<-BottomLeftPanel+ 
+          geom_point(aes(x=1-ResidualOpening,y=Zmax,pch=Branch,col=Branch),alpha= AlphaN_runs)
+        
+        if(Perform_error_propagation == TRUE)
+        {
+          BottomLeftPanel<-BottomLeftPanel+ 
+            geom_point(data=Result_all,aes(x=1-ResidualOpening,y=Zmax,pch="Intermediate")
+                       ,alpha= AlphaN_runs)+
+            scale_color_viridis_d(option = "D",direction = -1)+
+            scale_shape_manual("Runs",values=c(20,3,4)
+                               # ,labels=c("Upper","Intermediate","Lower")
+            )+
+            guides(shape = guide_legend(order = 1,nrow=3,override.aes=list(size=2,alpha=1
+                                                                           ,color = c("grey","yellow","darkblue")))
+                   ,color ="none")
+            
+        }else{ BottomLeftPanel<-BottomLeftPanel+guides(color="none",shape="none")    }
+        
+      BottomLeftPanel<-BottomLeftPanel+ 
+          geom_vline(xintercept = 0,col="grey")+
+          geom_vline(xintercept = 1,col="grey")+
+          annotate(geom = "text", y = 0.5*(min(Structures$Openings[[Structure_Ind]]$BaseLevel)+max(Result_all$Zmax)+.5)
+                   , adj=0.5, x = 0,vjust=(-0.5), label = "No clogging",srt=90,col="grey",size=3.5)+
+          annotate(geom = "text", x = 1, adj=0.5, y = 0.5*(min(Structures$Openings[[Structure_Ind]]$BaseLevel)+max(Result_all$Zmax)+.5)
+                   ,vjust=(1.5), label ="Total obstruction",srt=90 ,col="grey",size=3.5)+
+          geom_hline(yintercept = min(Structures$Openings[[Structure_Ind]]$BaseLevel),col="grey")+
+          annotate(geom = "text", x = 0.5, adj=0.5, y = min(Structures$Openings[[Structure_Ind]]$BaseLevel)
+                   ,vjust=(-.5), label ="Outlet base level" ,col="grey",size=3.5)+
+          coord_cartesian(xlim=c(0,1),ylim=c(min(Structures$Openings[[Structure_Ind]]$BaseLevel),max(Result_all$Zmax)+.5))+
+          scale_x_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))+
+          labs(x="General clogging of the structure [-]",y="Maximum flow level [m]")
+        
+        
+        # Plot a synthesis figure on Qpeak out
+        BottomRightPanel<-ggplot(Result_all_for_clogging)+
+          theme_classic(base_size = 9)+
+          geom_histogram(aes(y=Zmax,fill=Branch),binwidth=ZbinWidth)+
+          geom_boxplot(aes(y=Zmax,x=-1))+
+          coord_cartesian(ylim=c(min(Structures$Openings[[Structure_Ind]]$BaseLevel),max(Result_all$Zmax)+.5))+
+          labs(y="Maximum flow level [m]",x="# of Run")+guides(fill="none")
+        
+        if(Perform_error_propagation == TRUE)
+        {
+          BottomRightPanel<-BottomRightPanel+
+            scale_fill_viridis_d("Bound",option="D",direction=-1)
+        }else{ BottomRightPanel<-BottomRightPanel+guides(fill="none")    }
+        
+        
+        #Save figure
+        
+        png( paste0("FourPanelGraphMaxFlowLevelAndCloggingRate_Evt-"
+                    ,EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png")
+             , width = 17, height = 12,units="cm",res=350)
+        {
+          pushViewport(viewport(layout = grid.layout(10,12)))
+          # Arrange panels
+          print(TopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
+                , vp = define_region(1:4,1:9))
+          print(TopRightPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.0, "cm"))
+                , vp = define_region(1:4,10:12))
+          print(BottomLeftPanel+          labs(caption="")
+                , vp = define_region(5:10,1:9))
+          print(BottomRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=1,l=0.1, "cm"))+
+                  labs(caption=Caption_text)+
+                  theme(plot.caption =  element_text(size=8.5))        
+                , vp = define_region(5:10,10:12))
+        }
+        dev.off() 
+      }
+      #Boulder inventory plot----
       # 
       # ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
-      #   # geom_col(aes(y=-Class3.unjammed))+
+      #   # geom_col(a♣es(y=-Class3.unjammed))+
       #   geom_col(aes(y=Class1.unjammed),alpha=1)+
       #   geom_col(aes(y=Class2.unjammed),alpha=0.3)+
       #   geom_col(aes(y=-Class1.jammed),alpha=1)+
       #   geom_col(aes(y=-Class2.jammed),alpha=0.3)#+
       #   # geom_col(aes(y=Class3.unjammed),alpha=0.5)+
-        # geom_col(aes(y=Class4.unjammed))
+      # geom_col(aes(y=Class4.unjammed))
       # # 
       # # 
       # # 
