@@ -51,8 +51,8 @@ Create_inlet_input<-function(EventName,AdjustEventManually,Structures,Boulders)
     rm(InitialDeposit,InitialJam)
   }
 
-#The best estimate for the number of boulders is added to the input data
   
+#The best estimate for the number of boulders is added to the input data
   # Adding of the number of Boulders
   for(j in (1:dim(Boulders)[1]))
   {

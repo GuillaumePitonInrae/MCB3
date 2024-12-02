@@ -80,8 +80,20 @@ Transfer_Between_Structure<-function(Qo,TransferType,Vmixing)
         }else{
           if(Vpassing > 0)
           {
+            #Extract the volume of boulders of bigger diameter than the analysed class
+            Vboulderbigger <- 0
+            if(j>1)
+            {
+              Vboulderbigger <- sum(Qnext[Qnext$MixingStart[i]:i,(Numb_ColumnIndex-j+1):(Numb_ColumnIndex-1)]*Boulders$V[1:(j-1)])
+              }
             #For each class of boulder, compute the probability (in case of mixing)
-            Qnext[i,Prob_ColumnIndex] <-min(1,Npassing*Boulders$V[j]/Vpassing)   
+            if(Vboulderbigger < Vpassing)
+            {
+              Qnext[i,Prob_ColumnIndex] <-min(1,Npassing*Boulders$V[j]/(Vpassing-Vboulderbigger))   
+            }else{
+              #If the volume occupied by bigger boulder is >= to the volume passing, there is no smaller boulders.
+              Qnext[i,Prob_ColumnIndex] <- 0
+              }
           }else{Qnext[i,Prob_ColumnIndex]<-0}
         }
       }

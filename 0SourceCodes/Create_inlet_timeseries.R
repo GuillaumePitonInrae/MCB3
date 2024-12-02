@@ -55,13 +55,19 @@ for(i in (1:length(Boulders[,1])))
 
 #Mean boulder size of each class used to compute the typical volume of a boulder.
 Boulders$Diameter<-0.5*(Boulders$Diameter_min+Boulders$Diameter_max)
+
 #Elementary volume of each boulder class. Each boulder is assumed to be spherical.
 Boulders$V<-pi/6*Boulders$Diameter^3
 #Maximum number of boulders that could theoretically be observed in the reference volume.
 Boulders$Nmax<-round(Boulders$ReferenceVolume/Boulders$V,0)
 #Probability of having a boulder each time a volume of debris flow equal to boulder volume passes.
+# V0: consider probabilities independantly of other boulders
 Boulders$P<-Boulders$Number/Boulders$Nmax
-
+#Addition for boulders of class >1 of the consideration of the bigger boulders in the remaining volume
+for(i in (2:length(Boulders[,1])))
+{
+  Boulders$P[i]<-Boulders$Number[i]/(round((Boulders$ReferenceVolume[i]-sum(Boulders$Number[1:(i-1)]*Boulders$ReferenceVolume[1:(i-1)]/Boulders$ReferenceVolume[i]*Boulders$V[1:(i-1)]))/Boulders$V[i],0))
+}
 
 #Result dataset initialization
 Times.series.inlet<-data.frame(Time=seq(1,SimulationDuration,by = TimeStep)

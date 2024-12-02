@@ -125,8 +125,6 @@ Plot_BufferingModel<-function(ModelVersion,StructureName
           ,axis.text.x=element_blank(),axis.title.x=element_blank())
   
   # #Boulder passing plot
-  # # Define variables
-  #Boulder passing plot
   # Define variables
   BoulderPlot<-data.frame(Number_Passing=NA, Class_boulder=NA,time=Boulder_list_all$Time/3600)  #initialize dataframe
   # Loop over each row of the Boulder_list_all dataframe
