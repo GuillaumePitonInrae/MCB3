@@ -918,6 +918,23 @@ while(PerformAnotherSimulation == "yes")
       FillLegendLabel<-"# of bounding runs"
       Result_all$Branch<-paste0(Result_all$Branch," bound")
       Result_all_for_clogging$Branch<-paste0(Result_all_for_clogging$Branch," bound")
+      
+      
+      Qo_all <- Qo_all %>% 
+        mutate(Branch = case_when(Branch == "Lower" ~ "Small event, many boulders", Branch == "Upper" ~ "Big event, few boulders"))
+      
+      Qo_all_for_clogging <- Qo_all_for_clogging %>% 
+        mutate(Run = - Run) %>% mutate(Branch = case_when(Branch == "Lower" ~ "Small event, few boulders", Branch == "Upper" ~ "Big event, many boulders"))
+     
+       Qo_all <- rbind(Qo_all,Qo_all_for_clogging) 
+      
+       Result_all <- Result_all %>% 
+         mutate(Branch = case_when(Branch == "Lower bound" ~ "Small event, many boulders", Branch == "Upper bound" ~ "Big event, few boulders"))
+      
+      Result_all_for_clogging <- Result_all_for_clogging   %>%
+        mutate(Branch = case_when(Branch == "Lower bound" ~ "Small event, few boulders", Branch == "Upper bound" ~ "Big event, many boulders"))
+      
+      
       }
     
     #plots of synthesis multi run figures
@@ -934,7 +951,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           TopTopLeftPanel<-TopTopLeftPanel+
-          scale_fill_viridis_d("Bound",option="D",direction=-1)+
+          scale_fill_viridis_d("Bound",option="D",direction = 1)+
             coord_cartesian(xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))
         }else{ TopTopLeftPanel<-TopTopLeftPanel+
           guides(fill="none")+
@@ -960,7 +977,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           TopLeftPanel<-TopLeftPanel+
-            scale_fill_viridis_d("Bound",option="D",direction=-1)+
+            scale_fill_viridis_d("Bound",option="D",direction = 1)+
             coord_cartesian(xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))
         }else{
           TopLeftPanel<-TopLeftPanel+
@@ -1017,13 +1034,14 @@ while(PerformAnotherSimulation == "yes")
           BottomLeftPanel<-BottomLeftPanel+ 
             geom_point(data=Result_all_for_clogging,aes(x=Vout/10^3,y=Qp_out,pch="Intermediate")
                                                        ,alpha= AlphaN_runs)+
-            scale_color_viridis_d(option = "D",direction = -1)+
-            scale_shape_manual("Runs",values=c(20,3,4)
+            scale_color_viridis_d(option = "D",direction = 1)+
+            scale_shape_manual("Runs",values=c(3,20,4)
                                # ,labels=c("Upper","Intermediate","Lower")
             )+
             guides(shape = guide_legend(order = 1,nrow=3
                                         ,override.aes=list(size=2,alpha=1
-                                                           ,color = c("grey","yellow","darkblue")))
+                                                           # ,color = c("grey","yellow","darkblue")))
+                   ,color = c("darkblue","grey","yellow")))
                    ,color ="none")+
             coord_cartesian(ylim=c(0,Events$PeakDischarge_max[Event_Ind]*1.25)
                             ,xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))
@@ -1045,7 +1063,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           BottomRightPanel<-BottomRightPanel+
-            scale_fill_viridis_d("Bound",option="D",direction=-1)+
+            scale_fill_viridis_d("Bound",option="D",direction = 1)+
             coord_cartesian(ylim=c(0,Events$PeakDischarge_max[Event_Ind])*1.25)
         }else{ BottomRightPanel<-BottomRightPanel+
           guides(fill="none")+
@@ -1065,7 +1083,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           BottomRightRightPanel<-BottomRightRightPanel+
-            scale_fill_viridis_d("Bound",option="D",direction=-1)+
+            scale_fill_viridis_d("Bound",option="D",direction = 1)+
             coord_cartesian(ylim=c(0,Events$PeakDischarge_max[Event_Ind])*1.25)
         }else{
           BottomRightRightPanel<-BottomRightRightPanel+
@@ -1097,7 +1115,7 @@ while(PerformAnotherSimulation == "yes")
                                  "Parameters:"," uncertain values",
                                  "\n",
                                  " | ",
-                                 "Number of runs =",N_runs)
+                                 "Number of runs = 4 x",N_runs)
         }
         
         
@@ -1114,7 +1132,7 @@ while(PerformAnotherSimulation == "yes")
           # Define region in the plot
           define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
           # Arrange panels
-          print(TopightPanel, vp = define_region(1:6,7:12))
+          print(TopightPanel, vp = define_region(1:5,8:12))
           print(TopTopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
                 , vp = define_region(1:4,1:6))
           print(TopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
@@ -1140,14 +1158,14 @@ while(PerformAnotherSimulation == "yes")
             if(Perform_error_propagation == TRUE)
             {
               QplotIn<-QplotIn+
-                scale_color_viridis_d(option="D",direction=-1)
+                scale_color_viridis_d(option="D",direction = 1)
             }
           
           QplotIn<-QplotIn+
             theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank()
                   ,legend.position = "top")+
             labs(y = "Inlet Discharge\n [m3/s]",
-                 title = paste0("Time series of every bounding runs (Event: ",EventName," & Structure: ",StructureName,")"))+
+                 title = paste0("Time series of bounding runs (Event: ",EventName," at structure: ",StructureName,")"))+
             guides(linewidth="none")+
             guides(color="none")+
             theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
@@ -1158,7 +1176,7 @@ while(PerformAnotherSimulation == "yes")
           if(Perform_error_propagation == TRUE)
           {
             QplotOut<-QplotOut+
-              scale_color_viridis_d(option="D",direction=-1)
+              scale_color_viridis_d(option="D",direction = 1)
           }
           
           QplotOut<-QplotOut+
@@ -1174,7 +1192,7 @@ while(PerformAnotherSimulation == "yes")
           if(Perform_error_propagation == TRUE)
           {
             Vplot<-Vplot+
-              scale_color_viridis_d(option="D",direction=-1)
+              scale_color_viridis_d(option="D",direction = 1)
           }
           
           Vplot<-Vplot+
@@ -1190,27 +1208,29 @@ while(PerformAnotherSimulation == "yes")
           if(Perform_error_propagation == TRUE)
           {
             Zplot<-Zplot+
-              scale_color_viridis_d(option="D",direction=-1)
+              scale_color_viridis_d(option="D",direction = 1)
           }else{Zplot<-Zplot+guides(color="none")}
           
           Zplot<-Zplot+
             scale_linetype_manual(name="Level",label=c("Flow","Basal boulder jam"),values=c(1,4))+
             theme(legend.position = "bottom"#c(0.82,0.83)
                   ,legend.direction = "horizontal")+
+            guides(color = guide_legend(order = 1,nrow=2,override.aes=list(alpha=1,lwd=2))
+                   ,linetype = guide_legend(order = 2,nrow=2))+
             labs( x = "Time [h]",y = "Flow level\n [m]")
           
          png(paste0("SyntheticTimeSerie_Evt-" ,EventName   ,"_Structure_n"   ,Structure_Ind,"-"       ,StructureName,".png")
               , width = 16, height = 15,units="cm",res=350)
           {
-            pushViewport(viewport(layout = grid.layout(24,1) ) )
+            pushViewport(viewport(layout = grid.layout(26,1) ) )
             
             # Arrange graphs
             print(QplotIn      , vp = define_region(1:6,1))
             print(QplotOut     , vp = define_region(7:11,1))
-            print(Vplot        , vp = define_region(12:16,1))
+            print(Vplot        , vp = define_region(12:15,1))
             print(Zplot  +  labs(caption=Caption_text)+ 
                     theme(plot.caption =  element_text(size=8.5))        
-                  , vp = define_region(17:24,1))
+                  , vp = define_region(16:26,1))
           }
           dev.off() 
       }
@@ -1231,13 +1251,13 @@ while(PerformAnotherSimulation == "yes")
           labs(x="General clogging of the structure [-]",y="# of Run"
                ,title = paste0("Maximum flow level and general clogging ratio of the structure\n",
                                "|Event: ",EventName,"\n","|Structure: ",StructureName,""))+
-          theme(legend.position = "top",legend.box.background = element_rect(colour = 1) )
+          theme(legend.position = "top",legend.box.background = element_rect(colour = 1),legend.key.height = unit(0.3, 'cm') )
         
         
         if(Perform_error_propagation == TRUE)
         {
           TopLeftPanel<-TopLeftPanel+
-            scale_fill_viridis_d("Bound",option="D",direction=-1)
+            scale_fill_viridis_d("Bound",option="D",direction = 1)
         }#else{ TopLeftPanel<-TopLeftPanel    }
         
 
@@ -1276,12 +1296,13 @@ while(PerformAnotherSimulation == "yes")
           BottomLeftPanel<-BottomLeftPanel+ 
             geom_point(data=Result_all,aes(x=1-ResidualOpening,y=Zmax,pch="Intermediate")
                        ,alpha= AlphaN_runs)+
-            scale_color_viridis_d(option = "D",direction = -1)+
-            scale_shape_manual("Runs",values=c(20,3,4)
+            scale_color_viridis_d(option = "D",direction = 1)+
+            scale_shape_manual("Runs",values=c(3,20,4)
                                # ,labels=c("Upper","Intermediate","Lower")
             )+
             guides(shape = guide_legend(order = 1,nrow=3,override.aes=list(size=2,alpha=1
-                                                                           ,color = c("grey","yellow","darkblue")))
+                                                                           # ,color = c("grey","yellow","darkblue")))
+                   ,color = c("darkblue","grey","yellow")))
                    ,color ="none")
             
         }else{ BottomLeftPanel<-BottomLeftPanel+guides(color="none",shape="none")    }
@@ -1312,7 +1333,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           BottomRightPanel<-BottomRightPanel+
-            scale_fill_viridis_d("Bound",option="D",direction=-1)
+            scale_fill_viridis_d("Bound",option="D",direction = 1)
         }else{ BottomRightPanel<-BottomRightPanel+guides(fill="none")    }
         
         

@@ -2,6 +2,10 @@
 ##Function to simulate passage of debris flow through a series of cascading structures. 
 Cascade_of_structure_functionning<-function(input)
 {
+  load(file = "RunInd.Rdata.tmp")
+  if(Perform_error_propagation){Run_Ind<-Run_Ind+0.25}else{Run_Ind<-Run_Ind+1}
+  save(Run_Ind,N_runs,file = "RunInd.Rdata.tmp")
+  
   #Create input timesseries accordingly
   Qin<-Create_inlet_timeseries(input,Boulders)
   
@@ -47,10 +51,6 @@ Cascade_of_structure_functionning<-function(input)
     Result$StructureRank<-Structure_Ind
     
     #record the run ID (general variable) and structure name
-    load(file = "RunInd.Rdata.tmp")
-    if(Perform_error_propagation){Run_Ind<-Run_Ind+0.25}else{Run_Ind<-Run_Ind+1}
-    save(Run_Ind,N_runs,file = "RunInd.Rdata.tmp")
-    
     Qo$Run<-if(Perform_error_propagation == TRUE){Run_Ind*4}else{Run_Ind}
     Qo$StructureRank<-Structure_Ind
     
