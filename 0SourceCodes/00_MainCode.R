@@ -905,6 +905,7 @@ while(PerformAnotherSimulation == "yes")
     
   }
   
+  #Plot structure loop----
   for(Structure_Ind in 1:length(Structures$Name))
   {
     StructureName<-Structures$Name[[which(Structures$Rank==Structure_Ind)]]
@@ -937,6 +938,9 @@ while(PerformAnotherSimulation == "yes")
       
       }
     
+    Result_all<-rbind(Result_all,Result_all_for_clogging)
+    
+    
     #plots of synthesis multi run figures
     if(PrintFinalPlot==FALSE)
     {
@@ -952,7 +956,8 @@ while(PerformAnotherSimulation == "yes")
         {
           TopTopLeftPanel<-TopTopLeftPanel+
           scale_fill_viridis_d("Bound",option="D",direction = 1)+
-            coord_cartesian(xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))
+            coord_cartesian(xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))+
+            guides(fill = guide_legend(order = 1,nrow=2    ))
         }else{ TopTopLeftPanel<-TopTopLeftPanel+
           guides(fill="none")+
           coord_cartesian(xlim=c(0,Events$Volume_BestEstimate[Event_Ind]/10^3*1.25))
@@ -967,7 +972,7 @@ while(PerformAnotherSimulation == "yes")
                ,title = paste0("Debris flow volume and peak discharge \n","|Event: " ,EventName," \n"
                                ,"|Structure: ",StructureName,""))+
           theme(legend.position = "top"#c(0.2,0.5)
-                ,legend.box.background = element_rect(colour = 1) )
+                ,legend.box.background = element_rect(colour = 1) ,legend.key.height = unit(0.3, 'cm'))
         
         # Plot a synthesis figure on Vout
         TopLeftPanel<-ggplot(Result_all)+
@@ -994,7 +999,7 @@ while(PerformAnotherSimulation == "yes")
           theme_bw(base_size = 9)+
           geom_bin2d(aes(x=(Vevent-Vout)/Vevent,y=(Qp_in-Qp_out)/Qp_in),col=1,#bins=20)+
                      binwidth=c(0.1,0.1))+
-          scale_fill_gradient2("# of Run",low="palegreen1", high = "palegreen4")+ 
+          scale_fill_gradient2(FillLegendLabel,low="deeppink1", high = "deeppink4")+ 
           geom_hline(yintercept = 1,col="grey")+
           geom_vline(xintercept = 1,col="grey")+
           annotate(geom = "text", y = 0.5, adj=0.5, x = 0,vjust=(-1), label = "No effect on volume",srt=90,col="grey",size=3.5)+
@@ -1022,7 +1027,7 @@ while(PerformAnotherSimulation == "yes")
           BottomLeftPanel<-BottomLeftPanel+
             geom_bin2d(aes(x=Vout/10^3,y=Qp_out),col=1,#bins=20)+
                        binwidth=c(Events$Volume_BestEstimate[Event_Ind]/10^3/10,Events$PeakDischarge_BestEstimate[Event_Ind]/10))+
-            scale_fill_gradient2(FillLegendLabel,low="dodgerblue1", high = "dodgerblue4")+ 
+            scale_fill_gradient2(FillLegendLabel,low="deeppink1", high = "deeppink4")+ 
             theme(legend.direction = "horizontal",legend.position = "bottom",legend.key.height = unit(0.3, 'cm'))
         }
         
@@ -1032,17 +1037,16 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           BottomLeftPanel<-BottomLeftPanel+ 
-            geom_point(data=Result_all_for_clogging,aes(x=Vout/10^3,y=Qp_out,pch="Intermediate")
-                                                       ,alpha= AlphaN_runs)+
-            scale_color_viridis_d(option = "D",direction = 1)+
-            scale_shape_manual("Runs",values=c(3,20,4)
+            # geom_point(data=Result_all_for_clogging,aes(x=Vout/10^3,y=Qp_out,pch="Intermediate")
+                                                       # ,alpha= AlphaN_runs)+
+            scale_color_viridis_d("",option = "D",direction = 1)+
+            scale_shape_manual("",values=c(3,4,1,2)
                                # ,labels=c("Upper","Intermediate","Lower")
             )+
-            guides(shape = guide_legend(order = 1,nrow=3
-                                        ,override.aes=list(size=2,alpha=1
-                                                           # ,color = c("grey","yellow","darkblue")))
-                   ,color = c("darkblue","grey","yellow")))
-                   ,color ="none")+
+            guides(shape = guide_legend(order = 1,nrow=4,override.aes=list(size=2,alpha=1))
+                   ,color=guide_legend(order = 1,nrow=4,override.aes=list(size=2,alpha=1))
+                   ,fill = guide_colourbar(order = 2,title.position = "top")
+                   )+
             coord_cartesian(ylim=c(0,Events$PeakDischarge_max[Event_Ind]*1.25)
                             ,xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))
             
@@ -1103,18 +1107,18 @@ while(PerformAnotherSimulation == "yes")
         {
           Caption_text <-  paste("Code version:",ModelVersion,
                                  "\n",
-                                 " | ",
+                                 " |",
                                  "Parameters:"," best estimate values",
                                  "\n",
-                                 " | ",
+                                 " |",
                                  "Number of runs =",N_runs)
         }else{
           Caption_text <-  paste("Code version:",ModelVersion,
                                  "\n",
-                                 " | ",
+                                 " |",
                                  "Parameters:"," uncertain values",
                                  "\n",
-                                 " | ",
+                                 " |",
                                  "Number of runs = 4 x",N_runs)
         }
         
@@ -1240,51 +1244,64 @@ while(PerformAnotherSimulation == "yes")
         #Histograms and the 2Dbin plot is plotted with accuracy of 1/10 of Zmax - bottom outlet base level
         ZbinWidth<-(max(Result_all$Zmax,na.rm = TRUE)-min(Structures$Openings[[Structure_Ind]]$BaseLevel,na.rm = TRUE))/10
         
-        TopLeftPanel<-ggplot(Result_all_for_clogging)+
+        
+        TopTopLeftPanel<-ggplot(Result_all)+
+          theme_classic(base_size = 9)+
+          stat_ecdf(aes(1-ResidualOpening))+
+          coord_cartesian(xlim=c(0,1))+
+          scale_x_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))+
+          labs(x="", y="CDF",title = paste0("Maximum flow level and general clogging ratio of the structure\n",
+                               "|Event: ",EventName,"\n","|Structure: ",StructureName,""))
+        
+        TopLeftPanel<-ggplot(Result_all)+
           theme_classic(base_size = 9)+
           geom_histogram(aes(1-ResidualOpening,fill=Branch)
                          ,binwidth=1/10)+
           geom_boxplot(aes(x=1-ResidualOpening,y=-1))+
           coord_cartesian(xlim=c(0,1))+
           scale_x_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))+
-          # theme(axis.title.x=element_blank())+
           labs(x="General clogging of the structure [-]",y="# of Run"
-               ,title = paste0("Maximum flow level and general clogging ratio of the structure\n",
-                               "|Event: ",EventName,"\n","|Structure: ",StructureName,""))+
+               # ,title = paste0("Maximum flow level and general clogging ratio of the structure\n",
+                               # "|Event: ",EventName,"\n","|Structure: ",StructureName,"")
+               )+
           theme(legend.position = "top",legend.box.background = element_rect(colour = 1),legend.key.height = unit(0.3, 'cm') )
         
         
         if(Perform_error_propagation == TRUE)
         {
           TopLeftPanel<-TopLeftPanel+
-            scale_fill_viridis_d("Bound",option="D",direction = 1)
-        }#else{ TopLeftPanel<-TopLeftPanel    }
+            scale_fill_viridis_d("Bound",option="D",direction = 1)+
+            guides(fill = guide_legend(order = 1,nrow=4    ))
+        }
         
 
-        TopRightPanel<-ggplot(Result_all_for_clogging)+
-          theme_void(base_size = 7)+labs(title=paste0("Nota: The general clogging\n"
-                                                      ,"of the structure is computed\n"
-                                                      ,"only considering slot openings\n"
-                                                      ,"for bridges, and slot and slit\n"
-                                                      ,"openings for barriers, i.e. open-\n"
-                                                      ,"ings coded as weir are always \n"
-                                                      ,"ignored in its computation, as\n"
-                                                      ,"well as slits elements in bridges"))
+        TopRightPanel<-ggplot(Result_all)+
+          theme_void(base_size = 8)+
+          labs(title=paste0("Nota: The general clogging\n"
+                            ,"of the structure is computed\n"
+                            ,"only considering the slots for \n"
+                            ,"bridges, and slot and slit\n"
+                            ,"openings for barriers, i.e. \n"
+                            ,"openings coded as weir are \n"
+                            ,"always ignored in its comp-\n"
+                            ,"utation, as well as slits \n"
+                            ,"elements in bridges."))+
+          theme(plot.title = element_text(hjust=0.5))
         
         
-        BottomLeftPanel<-ggplot(Result_all_for_clogging)+
+        BottomLeftPanel<-ggplot(Result_all)+
           theme_bw(base_size = 9)
         
-        if((max(Result_all_for_clogging$ResidualOpening,na.rm = TRUE) == min(Result_all_for_clogging$ResidualOpening,na.rm = TRUE))  | (max(Result_all_for_clogging$Zmax,na.rm = TRUE) == min(Result_all_for_clogging$Zmax,na.rm = TRUE)) )
+        if((max(Result_all$ResidualOpening,na.rm = TRUE) == min(Result_all$ResidualOpening,na.rm = TRUE))  | (max(Result_all$Zmax,na.rm = TRUE) == min(Result_all$Zmax,na.rm = TRUE)) )
         {
           BottomLeftPanel<-BottomLeftPanel+
             geom_point(aes(x=1-ResidualOpening,y=Zmax),col=1,pch=22,fill=1,alpha=0.1)+
             theme(plot.margin = margin(t=0.1,r=0.1,b=1.5,l=0.4, "cm"))
         }else{
           BottomLeftPanel<-BottomLeftPanel+
-            geom_bin2d(aes(x=1-ResidualOpening,y=Zmax),col=1,#bins=20)+
+            geom_bin2d(aes(x=1-ResidualOpening,y=Zmax),col=1,
                        binwidth=c(1/10,ZbinWidth))+
-            scale_fill_gradient2(FillLegendLabel,low="dodgerblue1", high = "dodgerblue4")+ 
+            scale_fill_gradient2(FillLegendLabel,low="deeppink1", high = "deeppink4")+ 
             theme(legend.direction = "horizontal",legend.position = "bottom",legend.key.height = unit(0.3, 'cm'))
         }
         
@@ -1293,17 +1310,12 @@ while(PerformAnotherSimulation == "yes")
         
         if(Perform_error_propagation == TRUE)
         {
-          BottomLeftPanel<-BottomLeftPanel+ 
-            geom_point(data=Result_all,aes(x=1-ResidualOpening,y=Zmax,pch="Intermediate")
-                       ,alpha= AlphaN_runs)+
-            scale_color_viridis_d(option = "D",direction = 1)+
-            scale_shape_manual("Runs",values=c(3,20,4)
-                               # ,labels=c("Upper","Intermediate","Lower")
-            )+
-            guides(shape = guide_legend(order = 1,nrow=3,override.aes=list(size=2,alpha=1
-                                                                           # ,color = c("grey","yellow","darkblue")))
-                   ,color = c("darkblue","grey","yellow")))
-                   ,color ="none")
+          BottomLeftPanel<-BottomLeftPanel+
+            scale_color_viridis_d("",option = "D",direction = 1)+
+            scale_shape_manual("",values=c(3,4,1,2) )+
+            guides(shape = guide_legend(order = 1,nrow=4,override.aes=list(size=2,alpha=1))
+                   ,color = guide_legend(order = 1,nrow=4,override.aes=list(size=2,alpha=1))
+                   ,fill = guide_colourbar(order = 2,title.position = "top"))
             
         }else{ BottomLeftPanel<-BottomLeftPanel+guides(color="none",shape="none")    }
         
@@ -1322,8 +1334,8 @@ while(PerformAnotherSimulation == "yes")
           labs(x="General clogging of the structure [-]",y="Maximum flow level [m]")
         
         
-        # Plot a synthesis figure on Qpeak out
-        BottomRightPanel<-ggplot(Result_all_for_clogging)+
+        # Plot a synthesis figure on Zmax
+        BottomRightPanel<-ggplot(Result_all)+
           theme_classic(base_size = 9)+
           geom_histogram(aes(y=Zmax,fill=Branch),binwidth=ZbinWidth)+
           geom_boxplot(aes(y=Zmax,x=-1))+
@@ -1341,20 +1353,31 @@ while(PerformAnotherSimulation == "yes")
         
         png( paste0("FourPanelGraphMaxFlowLevelAndCloggingRate_Evt-"
                     ,EventName,"_Structure_n",Structure_Ind,"-",StructureName,".png")
-             , width = 17, height = 12,units="cm",res=350)
+             , width = 17.5, height = 15,units="cm",res=350)
         {
           pushViewport(viewport(layout = grid.layout(10,12)))
           # Arrange panels
-          print(TopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
-                , vp = define_region(1:4,1:9))
+          print(TopTopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
+                , vp = define_region(1:3,1:9))
+          if(Perform_error_propagation == TRUE)
+          {
+            print(TopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))+theme(legend.position = "right")
+                  , vp = define_region(4:5,1:12))
+          }else{
+            print(TopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))+
+                    guides(fill="none")
+                  , vp = define_region(4:5,1:9))
+          }
+          
+          
           print(TopRightPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.0, "cm"))
-                , vp = define_region(1:4,10:12))
+                , vp = define_region(1:3,10:12))
           print(BottomLeftPanel+          labs(caption="")
-                , vp = define_region(5:10,1:9))
-          print(BottomRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=1,l=0.1, "cm"))+
+                , vp = define_region(6:10,1:9))
+          print(BottomRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=1.3,l=0.1, "cm"))+
                   labs(caption=Caption_text)+
                   theme(plot.caption =  element_text(size=8.5))        
-                , vp = define_region(5:10,10:12))
+                , vp = define_region(6:10,10:12))
         }
         dev.off() 
       }
@@ -1376,7 +1399,7 @@ while(PerformAnotherSimulation == "yes")
       #   summarise(across(everything(), ~ sum(., na.rm = TRUE)))
       
     }# end of the synthesis plot loop
-  }# end of the structure loop
+  }# end of the plot structure loop
   
   ## Define if another run is to be launched
   if(HEADLESS){
