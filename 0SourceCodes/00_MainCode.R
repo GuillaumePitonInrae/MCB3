@@ -1142,9 +1142,9 @@ while(PerformAnotherSimulation == "yes")
           print(TopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
                 , vp = define_region(5:6,1:6))
           
-          print(BottomRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=1.5,l=0.1, "cm"))#+labs(caption="")
+          print(BottomRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=2,l=0.1, "cm"))#+labs(caption="")
                 , vp = define_region(7:11,7:9))
-          print(BottomRightRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=1.4,l=0.1, "cm"))+
+          print(BottomRightRightPanel+theme(plot.margin = margin(t=0.15,r=0.5,b=1.9,l=0.1, "cm"))+
                   # labs(caption=Caption_text)+
                   theme(plot.caption =  element_text(size=8.5))
                 , vp = define_region(7:11,10:12))
@@ -1276,7 +1276,7 @@ while(PerformAnotherSimulation == "yes")
         
 
         TopRightPanel<-ggplot(Result_all)+
-          theme_void(base_size = 8)+
+          theme_void(base_size = 7)+
           labs(title=paste0("Nota: The general clogging\n"
                             ,"of the structure is computed\n"
                             ,"only considering the slots for \n"
@@ -1292,21 +1292,17 @@ while(PerformAnotherSimulation == "yes")
         BottomLeftPanel<-ggplot(Result_all)+
           theme_bw(base_size = 9)
         
-        if((max(Result_all$ResidualOpening,na.rm = TRUE) == min(Result_all$ResidualOpening,na.rm = TRUE))  | (max(Result_all$Zmax,na.rm = TRUE) == min(Result_all$Zmax,na.rm = TRUE)) )
+        if((max(Result_all$ResidualOpening,na.rm = TRUE) > min(Result_all$ResidualOpening,na.rm = TRUE))  && (max(Result_all$Zmax,na.rm = TRUE) > min(Result_all$Zmax,na.rm = TRUE)) )
         {
-          BottomLeftPanel<-BottomLeftPanel+
-            geom_point(aes(x=1-ResidualOpening,y=Zmax),col=1,pch=22,fill=1,alpha=0.1)+
-            theme(plot.margin = margin(t=0.1,r=0.1,b=1.5,l=0.4, "cm"))
-        }else{
           BottomLeftPanel<-BottomLeftPanel+
             geom_bin2d(aes(x=1-ResidualOpening,y=Zmax),col=1,
                        binwidth=c(1/10,ZbinWidth))+
-            scale_fill_gradient2(FillLegendLabel,low="deeppink1", high = "deeppink4")+ 
-            theme(legend.direction = "horizontal",legend.position = "bottom",legend.key.height = unit(0.3, 'cm'))
+            scale_fill_gradient2(FillLegendLabel,low="deeppink1", high = "deeppink4")
         }
         
         BottomLeftPanel<-BottomLeftPanel+ 
-          geom_point(aes(x=1-ResidualOpening,y=Zmax,pch=Branch,col=Branch),alpha= AlphaN_runs)
+          geom_point(aes(x=1-ResidualOpening,y=Zmax,pch=Branch,col=Branch),alpha= AlphaN_runs)+
+          theme(legend.direction = "horizontal",legend.position = "bottom",legend.key.height = unit(0.3, 'cm'))
         
         if(Perform_error_propagation == TRUE)
         {
