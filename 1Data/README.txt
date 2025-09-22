@@ -27,11 +27,11 @@ The file InitialCOnditions.txt describe the initial state in the basin and barri
 	- for weir it is the angle between the wing and the horizontal in degrees. A weir with Param = 90 is actually a slit
  -The sixth is the vertical clogging of the opening by boulders in meters at the beggining of the run
  -The seventh is the lateral clogging of the opening by boulders in meters at the beggining of the run
- -The heighth is a comment column to keep track of what are these openings, e.g., "crest", "spillway", "bottom slit"
+ -The eighth is a comment column to keep track of what are these openings, e.g., "crest", "spillway", "bottom slit"
  
  
 In RangeOfBoulders.txt, the column titles must be: Boulder_size_category_(m)	Lower_bound	Upper_bound	Best_estimate	Reference_Volume
--Boulder_size_category_(m)	is the range of diameter D of the boulder class in meters, it must be separeted by "-", e.g., 0.5-1;
--the three next columns are "Lower_bound"	"Upper_bound"	"Best_estimate"	are the typical number N of such boulders that can be found in a reference volume (that is written in the next column), it is asked to provide a lower bound and upper bound (N being out of this range is considered impossible) and a best estimate (which mathematically is assumed to be the mode of the distribution, i.e., the most probable value);
--The fifth column is Reference_Volume, it is the reference volume in which typically the above mentionned numbers of boulders of class D can be found, expressed in cubic meters.
+-Diameter_min & Diameter_max	are the lower and upper range of diameter D of the boulder class in meters;
+-the three next columns are Number_BestEstimate, Number_min & Number_max are the typical number N of such boulders that can be found in a reference volume (that is written in the next column), it is asked to provide a lower bound and upper bound (N being out of this range is considered impossible) and a best estimate (which mathematically is assumed to be the mode of the distribution, i.e., the most probable value);
+-The fifth column is ReferenceVolume, it is the reference volume in which typically the above mentionned numbers of boulders of class D can be found, expressed in cubic meters.
  
