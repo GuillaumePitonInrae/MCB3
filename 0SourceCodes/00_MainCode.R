@@ -41,10 +41,10 @@ if(HEADLESS) {
 }
 
 # to emulate the headless mode under RStudio:
-# HEADLESS = TRUE
-# rootDir<-"D:/MCB3/4Simu/DFbuffering"
-# args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
-# setwd(paste0(rootDir,"/0SourceCodes"))
+HEADLESS = TRUE
+rootDir<-"D:/MCB3/4Simu/DFbuffering"
+args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
+setwd(paste0(rootDir,"/0SourceCodes"))
 
 
 if(HEADLESS) {
@@ -949,6 +949,25 @@ while(PerformAnotherSimulation == "yes")
     # Define region in the plot
     define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
     
+    if(Perform_error_propagation == FALSE)
+    {
+      Caption_text <-  paste("Code version:",ModelVersion,
+                             "\n",
+                             " |",
+                             "Parameters:"," best estimate values",
+                             "\n",
+                             " |",
+                             "Number of runs =",N_runs)
+    }else{
+      Caption_text <-  paste("Code version:",ModelVersion,
+                             "\n",
+                             " |",
+                             "Parameters:"," uncertain values",
+                             "\n",
+                             " |",
+                             "Number of runs = 4 x",N_runs)
+    }
+    
     if(PrintFinalPlot==FALSE)
     {
       AlphaN_runs<-min(0.3,0.3*25/max(Qo_all$Run)*4)
@@ -1119,26 +1138,6 @@ while(PerformAnotherSimulation == "yes")
           guides(fill="none")
 
         
-        if(Perform_error_propagation == FALSE)
-        {
-          Caption_text <-  paste("Code version:",ModelVersion,
-                                 "\n",
-                                 " |",
-                                 "Parameters:"," best estimate values",
-                                 "\n",
-                                 " |",
-                                 "Number of runs =",N_runs)
-        }else{
-          Caption_text <-  paste("Code version:",ModelVersion,
-                                 "\n",
-                                 " |",
-                                 "Parameters:"," uncertain values",
-                                 "\n",
-                                 " |",
-                                 "Number of runs = 4 x",N_runs)
-        }
-        
-        
         FootNote<-ggplot(Result_all)+
           theme_void(base_size = 7)+labs(title=Caption_text)
         
@@ -1171,7 +1170,7 @@ while(PerformAnotherSimulation == "yes")
         }
         dev.off()
       }
-    }
+    
       #Multi-run time series----
       {
           QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
