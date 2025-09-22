@@ -946,6 +946,8 @@ while(PerformAnotherSimulation == "yes")
     
     #plots of synthesis multi run figures
     AlphaN_runs<-min(0.3,0.3*25/max(Qo_all$Run))
+    # Define region in the plot
+    define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
     
     if(PrintFinalPlot==FALSE)
     {
@@ -1147,8 +1149,7 @@ while(PerformAnotherSimulation == "yes")
              , width = 17.5, height = 15,units="cm",res=350)
         {
           pushViewport(viewport(layout = grid.layout(11,12)))
-          # Define region in the plot
-          define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
+         
           # Arrange panels
           print(TopightPanel+theme(legend.key.width = unit(0.4, 'cm'),
                                    plot.margin = margin(t=0.15,r=0.1,b=0.8,l=0.8, "cm"))
