@@ -945,6 +945,8 @@ while(PerformAnotherSimulation == "yes")
     
     
     #plots of synthesis multi run figures
+    AlphaN_runs<-min(0.3,0.3*25/max(Qo_all$Run))
+    
     if(PrintFinalPlot==FALSE)
     {
       AlphaN_runs<-min(0.3,0.3*25/max(Qo_all$Run)*4)
