@@ -1,23 +1,23 @@
 {
     "sim": {
-        "N_runs": 11,
+        "N_runs": 25,
         "PrintFinalPlot": true,
         "SaveDetailsResults": true,
         "Perform_error_propagation": true,
         "Events": [
             {
-                "Name": "Exceptional",
-                "Volume_BestEstimate": 150000.0,
-                "PeakDischarge_BestEstimate": 233.0,
+                "Name": "2005",
+                "Volume_BestEstimate": 61000.0,
+                "PeakDischarge_BestEstimate": 113.0,
                 "TimeLag_BestEstimate": 0.14,
-                "DepositionSlope_BestEstimate": 0.08,
-                "Volume_min": 70000.0,
-                "Volume_max": 250000.0,
-                "PeakDischarge_min": 200.0,
-                "PeakDischarge_max": 350.0,
+                "DepositionSlope_BestEstimate": 0.1099,
+                "Volume_min": 40000.0,
+                "Volume_max": 70000.0,
+                "PeakDischarge_min": 81.0,
+                "PeakDischarge_max": 126.0,
                 "TimeLag_min": 0.03,
                 "TimeLag_max": 0.42,
-                "DepositionSlope_min": 0.04,
+                "DepositionSlope_min": 0.109,
                 "DepositionSlope_max": 0.11
             }
         ],
@@ -25,33 +25,33 @@
             {
                 "Diameter_min": 1.0,
                 "Diameter_max": 2.0,
-                "Number_BestEstimate": 550.0,
-                "ReferenceVolume": 157500.0,
-                "Number_max": 1700.0,
-                "Number_min": 270.0
+                "Number_BestEstimate": 210.0,
+                "ReferenceVolume": 61000.0,
+                "Number_max": 430.0,
+                "Number_min": 90.0
             },
             {
                 "Diameter_min": 2.0,
                 "Diameter_max": 3.0,
-                "Number_BestEstimate": 55.0,
-                "ReferenceVolume": 157500.0,
-                "Number_max": 170.0,
-                "Number_min": 27.0
+                "Number_BestEstimate": 21.0,
+                "ReferenceVolume": 61000.0,
+                "Number_max": 43.0,
+                "Number_min": 9.0
             },
             {
                 "Diameter_min": 3.0,
                 "Diameter_max": 4.0,
-                "Number_BestEstimate": 11.0,
-                "ReferenceVolume": 157500.0,
-                "Number_max": 34.0,
+                "Number_BestEstimate": 4.0,
+                "ReferenceVolume": 61000.0,
+                "Number_max": 9.0,
                 "Number_min": 0.0
             },
             {
                 "Diameter_min": 4.0,
                 "Diameter_max": 5.0,
                 "Number_BestEstimate": 1.0,
-                "ReferenceVolume": 157500.0,
-                "Number_max": 4.0,
+                "ReferenceVolume": 61000.0,
+                "Number_max": 1.1,
                 "Number_min": 0.0
             }
         ],

@@ -1,7 +1,7 @@
 #' ---
 #' title: "Main Code"
 #' output: html_document
-#' date: "2024-03-22"
+#' date: "2025-09-22"
 #' Author: G. Piton, C. Misset, H. Shirra
 #' ---
 #' This is an annotated version of the 00_MainCode.R  script prepared by H. Shirra, originally developed by G. Piton and C. Misset to stochastically simulate jamming through a series of constrictions in a debris flow event. It is adapted from Piton et. al's (2022) paper " *Debris Flows, Boulders and Constrictions: A Simple Framework for Modeling Jamming, and Its Consequences on Outflow*" for which an R Script was developed to stochastically simulate jamming through a single constriction. This code was developed in R, and is accessible either through RStudio, or through an interface on the online platform PlatRisk (https://platrisk.ige.inrae.fr). This script calls upon various sub-routines, which simulate different aspects of jamming. 
@@ -40,17 +40,12 @@ if(HEADLESS) {
   args<-commandArgs(trailingOnly = TRUE)
 }
 
-#For Guillaume P. only, to emulate the headless mode under RStudio:
+# to emulate the headless mode under RStudio:
 # HEADLESS = TRUE
 # rootDir<-"D:/MCB3/4Simu/DFbuffering"
 # args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
 # setwd(paste0(rootDir,"/0SourceCodes"))
 
-# For Hilary S. only, to emulate the headless mode under RStudio:
-# HEADLESS = FALSE
-# rootDir<-"C:/Users/shirrah/Documents/MSc_Thesis/GitHub/DFbuffering"
-# args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
-# setwd(paste0(rootDir,"/0SourceCodes"))
 
 if(HEADLESS) {
   print('Running in HEADLESS mode')
@@ -916,7 +911,7 @@ while(PerformAnotherSimulation == "yes")
       Result_all_for_clogging<-Result_all
       FillLegendLabel<-"# of runs"
     }else{
-      FillLegendLabel<-"# of bounding runs"
+      FillLegendLabel<-"# of runs"
       Result_all$Branch<-paste0(Result_all$Branch," bound")
       Result_all_for_clogging$Branch<-paste0(Result_all_for_clogging$Branch," bound")
       
@@ -940,6 +935,14 @@ while(PerformAnotherSimulation == "yes")
     
     Result_all<-rbind(Result_all,Result_all_for_clogging)
     
+    Result_all <- Result_all %>% 
+      mutate(Trapping = (Vevent-Vout)/Vevent) %>%
+      mutate(Attenuation = case_when(Trapping < 0.01 ~ 0
+                                     ,Trapping >=0.01 ~ Trapping)) %>%
+      mutate(Attenuation = (Qp_in-Qp_out)/Qp_in) %>%
+      mutate(Attenuation = case_when(Attenuation < 0.01 ~ 0
+                                     ,Attenuation >=0.01 ~ Attenuation))
+    
     
     #plots of synthesis multi run figures
     if(PrintFinalPlot==FALSE)
@@ -955,7 +958,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           TopTopLeftPanel<-TopTopLeftPanel+
-          scale_fill_viridis_d("Bound",option="D",direction = 1)+
+          scale_fill_viridis_d("Uncertainty sub-scenario",option="D",direction = 1)+
             coord_cartesian(xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))+
             guides(fill = guide_legend(order = 1,nrow=2    ))
         }else{ TopTopLeftPanel<-TopTopLeftPanel+
@@ -971,7 +974,7 @@ while(PerformAnotherSimulation == "yes")
           labs(x="Supplied volume [*1000 m3]",y="# of Run"
                ,title = paste0("Debris flow volume and peak discharge \n","|Event: " ,EventName," \n"
                                ,"|Structure: ",StructureName,""))+
-          theme(legend.position = "top"#c(0.2,0.5)
+          theme(legend.position = "top",legend.direction = "vertical"
                 ,legend.box.background = element_rect(colour = 1) ,legend.key.height = unit(0.3, 'cm'))
         
         # Plot a synthesis figure on Vout
@@ -982,7 +985,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           TopLeftPanel<-TopLeftPanel+
-            scale_fill_viridis_d("Bound",option="D",direction = 1)+
+            scale_fill_viridis_d("Uncertainty sub-scenario",option="D",direction = 1)+
             coord_cartesian(xlim=c(0,Events$Volume_max[Event_Ind]/10^3*1.25))
         }else{
           TopLeftPanel<-TopLeftPanel+
@@ -997,9 +1000,9 @@ while(PerformAnotherSimulation == "yes")
         # Plot a synthesis figure of Qpeak out VS Vout, top right panel
         TopightPanel<-ggplot(Result_all)+
           theme_bw(base_size = 9)+
-          geom_bin2d(aes(x=(Vevent-Vout)/Vevent,y=(Qp_in-Qp_out)/Qp_in),col=1,#bins=20)+
+          geom_bin2d(aes(x=Trapping,y=Attenuation),col=1,#bins=20)+
                      binwidth=c(0.1,0.1))+
-          scale_fill_gradient2(FillLegendLabel,low="deeppink1", high = "deeppink4")+ 
+          scale_fill_gradient2(FillLegendLabel,low="indianred1", high = "indianred4")+ 
           geom_hline(yintercept = 1,col="grey")+
           geom_vline(xintercept = 1,col="grey")+
           annotate(geom = "text", y = 0.5, adj=0.5, x = 0,vjust=(-1), label = "No effect on volume",srt=90,col="grey",size=3.5)+
@@ -1009,8 +1012,17 @@ while(PerformAnotherSimulation == "yes")
           annotate(geom = "text", y = 0.5, adj=0.5, x = 1*1.08,vjust=(0), label = "Total trapping",srt=90,col="grey",size=3.5)+
           annotate(geom = "text", x = 0.5, adj=0.5, y = 1*1.1,vjust=(1), label = "Total attenuation",col="grey",size=3.5)+
           coord_cartesian(ylim=c(-0.1,1.1),xlim=c(-0.1,1.1))+
+          geom_point(aes(x=Trapping,y=Attenuation
+                         ,pch=Branch,col=Branch),alpha= AlphaN_runs)+
+          scale_color_viridis_d("",option = "D",direction = 1)+
+          scale_shape_manual("",values=c(3,4,1,2))+
+          guides(shape = guide_legend(order = 1,nrow=4,override.aes=list(size=2,alpha=1))
+                 ,color = guide_legend(order = 1,nrow=4,override.aes=list(size=2,alpha=1))
+                 ,fill = guide_colourbar(order = 2,title.position = "top"))+
           labs(x="Volume trapping [%]",y="Peak discharge attenuation [%]" )+
-          theme(legend.direction = "horizontal",legend.position = "top",legend.key.height = unit(0.3, 'cm'))+
+          theme(legend.direction = "horizontal"
+                ,legend.position = "top"
+                ,legend.key.height = unit(0.3, 'cm'))+
           scale_y_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))+
           scale_x_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))
         
@@ -1067,7 +1079,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           BottomRightPanel<-BottomRightPanel+
-            scale_fill_viridis_d("Bound",option="D",direction = 1)+
+            scale_fill_viridis_d("Uncertainty sub-scenario",option="D",direction = 1)+
             coord_cartesian(ylim=c(0,Events$PeakDischarge_max[Event_Ind])*1.25)
         }else{ BottomRightPanel<-BottomRightPanel+
           guides(fill="none")+
@@ -1087,7 +1099,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           BottomRightRightPanel<-BottomRightRightPanel+
-            scale_fill_viridis_d("Bound",option="D",direction = 1)+
+            scale_fill_viridis_d("Uncertainty sub-scenario",option="D",direction = 1)+
             coord_cartesian(ylim=c(0,Events$PeakDischarge_max[Event_Ind])*1.25)
         }else{
           BottomRightRightPanel<-BottomRightRightPanel+
@@ -1136,7 +1148,9 @@ while(PerformAnotherSimulation == "yes")
           # Define region in the plot
           define_region <- function(row, col){viewport(layout.pos.row = row, layout.pos.col = col)}
           # Arrange panels
-          print(TopightPanel, vp = define_region(1:5,8:12))
+          print(TopightPanel+theme(legend.key.width = unit(0.4, 'cm'),
+                                   plot.margin = margin(t=0.15,r=0.1,b=0.8,l=0.8, "cm"))
+                , vp = define_region(1:6,7:12))
           print(TopTopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
                 , vp = define_region(1:4,1:6))
           print(TopLeftPanel+theme(plot.margin = margin(t=0.1,r=0.1,b=0.1,l=0.4, "cm"))
@@ -1154,6 +1168,7 @@ while(PerformAnotherSimulation == "yes")
         }
         dev.off()
       }
+    }
       #Multi-run time series----
       {
           QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
@@ -1169,7 +1184,7 @@ while(PerformAnotherSimulation == "yes")
             theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank()
                   ,legend.position = "top")+
             labs(y = "Inlet Discharge\n [m3/s]",
-                 title = paste0("Time series of bounding runs (Event: ",EventName," at structure: ",StructureName,")"))+
+                 title = paste0("Time series of uncertainty sub-scenarios (Event: ",EventName," at structure: ",StructureName,")"))+
             guides(linewidth="none")+
             guides(color="none")+
             theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
@@ -1219,9 +1234,9 @@ while(PerformAnotherSimulation == "yes")
             scale_linetype_manual(name="Level",label=c("Flow","Basal boulder jam"),values=c(1,4))+
             theme(legend.position = "bottom"#c(0.82,0.83)
                   ,legend.direction = "horizontal")+
-            guides(color = guide_legend(order = 1,nrow=2,override.aes=list(alpha=1,lwd=2))
-                   ,linetype = guide_legend(order = 2,nrow=2))+
-            labs( x = "Time [h]",y = "Flow level\n [m]")
+            guides(color = guide_legend(order = 2,nrow=2,override.aes=list(alpha=1,lwd=2))
+                   ,linetype = guide_legend(order = 1,nrow=2))+
+            labs( x = "Time [h]",y = "Flow level [m]")
           
          png(paste0("SyntheticTimeSerie_Evt-" ,EventName   ,"_Structure_n"   ,Structure_Ind,"-"       ,StructureName,".png")
               , width = 16, height = 15,units="cm",res=350)
@@ -1247,11 +1262,14 @@ while(PerformAnotherSimulation == "yes")
         
         TopTopLeftPanel<-ggplot(Result_all)+
           theme_classic(base_size = 9)+
-          stat_ecdf(aes(1-ResidualOpening))+
+          stat_ecdf(aes(1-ResidualOpening,col=Branch))+
+          scale_color_viridis_d("Uncertainty sub-scenario",option="D",direction = 1)+
+          # stat_ecdf(aes(1-ResidualOpening))+
           coord_cartesian(xlim=c(0,1))+
           scale_x_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))+
-          labs(x="", y="CDF",title = paste0("Maximum flow level and general clogging ratio of the structure\n",
-                               "|Event: ",EventName,"\n","|Structure: ",StructureName,""))
+          labs(x="", y="CDF",title = paste0("Maximum flow level and general clogging ratio\n",
+                               "|Event: ",EventName,"\n","|Structure: ",StructureName,""))+
+          guides(color="none")
         
         TopLeftPanel<-ggplot(Result_all)+
           theme_classic(base_size = 9)+
@@ -1270,7 +1288,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           TopLeftPanel<-TopLeftPanel+
-            scale_fill_viridis_d("Bound",option="D",direction = 1)+
+            scale_fill_viridis_d("Uncertainty sub-scenario",option="D",direction = 1)+
             guides(fill = guide_legend(order = 1,nrow=4    ))
         }
         
@@ -1341,7 +1359,7 @@ while(PerformAnotherSimulation == "yes")
         if(Perform_error_propagation == TRUE)
         {
           BottomRightPanel<-BottomRightPanel+
-            scale_fill_viridis_d("Bound",option="D",direction = 1)
+            scale_fill_viridis_d("Uncertainty sub-scenario",option="D",direction = 1)
         }else{ BottomRightPanel<-BottomRightPanel+guides(fill="none")    }
         
         
@@ -1379,15 +1397,22 @@ while(PerformAnotherSimulation == "yes")
       }
       #Boulder inventory plot----
       # 
-      # ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
-      #   # geom_col(a♣es(y=-Class3.unjammed))+
-      #   geom_col(aes(y=Class1.unjammed),alpha=1)+
-      #   geom_col(aes(y=Class2.unjammed),alpha=0.3)+
-      #   geom_col(aes(y=-Class1.jammed),alpha=1)+
-      #   geom_col(aes(y=-Class2.jammed),alpha=0.3)#+
-      #   # geom_col(aes(y=Class3.unjammed),alpha=0.5)+
-      # geom_col(aes(y=Class4.unjammed))
-      # # 
+      # ggplot(rbind(Qo_all,Qo_all_for_clogging),aes(x=Time/3600))+theme_bw(base_size = 9)+
+      #   geom_col(aes(y=Class4.unjammed,alpha="D=1-2m",fill="D=1-2m"))+
+      #   geom_col(aes(y=Class3.unjammed,alpha="D=2-3m",fill="D=2-3m"))+
+      #   geom_col(aes(y=Class2.unjammed,alpha="D=3-4m",fill="D=3-4m"))+
+      #   geom_col(aes(y=Class1.unjammed,alpha="D=4-5m",fill="D=4-5m"))+
+      #   
+      #   geom_col(aes(y=-Class4.jammed,alpha="D=1-2m",fill="D=1-2m"))+
+      #   geom_col(aes(y=-Class3.jammed,alpha="D=2-3m",fill="D=2-3m"))+
+      #   geom_col(aes(y=-Class2.jammed,alpha="D=3-4m",fill="D=3-4m"))+
+      #   geom_col(aes(y=-Class1.jammed,alpha="D=4-5m",fill="D=4-5m"))+
+      #   # scale_fill_manual('Boulder class',values=c("deeppink4","deeppink3","deeppink2","deeppink1"))+
+      #   scale_fill_manual('Boulder class',values=c("darkblue","deeppink","chartreuse","black"))+
+      #   scale_alpha_manual('Boulder class',values=c(0.2,0.7,0.8,1))+
+      #   labs(x="Time [h]",y="Jammed (negative) and unjammed (positive) boulders")
+      
+      # #   
       # # 
       # # 
       # Test<-Qo_all %>% select(c(11:22,24)) %>%
