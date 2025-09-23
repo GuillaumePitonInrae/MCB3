@@ -1,0 +1,349 @@
+{
+    "sim": {
+        "N_runs": 11,
+        "PrintFinalPlot": true,
+        "SaveDetailsResults": true,
+        "Perform_error_propagation": false,
+        "Events": [
+            {
+                "Name": "Front 2005",
+                "Volume_BestEstimate": 17080.0,
+                "PeakDischarge_BestEstimate": 113.0,
+                "TimeLag_BestEstimate": 0.5,
+                "DepositionSlope_BestEstimate": 0.08
+            }
+        ],
+        "Boulders": [
+            {
+                "Diameter_min": 1.0,
+                "Diameter_max": 2.0,
+                "Number_BestEstimate": 210.0,
+                "ReferenceVolume": 12200.0
+            },
+            {
+                "Diameter_min": 2.0,
+                "Diameter_max": 3.0,
+                "Number_BestEstimate": 27.0,
+                "ReferenceVolume": 12200.0
+            },
+            {
+                "Diameter_min": 3.0,
+                "Diameter_max": 4.0,
+                "Number_BestEstimate": 4.0,
+                "ReferenceVolume": 12200.0
+            },
+            {
+                "Diameter_min": 4.0,
+                "Diameter_max": 5.0,
+                "Number_BestEstimate": 1.0,
+                "ReferenceVolume": 12200.0
+            }
+        ],
+        "Structures": [
+            {
+                "Name": "Upper Debris Basin",
+                "TransferDownstream": "Mixing 5600",
+                "Openings": [
+                    {
+                        "Type": "slit",
+                        "Width": 5.0,
+                        "BaseLevel": 899.0,
+                        "TopLevel": 906.25,
+                        "SideAngle": 90.0,
+                        "Comment": "",
+                        "Number": 1
+                    },
+                    {
+                        "Type": "slit",
+                        "Width": 8.0,
+                        "BaseLevel": 906.75,
+                        "TopLevel": 906.76,
+                        "SideAngle": 90.0,
+                        "Comment": "",
+                        "Number": 2
+                    },
+                    {
+                        "Type": "weir",
+                        "Width": 0.0,
+                        "BaseLevel": 908.3,
+                        "TopLevel": 914.3,
+                        "SideAngle": 15.0,
+                        "Comment": "",
+                        "Number": 3
+                    }
+                ],
+                "Type": "barrier",
+                "StorageElevation": [
+                    {
+                        "Z": 899.0,
+                        "S0.11": 0.0,
+                        "S0.04": 0.0,
+                        "S0.08": 0.0
+                    },
+                    {
+                        "Z": 901.0,
+                        "S0.11": 2382.0,
+                        "S0.04": 59.0,
+                        "S0.08": 410.0
+                    },
+                    {
+                        "Z": 902.0,
+                        "S0.11": 4935.0,
+                        "S0.04": 548.0,
+                        "S0.08": 2003.0
+                    },
+                    {
+                        "Z": 903.0,
+                        "S0.11": 7796.0,
+                        "S0.04": 1674.0,
+                        "S0.08": 4302.0
+                    },
+                    {
+                        "Z": 904.0,
+                        "S0.11": 10987.0,
+                        "S0.04": 3362.0,
+                        "S0.08": 6910.0
+                    },
+                    {
+                        "Z": 905.0,
+                        "S0.11": 14523.0,
+                        "S0.04": 5523.0,
+                        "S0.08": 9797.0
+                    },
+                    {
+                        "Z": 906.0,
+                        "S0.11": 18527.0,
+                        "S0.04": 8066.0,
+                        "S0.08": 12997.0
+                    },
+                    {
+                        "Z": 907.0,
+                        "S0.11": 23123.0,
+                        "S0.04": 10904.0,
+                        "S0.08": 16533.0
+                    },
+                    {
+                        "Z": 908.0,
+                        "S0.11": 28364.0,
+                        "S0.04": 14038.0,
+                        "S0.08": 20511.0
+                    },
+                    {
+                        "Z": 909.0,
+                        "S0.11": 34197.0,
+                        "S0.04": 17493.0,
+                        "S0.08": 25096.0
+                    },
+                    {
+                        "Z": 910.0,
+                        "S0.11": 40604.0,
+                        "S0.04": 21334.0,
+                        "S0.08": 30197.0
+                    },
+                    {
+                        "Z": 911.0,
+                        "S0.11": 47796.0,
+                        "S0.04": 25740.0,
+                        "S0.08": 35714.0
+                    },
+                    {
+                        "Z": 912.0,
+                        "S0.11": 55912.0,
+                        "S0.04": 30536.0,
+                        "S0.08": 41631.0
+                    },
+                    {
+                        "Z": 913.0,
+                        "S0.11": 64870.0,
+                        "S0.04": 35618.0,
+                        "S0.08": 47899.0
+                    },
+                    {
+                        "Z": 914.0,
+                        "S0.11": 74371.0,
+                        "S0.04": 40907.0,
+                        "S0.08": 54498.0
+                    },
+                    {
+                        "Z": 915.0,
+                        "S0.11": 84245.0,
+                        "S0.04": 46344.0,
+                        "S0.08": 61328.0
+                    }
+                ],
+                "InitialConditions": {
+                    "Name": "Empty",
+                    "DepositHeight_BestEstimate": 0.1,
+                    "JammingHeight_BestEstimate": 0.1
+                },
+                "Rank": 1
+            },
+            {
+                "Name": "Lower Debris basin",
+                "TransferDownstream": "Mixing 5000",
+                "Openings": [
+                    {
+                        "Type": "slit",
+                        "Width": 5.0,
+                        "BaseLevel": 804.5,
+                        "TopLevel": 809.3,
+                        "SideAngle": 90.0,
+                        "Comment": "",
+                        "Number": 1
+                    },
+                    {
+                        "Type": "slit",
+                        "Width": 12.0,
+                        "BaseLevel": 809.3,
+                        "TopLevel": 809.3,
+                        "SideAngle": 90.0,
+                        "Comment": "",
+                        "Number": 2
+                    },
+                    {
+                        "Type": "weir",
+                        "Width": 0.0,
+                        "BaseLevel": 814.9,
+                        "TopLevel": 814.91,
+                        "SideAngle": 10.3,
+                        "Comment": "",
+                        "Number": 3
+                    }
+                ],
+                "Type": "barrier",
+                "StorageElevation": [
+                    {
+                        "Z": 804.5,
+                        "S0.11": 0.0,
+                        "S0.04": 0.0,
+                        "S0.08": 0.0
+                    },
+                    {
+                        "Z": 807.0,
+                        "S0.11": 3670.0,
+                        "S0.04": 16.0,
+                        "S0.08": 307.0
+                    },
+                    {
+                        "Z": 808.0,
+                        "S0.11": 7260.0,
+                        "S0.04": 301.0,
+                        "S0.08": 2154.0
+                    },
+                    {
+                        "Z": 809.0,
+                        "S0.11": 11263.0,
+                        "S0.04": 1272.0,
+                        "S0.08": 4856.0
+                    },
+                    {
+                        "Z": 810.0,
+                        "S0.11": 15738.0,
+                        "S0.04": 3046.0,
+                        "S0.08": 8327.0
+                    },
+                    {
+                        "Z": 811.0,
+                        "S0.11": 20836.0,
+                        "S0.04": 5444.0,
+                        "S0.08": 12276.0
+                    },
+                    {
+                        "Z": 812.0,
+                        "S0.11": 26575.0,
+                        "S0.04": 8282.0,
+                        "S0.08": 16710.0
+                    },
+                    {
+                        "Z": 813.0,
+                        "S0.11": 32932.0,
+                        "S0.04": 11685.0,
+                        "S0.08": 21623.0
+                    },
+                    {
+                        "Z": 814.0,
+                        "S0.11": 39978.0,
+                        "S0.04": 15797.0,
+                        "S0.08": 26839.0
+                    },
+                    {
+                        "Z": 815.0,
+                        "S0.11": 47694.0,
+                        "S0.04": 20458.0,
+                        "S0.08": 32839.0
+                    },
+                    {
+                        "Z": 816.0,
+                        "S0.11": 56066.0,
+                        "S0.04": 25632.0,
+                        "S0.08": 39377.0
+                    },
+                    {
+                        "Z": 817.0,
+                        "S0.11": 65064.0,
+                        "S0.04": 31255.0,
+                        "S0.08": 46540.0
+                    },
+                    {
+                        "Z": 818.0,
+                        "S0.11": 74705.0,
+                        "S0.04": 37334.0,
+                        "S0.08": 54395.0
+                    },
+                    {
+                        "Z": 819.0,
+                        "S0.11": 85003.0,
+                        "S0.04": 43917.0,
+                        "S0.08": 62946.0
+                    },
+                    {
+                        "Z": 914.0,
+                        "S0.11": 94371.0,
+                        "S0.04": 44907.0,
+                        "S0.08": 64498.0
+                    },
+                    {
+                        "Z": 915.0,
+                        "S0.11": 104245.0,
+                        "S0.04": 46344.0,
+                        "S0.08": 71328.0
+                    }
+                ],
+                "InitialConditions": {
+                    "Name": "Empty",
+                    "DepositHeight_BestEstimate": 0.01,
+                    "JammingHeight_BestEstimate": 0.01
+                },
+                "Rank": 2
+            },
+            {
+                "Name": "Upper Bridge",
+                "TransferDownstream": "Instantaneous",
+                "Openings": [
+                    {
+                        "Type": "slot",
+                        "Width": 13.0,
+                        "BaseLevel": 722.5,
+                        "TopLevel": 726.4,
+                        "SideAngle": 90.0,
+                        "Comment": "bridge section",
+                        "Number": 1
+                    },
+                    {
+                        "Type": "slit",
+                        "Width": 100.0,
+                        "BaseLevel": 727.5,
+                        "TopLevel": 727.51,
+                        "SideAngle": 90.0,
+                        "Comment": "above bridge",
+                        "Number": 2
+                    }
+                ],
+                "Type": "bridge",
+                "width": 13.0,
+                "slope": 0.15,
+                "Rank": 3
+            }
+        ]
+    }
+}

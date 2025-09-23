@@ -41,10 +41,10 @@ if(HEADLESS) {
 }
 
 # to emulate the headless mode under RStudio:
-HEADLESS = TRUE
-rootDir<-"D:/MCB3/4Simu/DFbuffering"
-args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
-setwd(paste0(rootDir,"/0SourceCodes"))
+# HEADLESS = TRUE
+# rootDir<-"D:/MCB3/4Simu/DFbuffering"
+# args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
+# setwd(paste0(rootDir,"/0SourceCodes"))
 
 
 if(HEADLESS) {
