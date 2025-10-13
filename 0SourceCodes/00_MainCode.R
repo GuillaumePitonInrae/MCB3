@@ -40,7 +40,7 @@ if(HEADLESS) {
   args<-commandArgs(trailingOnly = TRUE)
 }
 
-# to emulate the headless mode under RStudio:
+# ###to emulate the headless mode under RStudio:
 # HEADLESS = TRUE
 # rootDir<-"D:/MCB3/4Simu/DFbuffering"
 # args = c(paste0(rootDir,"/params.json"), paste0(rootDir,"/out"))
@@ -664,7 +664,7 @@ while(PerformAnotherSimulation == "yes")
       coord_flip()+ #To have Probability as Y
       theme(legend.position = "top")+
       labs( y = "Peak discharge [m3/s]",x = "Cumulative distribution function"
-            ,paste("Code version:",ModelVersion,"|",
+            ,caption= paste("Code version:",ModelVersion,"|",
                    "Parameters:"," uncertain values","|"
                    ,"Number of runs =",N_runs)
             ,title = paste0("Uncertainty analysis of peak discharge downstream all structures\n","(event: ",EventName,")"))
@@ -1173,6 +1173,8 @@ while(PerformAnotherSimulation == "yes")
     
       #Multi-run time series----
       {
+        Tmax<-max(Qo_all$Time)/2/3600
+        
           QplotIn<-ggplot(Qo_all,aes(x=Time/3600))+theme_bw(base_size = 9)+
             geom_line(aes(y=Qi,group = Run,col=Branch),alpha=AlphaN_runs)
             
@@ -1186,7 +1188,7 @@ while(PerformAnotherSimulation == "yes")
             theme(axis.line=element_blank(),axis.text.x=element_blank(),axis.title.x=element_blank()
                   ,legend.position = "top")+
             labs(y = "Inlet Discharge\n [m3/s]",
-                 title = paste0("Time series of uncertainty sub-scenarios (Event: ",EventName," at structure: ",StructureName,")"))+
+                 title = paste0("Time series (Event: ",EventName," at structure: ",StructureName,")"))+
             guides(linewidth="none")+
             guides(color="none")+
             theme(legend.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "pt"))
@@ -1226,19 +1228,20 @@ while(PerformAnotherSimulation == "yes")
             geom_line(aes(x=Time/3600,y=Z,lty="4",group=Run,col=Branch),alpha=AlphaN_runs)+
             geom_line(aes(x=Time/3600,y=BaseLevelJam,lty="5",group=Run,col=Branch),alpha=AlphaN_runs)
           
-          if(Perform_error_propagation == TRUE)
-          {
-            Zplot<-Zplot+
-              scale_color_viridis_d(option="D",direction = 1)
-          }else{Zplot<-Zplot+guides(color="none")}
           
           Zplot<-Zplot+
             scale_linetype_manual(name="Level",label=c("Flow","Basal boulder jam"),values=c(1,4))+
             theme(legend.position = "bottom"#c(0.82,0.83)
-                  ,legend.direction = "horizontal")+
+                  ,legend.direction = "vertical")+
             guides(color = guide_legend(order = 2,nrow=2,override.aes=list(alpha=1,lwd=2))
                    ,linetype = guide_legend(order = 1,nrow=2))+
             labs( x = "Time [h]",y = "Flow level [m]")
+          
+          if(Perform_error_propagation == TRUE)
+          {
+            Zplot<-Zplot+
+              scale_color_viridis_d("Uncertainty sub-scenarios",option="D",direction = 1)
+          }else{Zplot<-Zplot+guides(color="none")}
           
          png(paste0("SyntheticTimeSerie_Evt-" ,EventName   ,"_Structure_n"   ,Structure_Ind,"-"       ,StructureName,".png")
               , width = 16, height = 15,units="cm",res=350)
@@ -1246,10 +1249,14 @@ while(PerformAnotherSimulation == "yes")
             pushViewport(viewport(layout = grid.layout(26,1) ) )
             
             # Arrange graphs
-            print(QplotIn      , vp = define_region(1:6,1))
-            print(QplotOut     , vp = define_region(7:11,1))
-            print(Vplot        , vp = define_region(12:15,1))
-            print(Zplot  +  labs(caption=Caption_text)+ 
+            print(QplotIn+coord_cartesian(xlim=c(0,Tmax))
+                  , vp = define_region(1:6,1))
+            print(QplotOut+coord_cartesian(xlim=c(0,Tmax))
+                  , vp = define_region(7:11,1))
+            print(Vplot+coord_cartesian(xlim=c(0,Tmax))
+                  , vp = define_region(12:15,1))
+            print(Zplot+coord_cartesian(xlim=c(0,Tmax))
+                  +  labs(caption=Caption_text)+ 
                     theme(plot.caption =  element_text(size=8.5))        
                   , vp = define_region(16:26,1))
           }
@@ -1264,14 +1271,15 @@ while(PerformAnotherSimulation == "yes")
         
         TopTopLeftPanel<-ggplot(Result_all)+
           theme_classic(base_size = 9)+
-          stat_ecdf(aes(1-ResidualOpening,col=Branch))+
+          stat_ecdf(aes(1-ResidualOpening,col=Branch,lwd=Branch))+
           scale_color_viridis_d("Uncertainty sub-scenario",option="D",direction = 1)+
+          scale_linewidth_manual("Uncertainty sub-scenario",values=seq(1.5,0.5,length.out =4))+
           # stat_ecdf(aes(1-ResidualOpening))+
           coord_cartesian(xlim=c(0,1))+
           scale_x_continuous(labels = scales::percent_format(scale = 100),breaks =c(0,0.2,0.4,0.6,0.8,1))+
           labs(x="", y="CDF",title = paste0("Maximum flow level and general clogging ratio\n",
                                "|Event: ",EventName,"\n","|Structure: ",StructureName,""))+
-          guides(color="none")
+          guides(color="none",linewidth="none")
         
         TopLeftPanel<-ggplot(Result_all)+
           theme_classic(base_size = 9)+
