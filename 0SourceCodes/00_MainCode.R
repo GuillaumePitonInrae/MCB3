@@ -488,13 +488,13 @@ while(PerformAnotherSimulation == "yes")
     for(Structure_Ind in (1:length(Structures$Name)))
     {
       DepositHeight_BestEstimate<-Structures$InitialConditions$DepositHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
-      if(is.na(DepositHeight_BestEstimate)){DepositHeight_BestEstimate<-0}
+      if(is.null(DepositHeight_BestEstimate)){DepositHeight_BestEstimate<-0}else{if(is.na(DepositHeight_BestEstimate)){DepositHeight_BestEstimate<-0}} 
       
       DepositHeight_max<-Structures$InitialConditions$DepositHeight_max[which(Structures$Rank==Structure_Ind)]
-      if(is.na(DepositHeight_max)){DepositHeight_max<-0}
+      if(is.null(DepositHeight_max)){DepositHeight_max<-0}else{if(is.na(DepositHeight_max)){DepositHeight_max<-0}} 
       
       DepositHeight_min<-Structures$InitialConditions$DepositHeight_min[which(Structures$Rank==Structure_Ind)]
-      if(is.na(DepositHeight_min)){DepositHeight_min<-0}
+      if(is.null(DepositHeight_min)){DepositHeight_min<-0}else{if(is.na(DepositHeight_min)){DepositHeight_min<-0}} 
       
       
       #If min = best estimate = max, set the paramter as "fixed"
@@ -526,13 +526,13 @@ while(PerformAnotherSimulation == "yes")
       # Height of the initial jamming in the barrier (Large wood and / or boulders), set to 0 if missing
       #If min = best estimate = max, set the paramter as "fixed"
       JammingHeight_BestEstimate <- Structures$InitialConditions$JammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)]
-      if(is.na(JammingHeight_BestEstimate)){JammingHeight_BestEstimate<-0}
+      if(is.null(JammingHeight_BestEstimate)){JammingHeight_BestEstimate<-0}else{if(is.na(JammingHeight_BestEstimate)){JammingHeight_BestEstimate<-0}} 
       
       JammingHeight_max <- Structures$InitialConditions$JammingHeight_max[which(Structures$Rank==Structure_Ind)]
-      if(is.na(JammingHeight_max)){JammingHeight_max<-0}
+      if(is.null(JammingHeight_max)){JammingHeight_max<-0}else{if(is.na(JammingHeight_max)){JammingHeight_max<-0}} 
       
       JammingHeight_min <- Structures$InitialConditions$JammingHeight_min[which(Structures$Rank==Structure_Ind)]
-      if(is.na(JammingHeight_min)){JammingHeight_min<-0}
+      if(is.null(JammingHeight_min)){JammingHeight_min<-0}else{if(is.na(JammingHeight_min)){JammingHeight_min<-0}} 
       
       # Structures$InitialConditions$JammingHeight_BestEstimate[which(Structures$Rank==Structure_Ind)])#Jam at the slit base by large wood 
       

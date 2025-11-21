@@ -31,7 +31,7 @@ Volume<-input[1]*10^3
 Qpeak<-input[2]
 
 #The duration of the event is approximated by dividing the volume of the event by half of the peak flow.
-Duration<-round(Volume/(Qpeak/2),0)
+Duration<-max(round(Volume/(Qpeak/2),0),1)
 
 #The lag of the peak flow is calculated by multiplying the user defined lag time by the calculated duration.
 PeakLag<-input[3]*Duration
