@@ -610,7 +610,15 @@ Structure_functionning<-function(ModelVersion,StructureName,input,Qin,Opening,St
     # Create directory to save recorded buffering results
     # dir.create(paste0("",EventName,"_ComputedOn",lubridate::today())
     # ,showWarnings = FALSE,recursive = TRUE)
-    
+    # save(ModelVersion,StructureName
+    #      ,Reservoir
+    #      ,WidthClogging,VerticalClogging
+    #      ,Boulder_list_all
+    #      ,N_opening,storageElevationCurve
+    #      ,N_TimeSteps,Duration
+    #      ,OpeningMinBaseLevel,SpillwayLevel,CrestLevel
+    #      ,BoulderGenerationMode, file = "StructureFunctionningResult.Rdata")
+
     Plot_BufferingModel(ModelVersion,StructureName
                         ,Reservoir
                         ,WidthClogging,VerticalClogging
