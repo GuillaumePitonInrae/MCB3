@@ -25,6 +25,16 @@ CheckTriangleDistribution<-function(Min,BestEstimate,Max,Name)
     return(c(Min,BestEstimate,Max))
   }else
   {
+    #If one bound and the best estimate = 0, the best estimate is redefined in the middle of the interval
+    if(Min==BestEstimate && BestEstimate==0 | BestEstimate==Max && Max==0)
+    {
+      BestEstimate<-0.5*(Min+Max)
+      
+      print(paste("In the input data, on parameter" ,Name ,", one bound (min or max) = best estimate = 0,"
+                  ,"this trigger a bug, I changed it to best estimate = 0.5*( min + max) for the simulation,"
+                  ,"if you are not happy with this, please define different values for bounds and best estimate."))
+      
+    }
     #If min >= best estimate, set min = 0.999 best estimate
     if(Min>=BestEstimate)
     {
